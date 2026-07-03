@@ -2,7 +2,7 @@
     window.extraDatabase = window.extraDatabase || {};
 
     const task1Extra = {
-    "title": "Задание 1. Дополнительно — планиметрия: новые прототипы",
+    "title": "Дополнительно",
     "source": "Дополнительные прототипы из присланного LaTeX-файла",
     "prototypes": [
         {
@@ -1360,6 +1360,72 @@
         }
     ]
 };
+
+    task1Extra.title = "Дополнительно";
+
+    const S = {
+        rightTri: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M25,140 L125,40 L225,140 Z"/><path d="M113.7,51.3 L125,62.6 L136.3,51.3"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="10" y="154">A</text><text x="229" y="154">B</text><text x="120" y="31">C</text></g></svg>`,
+        rightHeight: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M25,140 L225,140 L145,40 Z"/><path d="M145,40 L145,140"/><path d="M134.4,53.2 L145,61.7 L158.2,51.1"/><path d="M145,129 L156,129 L156,140"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="10" y="154">A</text><text x="229" y="154">B</text><text x="140" y="31">C</text><text x="140" y="158">H</text></g></svg>`,
+        isoHeight: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M30,140 L220,140 L125,35 Z"/><path d="M125,35 L125,140"/><path d="M125,129 L136,129 L136,140"/><path d="M77,88 l7,6 M173,88 l-7,6"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="14" y="154">A</text><text x="224" y="154">B</text><text x="120" y="27">C</text><text x="119" y="158">H</text></g></svg>`,
+        isoAH: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M25,140 L225,140 L125,35 Z"/><path d="M25,140 L172,91"/><path d="M62,100 l7,6 M187,100 l-7,6"/><path d="M160,95 L164,107 L176,103"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="9" y="154">A</text><text x="229" y="154">B</text><text x="120" y="27">C</text><text x="176" y="91">H</text></g></svg>`,
+        obtuseIso: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M60,25 L115,140 L220,140 Z"/><path d="M60,25 L60,140"/><path d="M60,129 L71,129 L71,140"/><path d="M60,140 L115,140" stroke-dasharray="5 4"/><path d="M87,82 l7,5 M167,140 l0,-8"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="45" y="22">A</text><text x="224" y="154">B</text><text x="107" y="154">C</text><text x="46" y="154">H</text></g></svg>`,
+        trap: `<svg width="260" height="160" viewBox="0 0 260 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35,140 L225,140 L180,55 L80,55 Z"/><path d="M80,55 L80,140" stroke-dasharray="5 4"/><path d="M80,129 L91,129 L91,140"/><path d="M57,96 l7,6 M201,96 l-7,6"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="19" y="154">A</text><text x="70" y="48">B</text><text x="183" y="48">C</text><text x="229" y="154">D</text></g></svg>`,
+        square: `<svg width="210" height="170" viewBox="0 0 210 170" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M45,140 L165,140 L165,20 L45,20 Z"/><path d="M45,140 L165,20"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="30" y="154">A</text><text x="30" y="18">B</text><text x="169" y="18">C</text><text x="169" y="154">D</text></g></svg>`,
+        rect: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35,130 L215,130 L215,55 L35,55 Z"/><path d="M35,130 L215,55"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="20" y="145">A</text><text x="20" y="50">B</text><text x="219" y="50">C</text><text x="219" y="145">D</text></g></svg>`,
+        triArea: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35,140 L215,140 L82,38 Z"/><path d="M57,140 A 25,25 0 0 0 51,124"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="20" y="154">A</text><text x="219" y="154">B</text><text x="76" y="30">C</text></g></svg>`,
+        rightMedHeight: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M25,140 L225,140 L145,40 Z"/><path d="M145,40 L145,140"/><path d="M145,40 L125,140"/><path d="M134.4,53.2 L145,61.7 L158.2,51.1"/><path d="M145,129 L156,129 L156,140"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="10" y="154">A</text><text x="229" y="154">B</text><text x="140" y="31">C</text><text x="149" y="158">H</text><text x="116" y="158">M</text></g></svg>`,
+        rightBisectors: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35,140 L215,140 L215,50 Z"/><path d="M35,140 L160,111"/><path d="M215,50 L160,111"/><path d="M204,140 L204,129 L215,129"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="20" y="154">A</text><text x="219" y="47">B</text><text x="219" y="154">C</text></g></svg>`,
+        isoSimple: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35,140 L215,140 L125,35 Z"/><path d="M80,88 l7,6 M170,88 l-7,6"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="19" y="154">A</text><text x="219" y="154">B</text><text x="120" y="27">C</text></g></svg>`,
+        triIncircle: `<svg width="230" height="170" viewBox="0 0 230 170" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M45,135 L185,135 L115,25 Z"/><circle cx="115" cy="98" r="36"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="30" y="150">A</text><text x="189" y="150">B</text><text x="110" y="17">C</text></g></svg>`,
+        parRect: `<svg width="280" height="160" viewBox="0 0 280 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20,125 L115,125 L115,65 L20,65 Z"/><path d="M150,125 L245,125 L270,65 L175,65 Z"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="136" y="140">A</text><text x="167" y="58">B</text><text x="274" y="70">C</text><text x="249" y="140">D</text></g></svg>`,
+        parSimple: `<svg width="250" height="160" viewBox="0 0 250 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35,135 L170,135 L215,55 L80,55 Z"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="20" y="150">A</text><text x="174" y="150">B</text><text x="219" y="60">C</text><text x="70" y="48">D</text></g></svg>`,
+        rhombus: `<svg width="230" height="160" viewBox="0 0 230 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M55,130 L150,130 L185,65 L90,65 Z"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="40" y="145">A</text><text x="154" y="145">B</text><text x="189" y="70">C</text><text x="80" y="58">D</text></g></svg>`,
+        rhombusDiag: `<svg width="220" height="170" viewBox="0 0 220 170" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M110,145 L185,85 L110,25 L35,85 Z"/><path d="M110,145 L110,25 M35,85 L185,85"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="105" y="162">A</text><text x="190" y="90">B</text><text x="105" y="18">C</text><text x="20" y="90">D</text></g></svg>`,
+        trapMid: `<svg width="260" height="160" viewBox="0 0 260 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35,140 L225,140 L180,55 L80,55 Z"/><path d="M58,97 L203,97"/><path d="M80,55 L80,140" stroke-dasharray="5 4"/><path d="M80,129 L91,129 L91,140"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="19" y="154">A</text><text x="70" y="48">B</text><text x="183" y="48">C</text><text x="229" y="154">D</text></g></svg>`,
+        trapSimple: `<svg width="260" height="160" viewBox="0 0 260 160" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35,140 L225,140 L180,55 L80,55 Z"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="19" y="154">A</text><text x="70" y="48">B</text><text x="183" y="48">C</text><text x="229" y="154">D</text></g></svg>`,
+        trapCirc: `<svg width="260" height="170" viewBox="0 0 260 170" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M35,140 L225,140 L180,50 L80,50 Z"/><circle cx="130" cy="95" r="45"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="19" y="154">A</text><text x="229" y="154">B</text><text x="184" y="43">C</text><text x="70" y="43">D</text></g></svg>`,
+        regTriCirc: `<svg width="220" height="170" viewBox="0 0 220 170" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="110" cy="85" r="58"/><path d="M60,114 L160,114 L110,27 Z"/></g><circle cx="110" cy="85" r="2" fill="black"/><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="45" y="129">A</text><text x="164" y="129">B</text><text x="105" y="20">C</text><text x="114" y="90">O</text></g></svg>`,
+        regTriIn: `<svg width="220" height="170" viewBox="0 0 220 170" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M45,135 L175,135 L110,25 Z"/><circle cx="110" cy="92" r="37"/></g><circle cx="110" cy="92" r="2" fill="black"/><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="30" y="150">A</text><text x="179" y="150">B</text><text x="105" y="18">C</text><text x="114" y="97">O</text></g></svg>`,
+        rightCirc: `<svg width="250" height="170" viewBox="0 0 250 170" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="130" cy="90" r="70"/><path d="M65,120 L195,120 L195,60 Z"/><path d="M184,120 L184,109 L195,109"/></g><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="49" y="135">A</text><text x="199" y="58">B</text><text x="199" y="135">C</text></g></svg>`,
+        tangentChord: `<svg width="250" height="170" viewBox="0 0 250 170" overflow="visible"><g fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="105" cy="90" r="58"/><path d="M75,40 L150,125"/><path d="M20,40 L205,40"/></g><circle cx="105" cy="90" r="2" fill="black"/><g font-family="Times New Roman" font-size="16" font-style="italic"><text x="108" y="96">O</text><text x="67" y="37">B</text><text x="154" y="137">A</text><text x="209" y="45">C</text></g></svg>`
+    };
+
+    function extraSvgFor(desc) {
+        if (/высота и медиана/.test(desc)) return S.rightMedHeight;
+        if (/биссектрисы/.test(desc)) return S.rightBisectors;
+        if (/описанная окружность/.test(desc) && /Прямоугольный/.test(desc)) return S.rightCirc;
+        if (/Правый треугольник|Прямоугольный треугольник/.test(desc)) return S.rightTri;
+        if (/Высота к гипотенузе|известны катет/.test(desc)) return S.rightHeight;
+        if (/высота \$AH\$/.test(desc)) return S.isoAH;
+        if (/Тупоугольный/.test(desc)) return S.obtuseIso;
+        if (/Равнобедренный треугольник: площадь/.test(desc)) return S.isoSimple;
+        if (/Равнобедренный треугольник/.test(desc) || /Правильный треугольник: базовые/.test(desc)) return S.isoHeight;
+        if (/Равнобедренная трапеция/.test(desc)) return S.trap;
+        if (/Квадрат/.test(desc)) return S.square;
+        if (/Прямоугольник/.test(desc)) return S.rect;
+        if (/Площадь треугольника/.test(desc)) return S.triArea;
+        if (/Треугольник и вписанная окружность|Описанный многоугольник/.test(desc)) return S.triIncircle;
+        if (/Параллелограмм и прямоугольник/.test(desc)) return S.parRect;
+        if (/Параллелограмм/.test(desc)) return S.parSimple;
+        if (/Ромб: сторона/.test(desc)) return S.rhombus;
+        if (/Ромб/.test(desc)) return S.rhombusDiag;
+        if (/средняя линия/.test(desc)) return S.trapMid;
+        if (/Трапеция, описанная/.test(desc)) return S.trapCirc;
+        if (/Трапеция/.test(desc)) return S.trapSimple;
+        if (/описанная окружность/.test(desc)) return S.regTriCirc;
+        if (/вписанная окружность/.test(desc)) return S.regTriIn;
+        if (/Касательная/.test(desc)) return S.tangentChord;
+        return S.rightTri;
+    }
+
+    task1Extra.prototypes.forEach(proto => {
+        const cleanSvg = extraSvgFor(proto.desc || '');
+        proto.svg_code = cleanSvg;
+        if (Array.isArray(proto.tasks)) {
+            proto.tasks.forEach(task => { task.svg_code = cleanSvg; });
+        }
+    });
+
 
     window.extraDatabase[1] = task1Extra;
     window.extraDatabase.task1 = task1Extra;
