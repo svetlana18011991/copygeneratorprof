@@ -6,7 +6,7 @@
     "source": "Дополнительные прототипы из присланного LaTeX-файла",
     "prototypes": [
         {
-            "desc": "Правый треугольник: дана гипотенуза и тригонометрическая функция",
+            "desc": "Прямоугольный треугольник: гипотенуза и sin/cos/tg",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L225,140 L145,35 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M135,48 L145,58 L157,45\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"230\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"142\" y=\"28\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "В треугольнике $ABC$ угол $C$ равен $90^{\\circ}$, $AB=5$, $\\sin A=\\frac{7}{25}$. Найдите $AC$.",
             "theory_sol": "Так как $AB$ — гипотенуза, $\\sin A=\\frac{BC}{AB}$, значит $BC=AB\\cdot \\sin A=5\\cdot\\frac{7}{25}=\\frac{7}{5}$.<br><br>Найдём $\\cos A$: $\\cos A=\\sqrt{1-\\sin^2 A}=\\sqrt{1-\\frac{49}{625}}=\\frac{24}{25}$.<br><br>Тогда $AC=AB\\cdot \\cos A=5\\cdot\\frac{24}{25}=\\frac{24}{5}=4{,}8$.\\<br><br><b>Ответ:</b> 4,8",
@@ -39,7 +39,7 @@
             ]
         },
         {
-            "desc": "Правый треугольник: дана сторона и тригонометрическая функция",
+            "desc": "Прямоугольный треугольник: сторона по sin/cos/tg",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L225,140 L145,35 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M135,48 L145,58 L157,45\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"230\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"142\" y=\"28\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "В треугольнике $ABC$ угол $C$ равен $90^{\\circ}$, $AC=4{,}8$, $\\sin A=\\frac{7}{25}$. Найдите $AB$.",
             "theory_sol": "Гипотенуза — сторона $AB$. По условию известен прилежащий к углу $A$ катет $AC$.<br><br>$\\cos A=\\sqrt{1-\\sin^2 A}=\\sqrt{1-\\frac{49}{625}}=\\frac{24}{25}$.<br><br>По определению косинуса: $\\cos A=\\frac{AC}{AB}$, поэтому $AB=\\dfrac{AC}{\\cos A}=\\dfrac{4{,}8}{\\frac{24}{25}}=5$.\\<br><br><b>Ответ:</b> 5",
@@ -72,7 +72,7 @@
             ]
         },
         {
-            "desc": "Правый треугольник: две стороны и тригонометрия угла",
+            "desc": "Прямоугольный треугольник: sin, cos, tg по сторонам",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L225,140 L145,35 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M135,48 L145,58 L157,45\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"230\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"142\" y=\"28\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "В треугольнике $ABC$ угол $C$ равен $90^{\\circ}$, $AC=24$, $BC=7$. Найдите $\\sin A$.",
             "theory_sol": "Найдём гипотенузу по теореме Пифагора: $AB=\\sqrt{AC^2+BC^2}=\\sqrt{24^2+7^2}=\\sqrt{625}=25$.<br><br>Синус угла — отношение противолежащего катета к гипотенузе: $\\sin A=\\frac{BC}{AB}=\\frac{7}{25}$.\\<br><br><b>Ответ:</b> $0{,}28$",
@@ -105,7 +105,7 @@
             ]
         },
         {
-            "desc": "Высота к гипотенузе: найти $AH$",
+            "desc": "Высота к гипотенузе: проекция катета $AH$",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L230,140 L150,35 Z M150,35 L150,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M140,48 L150,58 L162,45 M140,140 L140,130 L150,130\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"147\" y=\"28\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"154\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">H</text></svg>",
             "theory_task": "В треугольнике $ABC$ угол $C$ равен $90^{\\circ}$, $CH$ — высота, $AB=27$, $\\sin A=\\frac{2}{3}$. Найдите $AH$.",
             "theory_sol": "В прямоугольном треугольнике $AC=AB\\cos A$. По свойству проекции катета на гипотенузу $AC^2=AB\\cdot AH$, поэтому $AH=\\frac{AC^2}{AB}=AB\\cdot\\cos^2 A$.<br><br>Найдём $\\cos A$: $\\cos A=\\sqrt{1-\\sin^2 A}=\\sqrt{1-\\frac{4}{9}}=\\frac{\\sqrt5}{3}$.<br><br>$AH=27\\cdot\\left(\\frac{\\sqrt5}{3}\\right)^2=27\\cdot\\frac{5}{9}=15$.\\<br><br><b>Ответ:</b> 15",
@@ -138,7 +138,7 @@
             ]
         },
         {
-            "desc": "Высота к гипотенузе: найти $BH$",
+            "desc": "Высота к гипотенузе: проекция катета $BH$",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L230,140 L150,35 Z M150,35 L150,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M140,48 L150,58 L162,45 M140,140 L140,130 L150,130\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"147\" y=\"28\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"154\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">H</text></svg>",
             "theory_task": "В треугольнике $ABC$ угол $C$ равен $90^{\\circ}$, $CH$ — высота, $AB=27$, $\\sin A=\\frac{2}{3}$. Найдите $BH$.",
             "theory_sol": "В прямоугольном треугольнике $BC=AB\\sin A$. По свойству проекции катета на гипотенузу $BC^2=AB\\cdot BH$, поэтому $BH=\\frac{BC^2}{AB}=AB\\cdot\\sin^2 A$.<br><br>$BH=27\\cdot\\left(\\frac{2}{3}\\right)^2=27\\cdot\\frac{4}{9}=12$.\\<br><br><b>Ответ:</b> 12",
@@ -204,7 +204,7 @@
             ]
         },
         {
-            "desc": "Равнобедренный треугольник: основание и тригонометрия",
+            "desc": "Равнобедренный треугольник: сторона по основанию",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L235,140 L130,25 Z M130,25 L130,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M120,140 L120,130 L130,130 M78,82 l8,-8 M180,74 l8,8\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"240\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"18\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"134\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">H</text></svg>",
             "theory_task": "В треугольнике $ABC$ известно, что $AC=BC$, $AB=8$, $\\cos A=0{,}5$. Найдите $AC$.",
             "theory_sol": "В равнобедренном треугольнике высота $CH$, проведённая к основанию, является медианой, значит $AH=\\frac{AB}{2}=4$.<br><br>В прямоугольном треугольнике $ACH$: $\\cos A=\\frac{AH}{AC}$.<br><br>$AC=\\frac{AH}{\\cos A}=\\frac{4}{0{,}5}=8$.\\<br><br><b>Ответ:</b> 8",
@@ -237,7 +237,7 @@
             ]
         },
         {
-            "desc": "Равнобедренный треугольник: высота и тригонометрия",
+            "desc": "Равнобедренный треугольник: сторона по высоте",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L235,140 L130,25 Z M130,25 L130,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M120,140 L120,130 L130,130 M78,82 l8,-8 M180,74 l8,8\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"240\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"18\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"134\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">H</text></svg>",
             "theory_task": "В треугольнике $ABC$ известно, что $AC=BC$, высота $CH$ равна $4$, $\\sin A=0{,}5$. Найдите $AC$.",
             "theory_sol": "В прямоугольном треугольнике $ACH$ катет $CH$ противолежит углу $A$, поэтому $\\sin A=\\frac{CH}{AC}$.<br><br>$AC=\\frac{CH}{\\sin A}=\\frac{4}{0{,}5}=8$.\\<br><br><b>Ответ:</b> 8",
@@ -270,7 +270,7 @@
             ]
         },
         {
-            "desc": "Равнобедренный треугольник и высота $AH$",
+            "desc": "Равнобедренный треугольник: высота из вершины $A$",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L235,140 L130,25 Z M25,140 L173,72\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M166,84 L162,74 L173,72 M78,82 l8,-8 M180,74 l8,8\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"240\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"18\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"178\" y=\"75\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">H</text></svg>",
             "theory_task": "В треугольнике $ABC$ известно, что $AC=BC$, $AH$ — высота, проведённая к стороне $BC$, $\\sin BAC=\\frac{7}{25}$. Найдите $\\sin BAH$.",
             "theory_sol": "Так как $AC=BC$, то углы при основании равны: $\\angle BAC=\\angle ABC$.<br><br>В прямоугольном треугольнике $ABH$ угол $ABH$ равен углу $ABC$, значит $\\angle BAH=90^{\\circ}-\\angle BAC$.<br><br>Тогда $\\sin BAH=\\cos BAC=\\sqrt{1-\\left(\\frac{7}{25}\\right)^2}=\\frac{24}{25}$.\\<br><br><b>Ответ:</b> $0{,}96$",
@@ -303,7 +303,7 @@
             ]
         },
         {
-            "desc": "Высота к гипотенузе: известны катет и его проекция",
+            "desc": "Катет и его проекция на гипотенузу",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L230,140 L150,35 Z M150,35 L150,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M140,48 L150,58 L162,45 M140,140 L140,130 L150,130\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"147\" y=\"28\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"154\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">H</text></svg>",
             "theory_task": "В треугольнике $ABC$ угол $C$ равен $90^{\\circ}$, $CH$ — высота, $BC=25$, $BH=20$. Найдите $\\cos A$.",
             "theory_sol": "Для катета и его проекции верно: $BC^2=AB\\cdot BH$.<br><br>Отсюда $AB=\\frac{BC^2}{BH}=\\frac{25^2}{20}=\\frac{125}{4}$.<br><br>$AH=AB-BH=\\frac{125}{4}-20=\\frac{45}{4}$. Тогда<br>$\\cos^2 A=\\frac{AH}{AB}=\\frac{45/4}{125/4}=\\frac{9}{25}$.<br><br>$\\cos A=\\frac{3}{5}=0{,}6$.\\<br><br><b>Ответ:</b> 0,6",
@@ -336,7 +336,7 @@
             ]
         },
         {
-            "desc": "Тупоугольный равнобедренный треугольник",
+            "desc": "Тупоугольный равнобедренный треугольник: синус угла",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M70,35 L120,140 L230,140 Z M70,35 L70,140 M70,140 L120,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M60,140 L60,130 L70,130 M92,88 l9,-5 M172,140 l0,-10\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"55\" y=\"30\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"122\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"55\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">H</text></svg>",
             "theory_task": "В тупоугольном треугольнике $ABC$ известно, что $AC=BC=8$, высота $AH$ равна $4$. Найдите $\\sin ACB$.",
             "theory_sol": "Рассмотрим прямоугольный треугольник $ACH$. Гипотенуза $AC=8$, катет $AH=4$.<br><br>Угол $\\angle ACH$ смежный с тупым углом $\\angle ACB$, поэтому $\\angle ACB=180^{\\circ}-\\angle ACH$.<br><br>Используем формулу приведения: $\\sin(180^{\\circ}-\\alpha)=\\sin\\alpha$, значит $\\sin(\\angle ACB)=\\sin(\\angle ACH)$.<br><br>В прямоугольном треугольнике $ACH$: $\\sin ACH=\\dfrac{AH}{AC}=\\dfrac{4}{8}=0{,}5$.\\<br><br><b>Ответ:</b> 0,5",
@@ -369,7 +369,7 @@
             ]
         },
         {
-            "desc": "Равнобедренная трапеция",
+            "desc": "Равнобедренная трапеция: синус острого угла",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M35,140 L230,140 L185,55 L80,55 Z M80,55 L80,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M70,140 L70,130 L80,130 M58,95 l8,-8 M205,95 l8,8\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"22\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text><text x=\"188\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"65\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text></svg>",
             "theory_task": "Основания равнобедренной трапеции равны $51$ и $65$. Боковые стороны равны $25$. Найдите синус острого угла трапеции.",
             "theory_sol": "Опустим высоту из вершины меньшего основания. Разность оснований равна $65-51=14$, значит горизонтальная проекция боковой стороны равна $\\frac{14}{2}=7$.<br><br>Высота: $h=\\sqrt{25^2-7^2}=\\sqrt{625-49}=24$.<br><br>Синус острого угла равен отношению высоты к боковой стороне: $\\sin\\alpha=\\frac{24}{25}$.\\<br><br><b>Ответ:</b> $0{,}96$",
@@ -402,7 +402,7 @@
             ]
         },
         {
-            "desc": "Квадрат: диагональ и площадь",
+            "desc": "Квадрат: площадь по диагонали",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M65,140 L185,140 L185,20 L65,20 Z M65,140 L185,20\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"50\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"190\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text><text x=\"190\" y=\"20\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"50\" y=\"20\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text></svg>",
             "theory_task": "Найдите площадь квадрата, если его диагональ равна $1$.",
             "theory_sol": "Диагональ квадрата со стороной $a$ равна $d=a\\sqrt2$. Поэтому $a=\\frac{d}{\\sqrt2}=\\frac{1}{\\sqrt2}$.<br><br>Площадь квадрата $S=a^2=\\left(\\frac{1}{\\sqrt2}\\right)^2=\\frac12=0{,}5$.\\<br><br><b>Ответ:</b> 0,5",
@@ -435,7 +435,7 @@
             ]
         },
         {
-            "desc": "Прямоугольник: площадь, периметр, отношение сторон",
+            "desc": "Прямоугольник: стороны по площади и отношению",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M35,130 L225,130 L225,55 L35,55 Z M35,130 L225,55\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"22\" y=\"145\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"230\" y=\"145\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text><text x=\"230\" y=\"55\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"22\" y=\"55\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text></svg>",
             "theory_task": "Найдите периметр прямоугольника, если его площадь равна $18$, а отношение соседних сторон равно $1:2$.",
             "theory_sol": "Пусть стороны прямоугольника равны $x$ и $2x$. Тогда площадь $2x^2=18$, откуда $x^2=9$, $x=3$.<br><br>Стороны равны $3$ и $6$. Периметр $P=2(3+6)=18$.\\<br><br><b>Ответ:</b> 18",
@@ -468,7 +468,7 @@
             ]
         },
         {
-            "desc": "Прямоугольник: диагональ",
+            "desc": "Прямоугольник: площадь по периметру и диагонали",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M35,130 L225,130 L225,55 L35,55 Z M35,130 L225,55\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"22\" y=\"145\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"230\" y=\"145\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text><text x=\"230\" y=\"55\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"22\" y=\"55\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text></svg>",
             "theory_task": "Периметр прямоугольника равен $28$, а диагональ равна $10$. Найдите площадь этого прямоугольника.",
             "theory_sol": "Пусть стороны прямоугольника равны $a$ и $b$. Тогда $2(a+b)=28$, значит $a+b=14$.<br><br>По теореме Пифагора для диагонали: $a^2+b^2=10^2=100$.<br><br>$(a+b)^2=a^2+2ab+b^2$, поэтому $14^2=100+2ab$.<br><br>$196=100+2ab$, $ab=48$. Значит площадь равна $48$.\\<br><br><b>Ответ:</b> 48",
@@ -501,7 +501,7 @@
             ]
         },
         {
-            "desc": "Площадь треугольника по двум сторонам и углу",
+            "desc": "Треугольник: площадь по двум сторонам и углу",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M30,140 L230,140 L80,35 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M53,140 A28,28 0 0,0 41,118\" fill=\"none\" stroke=\"black\" stroke-width=\"1.3\"/><text x=\"17\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"77\" y=\"28\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "Найдите площадь треугольника, две стороны которого равны $8$ и $12$, а угол между ними равен $30^{\\circ}$.",
             "theory_sol": "Площадь треугольника по двум сторонам и углу между ними:<br>$S=\\frac12 ab\\sin\\gamma$.<br><br>$S=\\frac12\\cdot 8\\cdot 12\\cdot \\sin 30^{\\circ}=48\\cdot\\frac12=24$.\\<br><br><b>Ответ:</b> 24",
@@ -534,7 +534,7 @@
             ]
         },
         {
-            "desc": "Прямоугольный треугольник: катет, гипотенуза и площадь",
+            "desc": "Прямоугольный треугольник: площадь по катету и гипотенузе",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L225,140 L145,35 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M135,48 L145,58 L157,45\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"230\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"142\" y=\"28\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "В прямоугольном треугольнике катет равен $6$, а гипотенуза равна $10$. Найдите площадь этого треугольника.",
             "theory_sol": "По теореме Пифагора второй катет равен $\\sqrt{10^2-6^2}=8$.<br><br>Тогда $S=\\frac12\\cdot 6\\cdot 8=24$.\\<br><br><b>Ответ:</b> 24",
@@ -633,7 +633,7 @@
             ]
         },
         {
-            "desc": "Равнобедренный треугольник: боковая сторона и основание",
+            "desc": "Равнобедренный треугольник: площадь по сторонам",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L235,140 L130,25 Z M130,25 L130,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M120,140 L120,130 L130,130 M78,82 l8,-8 M180,74 l8,8\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"240\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"18\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"134\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">H</text></svg>",
             "theory_task": "Боковая сторона равнобедренного треугольника равна $5$, а основание равно $6$. Найдите площадь этого треугольника.",
             "theory_sol": "Высота, проведённая к основанию, является медианой, поэтому половина основания равна $3$.<br><br>По теореме Пифагора высота равна $\\sqrt{5^2-3^2}=4$.<br><br>Тогда $S=\\frac12\\cdot 6\\cdot 4=12$.\\<br><br><b>Ответ:</b> 12",
@@ -666,7 +666,7 @@
             ]
         },
         {
-            "desc": "Равнобедренный треугольник: площадь по боковым сторонам и углу",
+            "desc": "Равнобедренный треугольник: площадь по боковым сторонам",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M30,140 L230,140 L130,30 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M82,85 l8,-8 M175,77 l8,8\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"17\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"23\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "Боковая сторона равнобедренного треугольника равна $10$, а угол при вершине, противолежащей основанию, равен $30^{\\circ}$. Найдите площадь этого треугольника.",
             "theory_sol": "Площадь по двум сторонам и углу между ними: $S=\\frac12 ab\\sin\\gamma$.<br><br>В данном случае $a=b=10$, $\\gamma=30^{\\circ}$, поэтому $S=\\frac12\\cdot 10\\cdot 10\\cdot \\frac12=25$.\\<br><br><b>Ответ:</b> 25",
@@ -699,7 +699,7 @@
             ]
         },
         {
-            "desc": "Правильный треугольник: базовые формулы",
+            "desc": "Правильный треугольник: сторона и высота",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M25,140 L235,140 L130,25 Z M130,25 L130,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M120,140 L120,130 L130,130 M78,82 l8,-8 M180,74 l8,8\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"12\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"240\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"18\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"134\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">H</text></svg>",
             "theory_task": "Правильный треугольник: высота равна $2\\sqrt3$. Найдите сторону этого треугольника.",
             "theory_sol": "В правильном треугольнике высота равна $h=\\frac{a\\sqrt3}{2}$.<br><br>Поэтому $a=\\frac{2h}{\\sqrt3}=\\frac{2\\cdot 2\\sqrt3}{\\sqrt3}=4$.\\<br><br><b>Ответ:</b> 4",
@@ -732,7 +732,7 @@
             ]
         },
         {
-            "desc": "Треугольник и вписанная окружность: площадь",
+            "desc": "Вписанная окружность: площадь треугольника",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M60,135 L200,135 L130,25 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><circle cx=\"130\" cy=\"98\" r=\"37\" fill=\"none\" stroke=\"black\" stroke-width=\"1.5\"/><text x=\"47\" y=\"150\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"205\" y=\"150\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"18\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "Периметр треугольника равен $12$, а радиус вписанной окружности равен $1$. Найдите площадь этого треугольника.",
             "theory_sol": "Площадь треугольника равна произведению радиуса вписанной окружности на полупериметр: $S=rp$.<br><br>Здесь полупериметр $p=\\frac{12}{2}=6$, поэтому $S=1\\cdot 6=6$.\\<br><br><b>Ответ:</b> 6",
@@ -765,7 +765,7 @@
             ]
         },
         {
-            "desc": "Треугольник и вписанная окружность: периметр",
+            "desc": "Вписанная окружность: периметр треугольника",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M60,135 L200,135 L130,25 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><circle cx=\"130\" cy=\"98\" r=\"37\" fill=\"none\" stroke=\"black\" stroke-width=\"1.5\"/><text x=\"47\" y=\"150\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"205\" y=\"150\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"18\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "Площадь треугольника равна $24$, а радиус вписанной окружности равен $2$. Найдите периметр этого треугольника.",
             "theory_sol": "Используем формулу $S=rp$, где $p$ — полупериметр.<br><br>$p=\\frac{S}{r}=\\frac{24}{2}=12$, значит периметр равен $2p=24$.\\<br><br><b>Ответ:</b> 24",
@@ -798,7 +798,7 @@
             ]
         },
         {
-            "desc": "Параллелограмм и прямоугольник с одинаковыми сторонами",
+            "desc": "Параллелограмм: сравнение с прямоугольником",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M20,120 L100,120 L100,65 L20,65 Z M145,120 L225,120 L245,65 L165,65 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"132\" y=\"135\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"230\" y=\"135\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text><text x=\"248\" y=\"65\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"160\" y=\"62\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text></svg>",
             "theory_task": "Параллелограмм и прямоугольник имеют одинаковые стороны. Найдите острый угол параллелограмма, если его площадь равна половине площади прямоугольника. Ответ дайте в градусах.",
             "theory_sol": "Если стороны фигур одинаковы и равны $a$ и $b$, то площадь прямоугольника равна $ab$, а площадь параллелограмма равна $ab\\sin\\alpha$.<br><br>По условию $ab\\sin\\alpha=\\frac12ab$, значит $\\sin\\alpha=\\frac12$.<br><br>Острый угол параллелограмма равен $30^{\\circ}$.\\<br><br><b>Ответ:</b> 30",
@@ -831,7 +831,7 @@
             ]
         },
         {
-            "desc": "Параллелограмм: периметр и отношение сторон",
+            "desc": "Параллелограмм: сторона по периметру и отношению",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M40,135 L190,135 L230,55 L80,55 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"27\" y=\"150\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"192\" y=\"150\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"235\" y=\"55\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"65\" y=\"55\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text></svg>",
             "theory_task": "Периметр параллелограмма равен $88$, а его стороны относятся как $4:7$. Найдите большую сторону параллелограмма.",
             "theory_sol": "Пусть стороны равны $4x$ и $7x$. Тогда $2(4x+7x)=88$.<br><br>$22x=88$, откуда $x=4$. Большая сторона равна $7x=28$.\\<br><br><b>Ответ:</b> 28",
@@ -864,7 +864,7 @@
             ]
         },
         {
-            "desc": "Ромб: сторона и угол",
+            "desc": "Ромб: площадь по стороне и углу",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M50,115 L130,55 L210,115 L130,155 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"37\" y=\"120\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"130\" y=\"50\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"215\" y=\"120\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"130\" y=\"170\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text></svg>",
             "theory_task": "Найдите площадь ромба, если его сторона равна $6$, а острый угол равен $30^{\\circ}$.",
             "theory_sol": "Площадь ромба через сторону и угол: $S=a^2\\sin\\alpha$.<br><br>$S=6^2\\cdot \\sin30^{\\circ}=36\\cdot \\frac12=18$.\\<br><br><b>Ответ:</b> 18",
@@ -930,7 +930,7 @@
             ]
         },
         {
-            "desc": "Ромб: найти диагональ",
+            "desc": "Ромб: диагональ по площади",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M130,20 L220,90 L130,160 L40,90 Z M130,20 L130,160 M40,90 L220,90\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"127\" y=\"16\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"225\" y=\"95\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"175\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"25\" y=\"95\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text></svg>",
             "theory_task": "Площадь ромба равна $18$. Одна из его диагоналей равна $12$. Найдите другую диагональ.",
             "theory_sol": "По формуле площади ромба $S=\\frac12d_1d_2$.<br><br>$18=\\frac12\\cdot 12\\cdot d_2$, значит $18=6d_2$, откуда $d_2=3$.\\<br><br><b>Ответ:</b> 3",
@@ -963,7 +963,7 @@
             ]
         },
         {
-            "desc": "Ромб: диагонали и высота",
+            "desc": "Ромб: высота по диагоналям",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M130,20 L220,90 L130,160 L40,90 Z M130,20 L130,160 M40,90 L220,90\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"127\" y=\"16\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"225\" y=\"95\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"175\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"25\" y=\"95\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text></svg>",
             "theory_task": "Диагонали ромба относятся как $3:4$, а периметр ромба равен $200$. Найдите высоту ромба.",
             "theory_sol": "Пусть диагонали равны $3x$ и $4x$. Сторона ромба равна гипотенузе прямоугольного треугольника с катетами $\\frac{3x}{2}$ и $\\frac{4x}{2}$, то есть $\\frac{5x}{2}$.<br><br>Тогда периметр $4\\cdot \\frac{5x}{2}=10x=200$, откуда $x=20$.<br><br>Диагонали равны $60$ и $80$, площадь $S=\\frac12\\cdot 60\\cdot 80=2400$. Сторона равна $50$, поэтому высота $h=\\frac{S}{a}=\\frac{2400}{50}=48$.\\<br><br><b>Ответ:</b> 48",
@@ -996,7 +996,7 @@
             ]
         },
         {
-            "desc": "Трапеция: средняя линия, высота, площадь",
+            "desc": "Трапеция: средняя линия по площади и высоте",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M35,140 L230,140 L190,55 L80,55 Z M58,98 L210,98 M80,55 L80,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M70,140 L70,130 L80,130\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"22\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text><text x=\"193\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"65\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text></svg>",
             "theory_task": "Высота трапеции равна $10$, площадь равна $150$. Найдите среднюю линию трапеции.",
             "theory_sol": "Площадь трапеции равна произведению средней линии на высоту: $S=mh$.<br><br>$m=\\frac{S}{h}=\\frac{150}{10}=15$.\\<br><br><b>Ответ:</b> 15",
@@ -1029,7 +1029,7 @@
             ]
         },
         {
-            "desc": "Трапеция: найти второе основание",
+            "desc": "Трапеция: основание по площади и высоте",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M35,140 L230,140 L185,55 L80,55 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"22\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"188\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"65\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text></svg>",
             "theory_task": "Основание трапеции равно $13$, высота равна $5$, а площадь равна $50$. Найдите второе основание трапеции.",
             "theory_sol": "Пусть второе основание равно $x$. Тогда $50=\\frac{13+x}{2}\\cdot 5$.<br><br>$13+x=20$, откуда $x=7$.\\<br><br><b>Ответ:</b> 7",
@@ -1095,7 +1095,7 @@
             ]
         },
         {
-            "desc": "Равнобедренная трапеция: периметр",
+            "desc": "Равнобедренная трапеция: периметр по площади",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M35,140 L230,140 L185,55 L80,55 Z M80,55 L80,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M70,140 L70,130 L80,130 M58,95 l8,-8 M205,95 l8,8\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"22\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text><text x=\"188\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"65\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text></svg>",
             "theory_task": "Основания равнобедренной трапеции равны $6$ и $12$, а её площадь равна $36$. Найдите периметр трапеции.",
             "theory_sol": "Средняя линия равна $\\frac{6+12}{2}=9$. Высота $h=\\frac{36}{9}=4$.<br><br>Половина разности оснований равна $\\frac{12-6}{2}=3$. Боковая сторона равна $\\sqrt{3^2+4^2}=5$.<br><br>Периметр равен $6+12+5+5=28$.\\<br><br><b>Ответ:</b> 28",
@@ -1128,7 +1128,7 @@
             ]
         },
         {
-            "desc": "Трапеция: боковая сторона и угол",
+            "desc": "Трапеция: площадь по боковой стороне и углу",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M35,140 L230,140 L185,55 L80,55 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><text x=\"22\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"188\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"65\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text></svg>",
             "theory_task": "Основания трапеции равны $18$ и $6$, боковая сторона равна $7$, один из углов при основании равен $150^{\\circ}$. Найдите площадь трапеции.",
             "theory_sol": "Высота равна проекции боковой стороны на направление, перпендикулярное основанию: $h=7\\sin150^{\\circ}=7\\cdot \\frac12=3{,}5$.<br><br>Средняя линия равна $\\frac{18+6}{2}=12$. Площадь $S=mh=12\\cdot 3{,}5=42$.\\<br><br><b>Ответ:</b> 42",
@@ -1161,7 +1161,7 @@
             ]
         },
         {
-            "desc": "Трапеция, описанная около окружности",
+            "desc": "Описанная трапеция: средняя линия",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M35,140 L230,140 L185,55 L80,55 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><circle cx=\"132\" cy=\"97\" r=\"42\" fill=\"none\" stroke=\"black\" stroke-width=\"1.5\"/><text x=\"22\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"235\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"188\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text><text x=\"65\" y=\"52\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">D</text></svg>",
             "theory_task": "Около окружности описана трапеция, периметр которой равен $40$. Найдите длину её средней линии.",
             "theory_sol": "В описанном четырёхугольнике суммы противоположных сторон равны. Для трапеции это даёт: сумма оснований равна сумме боковых сторон.<br><br>Поэтому периметр равен удвоенной сумме оснований: $P=2(a+b)$.<br><br>Средняя линия $m=\\frac{a+b}{2}=\\frac{P}{4}=\\frac{40}{4}=10$.\\<br><br><b>Ответ:</b> 10",
@@ -1194,7 +1194,7 @@
             ]
         },
         {
-            "desc": "Описанный многоугольник",
+            "desc": "Описанный многоугольник: периметр через $S$ и $r$",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M60,135 L200,135 L130,25 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><circle cx=\"130\" cy=\"98\" r=\"37\" fill=\"none\" stroke=\"black\" stroke-width=\"1.5\"/><text x=\"47\" y=\"150\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"205\" y=\"150\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"127\" y=\"18\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "Около окружности описан многоугольник, площадь которого равна $33$, а радиус окружности равен $3$. Найдите периметр многоугольника.",
             "theory_sol": "Для многоугольника, описанного около окружности, площадь равна $S=rp$, где $p$ — полупериметр.<br><br>$p=\\frac{S}{r}=\\frac{33}{3}=11$, значит периметр равен $22$.\\<br><br><b>Ответ:</b> 22",
@@ -1227,7 +1227,7 @@
             ]
         },
         {
-            "desc": "Окружности в правильном треугольнике: описанная окружность",
+            "desc": "Правильный треугольник: радиус описанной окружности",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><circle cx=\"130\" cy=\"88\" r=\"58\" fill=\"none\" stroke=\"black\" stroke-width=\"1.5\"/><path d=\"M80,118 L180,118 L130,30 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><circle cx=\"130\" cy=\"88\" r=\"2\" fill=\"black\"/><text x=\"135\" y=\"90\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">O</text></svg>",
             "theory_task": "Сторона правильного треугольника равна $\\sqrt3$. Найдите радиус окружности, описанной около этого треугольника.",
             "theory_sol": "Для правильного треугольника $R=\\frac{a}{\\sqrt3}$.<br><br>$R=\\frac{\\sqrt3}{\\sqrt3}=1$.\\<br><br><b>Ответ:</b> 1",
@@ -1260,7 +1260,7 @@
             ]
         },
         {
-            "desc": "Окружности в правильном треугольнике: вписанная окружность",
+            "desc": "Правильный треугольник: высота через вписанную окружность",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M60,135 L200,135 L130,25 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><circle cx=\"130\" cy=\"98\" r=\"37\" fill=\"none\" stroke=\"black\" stroke-width=\"1.5\"/><circle cx=\"130\" cy=\"98\" r=\"2\" fill=\"black\"/><text x=\"135\" y=\"100\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">O</text></svg>",
             "theory_task": "Радиус окружности, вписанной в правильный треугольник, равен $6$. Найдите высоту этого треугольника.",
             "theory_sol": "В правильном треугольнике радиус вписанной окружности равен трети высоты: $r=\\frac{h}{3}$.<br><br>Значит $h=3r=18$.\\<br><br><b>Ответ:</b> 18",
@@ -1293,7 +1293,7 @@
             ]
         },
         {
-            "desc": "Прямоугольный треугольник и описанная окружность",
+            "desc": "Прямоугольный треугольник: радиус описанной окружности",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><circle cx=\"130\" cy=\"90\" r=\"70\" fill=\"none\" stroke=\"black\" stroke-width=\"1.5\"/><path d=\"M60,140 L200,140 L200,65 Z\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><path d=\"M190,140 L190,130 L200,130\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"47\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"205\" y=\"65\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"205\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "Гипотенуза прямоугольного треугольника равна $12$. Найдите радиус окружности, описанной около этого треугольника.",
             "theory_sol": "В прямоугольном треугольнике центр описанной окружности — середина гипотенузы, поэтому $R=\\frac{c}{2}$.<br><br>$R=\\frac{12}{2}=6$.\\<br><br><b>Ответ:</b> 6",
@@ -1326,7 +1326,7 @@
             ]
         },
         {
-            "desc": "Касательная и хорда",
+            "desc": "Окружность: угол между касательной и хордой",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><circle cx=\"110\" cy=\"90\" r=\"58\" fill=\"none\" stroke=\"black\" stroke-width=\"1.5\"/><path d=\"M80,40 L155,125 M20,40 L205,40\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\"/><circle cx=\"110\" cy=\"90\" r=\"2\" fill=\"black\"/><text x=\"113\" y=\"95\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">O</text><text x=\"72\" y=\"38\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"160\" y=\"135\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"210\" y=\"45\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "Хорда $AB$ стягивает дугу окружности в $92^{\\circ}$. Найдите угол между этой хордой и касательной к окружности, проведённой через точку $B$. Ответ дайте в градусах.",
             "theory_sol": "Угол между касательной и хордой равен половине градусной меры дуги, заключённой между ними.<br><br>Искомый угол равен $\\frac{92^{\\circ}}{2}=46^{\\circ}$.\\<br><br><b>Ответ:</b> 46",
