@@ -9,7 +9,7 @@
             "desc": "Прямоугольный треугольник: гипотенуза и sin/cos/tg",
             "svg_code": "<svg width=\"260\" height=\"170\" viewBox=\"0 0 260 170\" overflow=\"visible\"><path d=\"M35,140 L225,140 L145,45 L35,140\" fill=\"none\" stroke=\"black\" stroke-width=\"1.7\" /><path d=\"M138.2,50.9 L144,57.8 L150.8,51.9\" fill=\"none\" stroke=\"black\" stroke-width=\"1.4\"/><text x=\"22\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">A</text><text x=\"230\" y=\"155\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">B</text><text x=\"142\" y=\"35\" font-family=\"Times New Roman\" font-size=\"16\" font-style=\"italic\">C</text></svg>",
             "theory_task": "В треугольнике $ABC$ угол $C$ равен $90^{\\circ}$, $AB=5$, $\\sin A=\\frac{7}{25}$. Найдите $AC$.",
-            "theory_sol": "Так как $AB$ — гипотенуза, $\\sin A=\\frac{BC}{AB}$, значит $BC=AB\\cdot \\sin A=5\\cdot\\frac{7}{25}=\\frac{7}{5}$.<br><br>Найдём $\\cos A$: $\\cos A=\\sqrt{1-\\sin^2 A}=\\sqrt{1-\\frac{49}{625}}=\\frac{24}{25}$.<br><br>Тогда $AC=AB\\cdot \\cos A=5\\cdot\\frac{24}{25}=\\frac{24}{5}=4{,}8$.<br><br><b>Ответ:</b> 4,8",
+            "theory_sol": "Так как $AB$ — гипотенуза, а $AC$ — катет, прилежащий к углу $A$, используем косинус: $\\cos A=\\frac{AC}{AB}$.<br><br>Найдём $\\cos A$ по основному тригонометрическому тождеству:<br>$\\cos A=\\sqrt{1-\\sin^2 A}=\\sqrt{1-\\left(\\frac{7}{25}\\right)^2}=\\sqrt{\\frac{576}{625}}=\\frac{24}{25}$.<br><br>Тогда $AC=AB\\cdot\\cos A=5\\cdot\\frac{24}{25}=\\frac{24}{5}=4{,}8$.<br><br><b>Ответ:</b> 4,8",
             "tasks": [
                 {
                     "text": "В треугольнике $ABC$ угол $C$ равен $90^{\\circ}$, $AB=10$, $\\sin A=0{,}6$. Найдите $AC$.",
