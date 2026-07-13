@@ -698,7 +698,7 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
     <title>Презентация урока</title>
     <base href="https://svetlana18011991.github.io/generator11prof/">
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
-    <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']] } };${window.SCRIPT_END}
+    <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], macros: { tg: '\\\\operatorname{tg}', ctg: '\\\\operatorname{ctg}', arctg: '\\\\operatorname{arctg}', arcctg: '\\\\operatorname{arcctg}' } } };${window.SCRIPT_END}
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">${window.SCRIPT_END}
     <style>
         body, html { margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
@@ -822,6 +822,7 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
         let answeredMap = {};
         let slideStartTime = Date.now();
         let presentationStartTime = Date.now();
+        let presentationEndTime = null;
         let totalTimerSeconds = ${timerMinutes} > 0 ? ${timerMinutes} * 60 : 0;
         let timerInterval = null;
         let resultsRendered = false;
@@ -1047,6 +1048,8 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
             let summary = document.getElementById('results-summary');
             let html = '';
             let correctCount = 0;
+            if (presentationEndTime === null) presentationEndTime = Date.now();
+            let totalWorkSeconds = Math.max(0, Math.floor((presentationEndTime - presentationStartTime) / 1000));
 
             userResults
                 .sort((a, b) => a.taskNum - b.taskNum)
@@ -1070,7 +1073,7 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
                 });
 
             if (summary) {
-                summary.textContent = 'Верно: ' + correctCount + ' из ' + userResults.length;
+                summary.innerHTML = 'Верно: ' + correctCount + ' из ' + userResults.length + '<div style="margin-top:10px; color:' + '${accentColor}' + '; font-size:0.95em;">⏱ Общее время работы: ' + formatTime(totalWorkSeconds) + '</div>';
             }
 
             tbody.innerHTML = html;
