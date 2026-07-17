@@ -274,6 +274,7 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
         <div id="drawPanel" onclick="event.stopPropagation();">
             <div id="drawTools">
                 <button type="button" data-tool-btn="pointer" title="Указатель">👆</button>
+                <button type="button" data-tool-btn="zoom" title="Лупа: нажмите на чертёж, чтобы открыть его крупно">🔍</button>
                 <button type="button" data-tool-btn="pen" title="Карандаш">🖊️</button>
                 <button type="button" id="undoBattle" title="Отменить">↶</button>
                 <button type="button" id="redoBattle" title="Повторить">↷</button>
@@ -750,6 +751,49 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
         fitQuestionPanel();
     }
 
+
+        window.openDraftVisualZoom = window.openDraftVisualZoom || function(sourceEl) {
+            if (!sourceEl) return;
+            const visual = sourceEl.matches && sourceEl.matches('svg,img,picture,canvas') ? sourceEl : sourceEl.querySelector('svg,img,picture,canvas');
+            if (!visual) return;
+            let overlay = document.getElementById('draftVisualZoomOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'draftVisualZoomOverlay';
+                overlay.style.cssText = 'position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
+                overlay.innerHTML = '<div style="position:relative;width:min(1100px,96vw);height:min(820px,90vh);background:#fff;border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.55);overflow:hidden;display:flex;flex-direction:column;"><div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;background:#eef6ff;border-bottom:1px solid #c9dff2;"><button type="button" data-z="out" title="Уменьшить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">−</button><button type="button" data-z="reset" title="Исходный размер" style="font-size:16px;border:1px solid #90caf9;background:#fff;border-radius:8px;height:36px;cursor:pointer;">100%</button><button type="button" data-z="in" title="Увеличить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">+</button><button type="button" data-z="close" title="Закрыть" style="margin-left:auto;font-size:24px;border:1px solid #ffcc80;background:#fff3e0;color:#e65100;border-radius:8px;width:38px;height:36px;cursor:pointer;">×</button></div><div data-z="viewport" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;background:#fff;"><div data-z="content" style="transform-origin:center center;transition:transform .12s ease;"></div></div></div>';
+                document.body.appendChild(overlay);
+                const close = () => { overlay.style.display = 'none'; document.body.style.overflow = overlay.dataset.oldOverflow || ''; };
+                overlay.addEventListener('click', e => { if (e.target === overlay || e.target.closest('[data-z="close"]')) close(); });
+                document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.style.display !== 'none') close(); });
+                overlay.querySelector('[data-z="in"]').addEventListener('click', () => { overlay._scale = Math.min(4, (overlay._scale || 1) + .25); overlay._apply(); });
+                overlay.querySelector('[data-z="out"]').addEventListener('click', () => { overlay._scale = Math.max(.5, (overlay._scale || 1) - .25); overlay._apply(); });
+                overlay.querySelector('[data-z="reset"]').addEventListener('click', () => { overlay._scale = 1; overlay._apply(); });
+                overlay.querySelector('[data-z="viewport"]').addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); overlay._scale = Math.max(.5, Math.min(4, (overlay._scale || 1) + (e.deltaY < 0 ? .15 : -.15))); overlay._apply(); }, {passive:false});
+            }
+            const content = overlay.querySelector('[data-z="content"]');
+            content.innerHTML = '';
+            let clone;
+            if (visual.tagName && visual.tagName.toLowerCase() === 'canvas') {
+                clone = document.createElement('img');
+                try { clone.src = visual.toDataURL('image/png'); } catch(e) { return; }
+            } else clone = visual.cloneNode(true);
+            clone.removeAttribute && clone.removeAttribute('id');
+            clone.style.cssText = 'display:block;max-width:none!important;max-height:none!important;width:auto!important;height:auto!important;min-width:min(760px,82vw);object-fit:contain;margin:auto;';
+            if (clone.tagName && clone.tagName.toLowerCase() === 'svg') {
+                const vb = clone.getAttribute('viewBox');
+                if (!clone.getAttribute('width')) clone.setAttribute('width', vb ? Math.max(760, Number(vb.split(/\\s+/)[2]) * 2) : 900);
+                if (!clone.getAttribute('height') && vb) clone.setAttribute('height', Math.max(520, Number(vb.split(/\\s+/)[3]) * 2));
+            }
+            content.appendChild(clone);
+            overlay._scale = 1;
+            overlay._apply = () => { content.style.transform = 'scale(' + overlay._scale + ')'; overlay.querySelector('[data-z="reset"]').textContent = Math.round(overlay._scale * 100) + '%'; };
+            overlay._apply();
+            overlay.dataset.oldOverflow = document.body.style.overflow || '';
+            document.body.style.overflow = 'hidden';
+            overlay.style.display = 'flex';
+        };
+
     // --- Черновик для Баттла ЕГЭ (унифицированный холст) ---
     const draftState = { canvas:null, ctx:null, drawing:false, tool:'pen', startX:0, startY:0, snapshot:null, undo:[], redo:[] };
 
@@ -828,6 +872,8 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
     function setDraftTool(tool){
         draftState.tool = tool || 'pen';
         document.querySelectorAll('#drawTools [data-tool-btn]').forEach(b => b.classList.toggle('active', b.dataset.toolBtn === draftState.tool));
+        const canvas = $('canvas-battle');
+        if (canvas) canvas.style.cursor = draftState.tool === 'pointer' ? 'move' : (draftState.tool === 'zoom' ? 'zoom-in' : 'crosshair');
     }
 
     function posOnCanvas(e){
@@ -840,6 +886,15 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
         const ctx = draftState.ctx, canvas = draftState.canvas;
         if(!ctx || !canvas || draftState.tool === 'pointer') return;
         e.preventDefault();
+        if (draftState.tool === 'zoom') {
+            const box = $('draftTaskStatement');
+            const visual = box && box.querySelector('svg,img,picture,canvas');
+            if (visual) {
+                const r = visual.getBoundingClientRect();
+                if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) window.openDraftVisualZoom(visual);
+            }
+            return;
+        }
         const p = posOnCanvas(e);
         draftState.drawing = true;
         draftState.startX = p.x; draftState.startY = p.y;

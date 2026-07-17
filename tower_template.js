@@ -78,7 +78,7 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
             <canvas id="c"></canvas>
             <div id="hud"><div class="pill" id="leftPill">Башня: <b id="heightTxt">0</b><span style="opacity:.5">|</span>Осталось: <b id="remainNum">9</b></div><div id="progressWrap">Прогресс<div id="bar"><div></div></div><span id="pct">0%</span></div><div class="pill" id="scorePill">Счёт: <b id="scoreNum">0</b></div></div>
             <button id="nextBtn" disabled>Далее →</button>
-            <div id="overlay" role="dialog" aria-modal="true"><div id="card"><div id="cardHeader"><div><div id="title">Вопрос</div><div id="q">...</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><div style="display:flex; align-items:center; gap:10px;"><button id="draftBtn" type="button" title="Открыть черновик">✏️</button><div id="badge">1 / 9</div></div></div></div><div id="answers"></div><div id="inputRow"><input id="ansInput" type="text" placeholder="Введите ответ..." autocomplete="off" /><button id="submit">ОК</button></div><div id="msg"></div><div id="hint">Верно → блок опускается и становится этажом (+100). Неверно → обугливание, взрыв и исчезает.</div></div><div id="drawPanel" onclick="event.stopPropagation();"><div id="drawTools"><button type="button" onclick="window.setTool('tower', 'pointer')" title="Указатель (Перетаскивание)">👆</button><button type="button" onclick="window.setTool('tower', 'pen')" title="Карандаш">🖊️</button><select id="tool-select-tower" onchange="window.setTool('tower', this.value)"><option value="" disabled selected hidden>🔺 Фигуры</option><option value="line">📏 Прямая</option><option value="vector">↗️ Вектор</option><option value="circle">⭕ Окружность</option><option value="triangle">🔺 Треугольник</option><option value="cylinder">🛢️ Цилиндр</option><option value="cone">🍦 Конус</option><option value="sphere">🔮 Сфера</option></select><input type="color" id="color-tower" value="#003399" title="Цвет"><input type="range" id="size-tower" min="1" max="15" value="3" title="Толщина линии"><button type="button" onclick="window.setTool('tower', 'eraser')" title="Ластик">🧽</button><div style="flex-grow:1;"></div><button type="button" onclick="window.clearCanvas('tower')" title="Очистить всё">🗑️</button><button id="drawClose" type="button" title="Закрыть">×</button><input type="hidden" id="tool-tower" value="pen"></div><div id="drawCanvasWrap"><div id="towerDraftDiagram"></div><canvas id="canvas-tower"></canvas></div></div></div>
+            <div id="overlay" role="dialog" aria-modal="true"><div id="card"><div id="cardHeader"><div><div id="title">Вопрос</div><div id="q">...</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><div style="display:flex; align-items:center; gap:10px;"><button id="draftBtn" type="button" title="Открыть черновик">✏️</button><div id="badge">1 / 9</div></div></div></div><div id="answers"></div><div id="inputRow"><input id="ansInput" type="text" placeholder="Введите ответ..." autocomplete="off" /><button id="submit">ОК</button></div><div id="msg"></div><div id="hint">Верно → блок опускается и становится этажом (+100). Неверно → обугливание, взрыв и исчезает.</div></div><div id="drawPanel" onclick="event.stopPropagation();"><div id="drawTools"><button type="button" onclick="window.setTool('tower', 'pointer')" title="Указатель (Перетаскивание)">👆</button><button type="button" onclick="window.setTool('tower', 'zoom')" title="Лупа: нажмите на чертёж, чтобы открыть его крупно">🔍</button><button type="button" onclick="window.setTool('tower', 'pen')" title="Карандаш">🖊️</button><select id="tool-select-tower" onchange="window.setTool('tower', this.value)"><option value="" disabled selected hidden>🔺 Фигуры</option><option value="line">📏 Прямая</option><option value="vector">↗️ Вектор</option><option value="circle">⭕ Окружность</option><option value="triangle">🔺 Треугольник</option><option value="cylinder">🛢️ Цилиндр</option><option value="cone">🍦 Конус</option><option value="sphere">🔮 Сфера</option></select><input type="color" id="color-tower" value="#003399" title="Цвет"><input type="range" id="size-tower" min="1" max="15" value="3" title="Толщина линии"><button type="button" onclick="window.setTool('tower', 'eraser')" title="Ластик">🧽</button><div style="flex-grow:1;"></div><button type="button" onclick="window.clearCanvas('tower')" title="Очистить всё">🗑️</button><button id="drawClose" type="button" title="Закрыть">×</button><input type="hidden" id="tool-tower" value="pen"></div><div id="drawCanvasWrap"><div id="towerDraftDiagram"></div><canvas id="canvas-tower"></canvas></div></div></div>
             <div id="start"><div id="startCard"><h1>Башня знаний</h1><p></p><button id="play">▶ Начать</button><div id="err" style="display:none;"></div></div></div>
             <div id="finish"><div id="finishCard"><div id="finishTitle">Отлично!</div><div id="finishText">Заработано <b id="finishScore">0</b> баллов из 900</div><div id="finishCustomText" style="color:var(--text); margin-bottom:14px; font-size:16px; line-height:1.4; display:none;"></div><div id="stats"><div class="stat"><b id="stCorrect">0</b><div>правильных ответов</div></div><div class="stat"><b id="stWrong">0</b><div>неправильных ответов</div></div><div class="stat"><b id="stHeight">0</b><div>блоков в башне</div></div></div><button id="restart">↻ Сыграть ещё раз</button></div></div>
         </div>
@@ -174,6 +174,49 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
                 towerDraftDiagram.style.display = "none";
             }
         }
+
+
+        window.openDraftVisualZoom = window.openDraftVisualZoom || function(sourceEl) {
+            if (!sourceEl) return;
+            const visual = sourceEl.matches && sourceEl.matches('svg,img,picture,canvas') ? sourceEl : sourceEl.querySelector('svg,img,picture,canvas');
+            if (!visual) return;
+            let overlay = document.getElementById('draftVisualZoomOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'draftVisualZoomOverlay';
+                overlay.style.cssText = 'position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
+                overlay.innerHTML = '<div style="position:relative;width:min(1100px,96vw);height:min(820px,90vh);background:#fff;border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.55);overflow:hidden;display:flex;flex-direction:column;"><div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;background:#eef6ff;border-bottom:1px solid #c9dff2;"><button type="button" data-z="out" title="Уменьшить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">−</button><button type="button" data-z="reset" title="Исходный размер" style="font-size:16px;border:1px solid #90caf9;background:#fff;border-radius:8px;height:36px;cursor:pointer;">100%</button><button type="button" data-z="in" title="Увеличить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">+</button><button type="button" data-z="close" title="Закрыть" style="margin-left:auto;font-size:24px;border:1px solid #ffcc80;background:#fff3e0;color:#e65100;border-radius:8px;width:38px;height:36px;cursor:pointer;">×</button></div><div data-z="viewport" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;background:#fff;"><div data-z="content" style="transform-origin:center center;transition:transform .12s ease;"></div></div></div>';
+                document.body.appendChild(overlay);
+                const close = () => { overlay.style.display = 'none'; document.body.style.overflow = overlay.dataset.oldOverflow || ''; };
+                overlay.addEventListener('click', e => { if (e.target === overlay || e.target.closest('[data-z="close"]')) close(); });
+                document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.style.display !== 'none') close(); });
+                overlay.querySelector('[data-z="in"]').addEventListener('click', () => { overlay._scale = Math.min(4, (overlay._scale || 1) + .25); overlay._apply(); });
+                overlay.querySelector('[data-z="out"]').addEventListener('click', () => { overlay._scale = Math.max(.5, (overlay._scale || 1) - .25); overlay._apply(); });
+                overlay.querySelector('[data-z="reset"]').addEventListener('click', () => { overlay._scale = 1; overlay._apply(); });
+                overlay.querySelector('[data-z="viewport"]').addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); overlay._scale = Math.max(.5, Math.min(4, (overlay._scale || 1) + (e.deltaY < 0 ? .15 : -.15))); overlay._apply(); }, {passive:false});
+            }
+            const content = overlay.querySelector('[data-z="content"]');
+            content.innerHTML = '';
+            let clone;
+            if (visual.tagName && visual.tagName.toLowerCase() === 'canvas') {
+                clone = document.createElement('img');
+                try { clone.src = visual.toDataURL('image/png'); } catch(e) { return; }
+            } else clone = visual.cloneNode(true);
+            clone.removeAttribute && clone.removeAttribute('id');
+            clone.style.cssText = 'display:block;max-width:none!important;max-height:none!important;width:auto!important;height:auto!important;min-width:min(760px,82vw);object-fit:contain;margin:auto;';
+            if (clone.tagName && clone.tagName.toLowerCase() === 'svg') {
+                const vb = clone.getAttribute('viewBox');
+                if (!clone.getAttribute('width')) clone.setAttribute('width', vb ? Math.max(760, Number(vb.split(/\\s+/)[2]) * 2) : 900);
+                if (!clone.getAttribute('height') && vb) clone.setAttribute('height', Math.max(520, Number(vb.split(/\\s+/)[3]) * 2));
+            }
+            content.appendChild(clone);
+            overlay._scale = 1;
+            overlay._apply = () => { content.style.transform = 'scale(' + overlay._scale + ')'; overlay.querySelector('[data-z="reset"]').textContent = Math.round(overlay._scale * 100) + '%'; };
+            overlay._apply();
+            overlay.dataset.oldOverflow = document.body.style.overflow || '';
+            document.body.style.overflow = 'hidden';
+            overlay.style.display = 'flex';
+        };
 
         // Черновик: логика один-в-один как в презентациях, только панель открывается справа
         window.mainCanvases = window.mainCanvases || {};
@@ -336,6 +379,16 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
             function startDraw(e) {
                 isDrawing = true; let p = getPos(e);
                 let tool = document.getElementById('tool-' + id).value; let color = document.getElementById('color-' + id).value; let size = document.getElementById('size-' + id).value;
+                if (tool === 'zoom') {
+                    isDrawing = false;
+                    const visual = towerDraftDiagram && towerDraftDiagram.querySelector('svg,img,picture,canvas');
+                    if (visual) {
+                        const r = visual.getBoundingClientRect();
+                        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) window.openDraftVisualZoom(visual);
+                    }
+                    if (e.cancelable) e.preventDefault();
+                    return;
+                }
                 if (tool === 'pointer') {
                     let hitHandle = false;
                     if (draggingObj) {
@@ -401,6 +454,7 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
             if (canvas) {
                 if (tool === 'eraser') canvas.style.cursor = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22><text y=%2220%22 font-size=%2220%22>🧽</text></svg>') 0 20, auto";
                 else if (tool === 'pointer') canvas.style.cursor = 'move';
+                else if (tool === 'zoom') canvas.style.cursor = 'zoom-in';
                 else canvas.style.cursor = 'crosshair';
             }
         };
