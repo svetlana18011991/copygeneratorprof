@@ -1,10 +1,11 @@
 (function() {
     window.extraDatabase = window.extraDatabase || {};
 
-    // Сначала берём изображение из встроенного набора ресурсов (если оно там есть).
-    // Иначе формируем абсолютный адрес относительно страницы генератора.
-    // Поэтому картинка продолжает работать и в скачанной презентации/игре,
-    // пока доступен сайт GitHub Pages.
+    // ВАЖНО: z1/z2 уже заняты в игре, а f1-f4 — оформлением презентации.
+    // Поэтому чертежи дополнительных прототипов 1 и 2 используют уникальные имена:
+    // task3_z1.png ... task3_z6.png и task3_f1.png ... task3_f6.png.
+    const TASK3_ASSET_VERSION = 'task3-extra-20260718-3';
+
     function task3ExtraAssetUrl(fileName) {
         try {
             if (window.EMBEDDED_ASSETS && window.EMBEDDED_ASSETS[fileName]) {
@@ -13,46 +14,101 @@
             const base = (typeof document !== 'undefined' && document.baseURI)
                 ? document.baseURI
                 : ((typeof location !== 'undefined' && location.href) ? location.href : '');
-            return base ? new URL(fileName, base).href : fileName;
+            const url = base ? new URL(fileName, base).href : fileName;
+            const separator = url.includes('?') ? '&' : '?';
+            return url + separator + 'v=' + encodeURIComponent(TASK3_ASSET_VERSION);
         } catch (e) {
             return fileName;
         }
     }
 
-    function task3ExtraImage(fileName, widthPx = 330, altText = 'Чертёж к заданию') {
-        const src = String(task3ExtraAssetUrl(fileName))
-            .replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;');
-        const alt = String(altText)
+    function task3ExtraEscape(value) {
+        return String(value == null ? '' : value)
             .replace(/&/g, '&amp;')
             .replace(/"/g, '&quot;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
-        return `<img src="${src}" alt="${alt}" loading="eager" decoding="async" ` +
-            `style="display:block;width:${widthPx}px;max-width:100%;height:auto;object-fit:contain;margin:0 auto;">`;
     }
 
-    // Устойчивый компактный чертёж для прототипа 6.
-    // Прямые координаты и фиксированный viewBox — как в основном task3.js.
-    const task3ExtraLiquidCylinder = `<svg width="220" height="230" viewBox="0 0 220 230" ` +
-        `style="display:block;max-width:100%;height:auto;margin:0 auto;" overflow="visible" ` +
-        `xmlns="http://www.w3.org/2000/svg">` +
-        `<rect x="0" y="0" width="220" height="230" fill="white"/>` +
-        `<path d="M42.5 50 L42.5 190 M177.5 50 L177.5 190" fill="none" stroke="black" stroke-width="2.2"/>` +
-        `<ellipse cx="110" cy="50" rx="67.5" ry="17.5" fill="white" stroke="black" stroke-width="2.2"/>` +
-        `<path d="M42.5 117.5 C42.5 127.2 72.7 135 110 135 C147.3 135 177.5 127.2 177.5 117.5 ` +
-        `L177.5 190 C177.5 199.7 147.3 207.5 110 207.5 C72.7 207.5 42.5 199.7 42.5 190 Z" ` +
-        `fill="#dddddd" stroke="none"/>` +
-        `<ellipse cx="110" cy="117.5" rx="67.5" ry="17.5" fill="#dddddd" stroke="black" stroke-width="2.2"/>` +
-        `<path d="M42.5 190 C42.5 199.7 72.7 207.5 110 207.5 C147.3 207.5 177.5 199.7 177.5 190" ` +
-        `fill="none" stroke="black" stroke-width="2.2"/>` +
-        `<path d="M42.5 190 C42.5 180.3 72.7 172.5 110 172.5 C147.3 172.5 177.5 180.3 177.5 190" ` +
-        `fill="none" stroke="black" stroke-width="1.5" stroke-dasharray="6 6"/>` +
+    // Поддерживает несколько безопасных имён для одного файла.
+    // При ошибке загрузки пробует следующий адрес; в конце показывает понятное сообщение.
+    function task3ExtraImage(fileNames, widthPx = 330, altText = 'Чертёж к заданию') {
+        const names = Array.isArray(fileNames) ? fileNames : [fileNames];
+        const sources = names.map(task3ExtraAssetUrl);
+        const encodedSources = task3ExtraEscape(JSON.stringify(sources));
+        const src = task3ExtraEscape(sources[0] || '');
+        const alt = task3ExtraEscape(altText);
+        const missing = task3ExtraEscape('Не найден файл: ' + names.join(' или '));
+        return `<span class="task3-extra-image-wrap" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:130px;">` +
+            `<img src="${src}" alt="${alt}" data-task3-sources="${encodedSources}" data-task3-index="0" ` +
+            `loading="eager" decoding="async" ` +
+            `onerror="(function(img){var a=[];try{a=JSON.parse(img.dataset.task3Sources||'[]')}catch(e){};var i=(parseInt(img.dataset.task3Index||'0',10)+1);if(i<a.length){img.dataset.task3Index=String(i);img.src=a[i];return;}var p=img.parentNode;if(p){p.innerHTML='<div style=&quot;border:2px dashed #d9534f;border-radius:10px;padding:14px;color:#a12622;background:#fff7f7;font:600 14px/1.35 system-ui;text-align:center;max-width:320px;&quot;>${missing}</div>';}})(this)" ` +
+            `style="display:block;width:${widthPx}px;max-width:100%;height:auto;object-fit:contain;margin:0 auto;">` +
+            `</span>`;
+    }
+
+    const task3SvgAttrs = `fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+    const task3SvgDash = `fill="none" stroke="black" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"`;
+
+    // Простые SVG без transform/clipPath — по той же устойчивой схеме, что в основном task3.js.
+    const task3ExtraCube = `<svg width="250" height="205" viewBox="0 0 250 205" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path ${task3SvgAttrs} d="M35 170 L165 170 L165 45 L35 45 Z M75 135 L205 135 L205 10 L75 10 Z M35 170 L75 135 M165 170 L205 135 M165 45 L205 10 M35 45 L75 10"/>` +
+        `<path ${task3SvgDash} d="M75 135 L75 10 M75 135 L205 135"/></svg>`;
+
+    const task3ExtraLiquidCylinder = `<svg width="245" height="250" viewBox="0 0 245 250" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path d="M42 46 L42 206 M203 46 L203 206" ${task3SvgAttrs}/>` +
+        `<ellipse cx="122.5" cy="46" rx="80.5" ry="21" fill="white" stroke="black" stroke-width="2"/>` +
+        `<path d="M42 130 C42 141.6 78 151 122.5 151 C167 151 203 141.6 203 130 L203 206 C203 217.6 167 227 122.5 227 C78 227 42 217.6 42 206 Z" fill="#d9d9d9" stroke="none"/>` +
+        `<ellipse cx="122.5" cy="130" rx="80.5" ry="21" fill="#d9d9d9" stroke="black" stroke-width="2"/>` +
+        `<path d="M42 206 C42 217.6 78 227 122.5 227 C167 227 203 217.6 203 206" ${task3SvgAttrs}/>` +
+        `<path d="M42 206 C42 194.4 78 185 122.5 185 C167 185 203 194.4 203 206" ${task3SvgDash}/>` +
+        `</svg>`;
+
+    const task3ExtraTwoCylinders = `<svg width="360" height="245" viewBox="0 0 360 245" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<g><path d="M28 74 L28 202 M142 74 L142 202" ${task3SvgAttrs}/><ellipse cx="85" cy="74" rx="57" ry="15" fill="white" stroke="black" stroke-width="2"/><path d="M28 202 C28 210 53.5 217 85 217 C116.5 217 142 210 142 202" ${task3SvgAttrs}/><path d="M28 202 C28 194 53.5 187 85 187 C116.5 187 142 194 142 202" ${task3SvgDash}/></g>` +
+        `<g><path d="M196 38 L196 202 M340 38 L340 202" ${task3SvgAttrs}/><ellipse cx="268" cy="38" rx="72" ry="19" fill="white" stroke="black" stroke-width="2"/><path d="M196 202 C196 212 228 220 268 220 C308 220 340 212 340 202" ${task3SvgAttrs}/><path d="M196 202 C196 192 228 184 268 184 C308 184 340 192 340 202" ${task3SvgDash}/></g>` +
+        `</svg>`;
+
+    const task3ExtraTriPrismVessel = `<svg width="310" height="255" viewBox="0 0 310 255" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path d="M45 42 L118 105 L263 58 Z M45 42 L45 194 M118 105 L118 235 M263 58 L263 194" ${task3SvgAttrs}/>` +
+        `<path d="M45 194 L118 235 L263 194" ${task3SvgAttrs}/>` +
+        `<path d="M45 194 L263 194" ${task3SvgDash}/>` +
+        `<path d="M45 126 L118 174 L263 139 L263 194 L118 235 L45 194 Z" fill="#d7d7d7" stroke="none"/>` +
+        `<path d="M45 126 L118 174 L263 139" ${task3SvgAttrs}/>` +
+        `<path d="M45 126 L263 139" ${task3SvgDash}/>` +
+        `</svg>`;
+
+    const task3ExtraCylinder = `<svg width="230" height="245" viewBox="0 0 230 245" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path d="M38 48 L38 205 M192 48 L192 205" ${task3SvgAttrs}/><ellipse cx="115" cy="48" rx="77" ry="20" fill="white" stroke="black" stroke-width="2"/>` +
+        `<path d="M38 205 C38 216 72.5 225 115 225 C157.5 225 192 216 192 205" ${task3SvgAttrs}/><path d="M38 205 C38 194 72.5 185 115 185 C157.5 185 192 194 192 205" ${task3SvgDash}/></svg>`;
+
+    const task3ExtraCone = `<svg width="240" height="255" viewBox="0 0 240 255" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path d="M35 210 C35 221 73 230 120 230 C167 230 205 221 205 210 M35 210 L120 28 L205 210" ${task3SvgAttrs}/>` +
+        `<path d="M35 210 C35 199 73 190 120 190 C167 190 205 199 205 210 M120 28 L120 210" ${task3SvgDash}/></svg>`;
+
+    const task3ExtraSphere = `<svg width="230" height="230" viewBox="0 0 230 230" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<circle cx="115" cy="115" r="88" ${task3SvgAttrs}/><path d="M27 115 C27 93 66 76 115 76 C164 76 203 93 203 115" ${task3SvgAttrs}/><path d="M27 115 C27 137 66 154 115 154 C164 154 203 137 203 115" ${task3SvgDash}/></svg>`;
+
+    const task3ExtraRhombusPrism = `<svg width="285" height="245" viewBox="0 0 285 245" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path d="M28 205 L170 205 L250 160 L108 160 Z M28 60 L170 60 L250 15 L108 15 Z M28 205 L28 60 M170 205 L170 60 M250 160 L250 15 M108 160 L108 15" ${task3SvgAttrs}/>` +
+        `<path d="M28 205 L250 160 M170 205 L108 160 M108 160 L108 15" ${task3SvgDash}/></svg>`;
+
+    const task3ExtraPyramid = `<svg width="285" height="245" viewBox="0 0 285 245" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path d="M30 205 L188 205 L255 155 L96 155 Z M142 24 L30 205 M142 24 L188 205 M142 24 L255 155" ${task3SvgAttrs}/>` +
+        `<path d="M142 24 L96 155 M142 24 L142 180" ${task3SvgDash}/></svg>`;
+
+    const task3ExtraTetra = `<svg width="250" height="235" viewBox="0 0 250 235" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path d="M30 205 L215 190 L102 145 Z M132 22 L30 205 M132 22 L215 190" ${task3SvgAttrs}/><path d="M132 22 L102 145" ${task3SvgDash}/></svg>`;
+
+    const task3ExtraHexPrism = `<svg width="320" height="255" viewBox="0 0 320 255" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path d="M35 190 L88 215 L180 215 L235 190 L180 165 L88 165 Z M35 62 L88 87 L180 87 L235 62 L180 37 L88 37 Z M35 190 L35 62 M88 215 L88 87 M180 215 L180 87 M235 190 L235 62 M180 165 L180 37 M88 165 L88 37" ${task3SvgAttrs}/>` +
+        `<path d="M88 165 L180 215 M88 215 L180 37" ${task3SvgDash}/>` +
+        `<text x="77" y="235" font-family="Times New Roman" font-size="18" font-style="italic">B</text><text x="188" y="34" font-family="Times New Roman" font-size="18" font-style="italic">E₁</text>` +
         `</svg>`;
 
     const task3Extra = {
     "title": "Дополнительно",
-    "source": "27 дополнительных прототипов. Внешние PNG подгружаются из корня сайта; остальные чертежи встроены в файл.",
+    "source": "27 дополнительных прототипов. Конфликтующие имена z/f заменены на task3_z/task3_f; простые чертежи встроены как устойчивые SVG.",
     "prototypes": [
         {
             "desc": "Прототип 1. Площадь поверхности составного многогранника",
@@ -823,29 +879,48 @@
     ]
 };
 
-    // Прототипы 1–2: у каждой задачи свой файл.
-    task3Extra.prototypes[0].svg_code = task3ExtraImage('z1.png', 360, 'Составной многогранник — прототип 1');
+    // Прототипы 1–2. Не используем z1/f1: эти имена заняты другими ресурсами сайта.
+    task3Extra.prototypes[0].svg_code = task3ExtraImage('task3_z1.png', 360, 'Составной многогранник — пример прототипа 1');
     task3Extra.prototypes[0].tasks.forEach((task, index) => {
-        task.svg_code = task3ExtraImage(`z${index + 2}.png`, 330, `Составной многогранник z${index + 2}`);
+        const n = index + 2;
+        task.svg_code = task3ExtraImage(`task3_z${n}.png`, 340, `Составной многогранник — вариант z${n}`);
     });
 
-    task3Extra.prototypes[1].svg_code = task3ExtraImage('f1.png', 360, 'Составной многогранник — прототип 2');
+    task3Extra.prototypes[1].svg_code = task3ExtraImage('task3_f1.png', 360, 'Составной многогранник — пример прототипа 2');
     task3Extra.prototypes[1].tasks.forEach((task, index) => {
-        task.svg_code = task3ExtraImage(`f${index + 2}.png`, 330, `Составной многогранник f${index + 2}`);
+        const n = index + 2;
+        task.svg_code = task3ExtraImage(`task3_f${n}.png`, 340, `Составной многогранник — вариант f${n}`);
     });
 
-    // Прототип 6: без растянутого SVG, полученного конвертацией TikZ.
+    // Устойчивые встроенные чертежи: без Base64, transform и повторяющихся id.
+    task3Extra.prototypes[2].svg_code = task3ExtraCube;
+    task3Extra.prototypes[3].svg_code = task3ExtraCube;
+    task3Extra.prototypes[4].svg_code = task3ExtraCube;
     task3Extra.prototypes[5].svg_code = task3ExtraLiquidCylinder;
+    task3Extra.prototypes[6].svg_code = task3ExtraTwoCylinders;
+    task3Extra.prototypes[7].svg_code = task3ExtraTriPrismVessel;
 
-    // Файлы лежат в корне репозитория рядом с index.html.
-    task3Extra.prototypes[8].svg_code  = task3ExtraImage('про.png', 300, 'Цилиндр в правильной четырёхугольной призме');
-    task3Extra.prototypes[9].svg_code  = task3ExtraImage('proto11.png', 300, 'Цилиндр в правильной шестиугольной призме');
-    task3Extra.prototypes[10].svg_code = task3ExtraImage('tri_cyl.png', 310, 'Правильная треугольная призма, вписанная в цилиндр');
-    task3Extra.prototypes[15].svg_code = task3ExtraImage('кпкп.png', 300, 'Куб, описанный около сферы');
-    task3Extra.prototypes[18].svg_code = task3ExtraImage('рто.png', 300, 'Прямая треугольная призма');
-    task3Extra.prototypes[19].svg_code = task3ExtraImage('рто.png', 300, 'Прямая треугольная призма');
-    task3Extra.prototypes[24].svg_code = task3ExtraImage('tetra_mid.png', 320, 'Многогранник из середин рёбер тетраэдра');
-    task3Extra.prototypes[26].svg_code = task3ExtraImage('prism_diag.png', 320, 'Диагонали правильной четырёхугольной призмы');
+    // Внешние файлы с уникальными безопасными именами; старые имена оставлены только как запасной вариант.
+    task3Extra.prototypes[8].svg_code  = task3ExtraImage(['task3_square_prism_cylinder.png', 'про.png'], 310, 'Цилиндр в правильной четырёхугольной призме');
+    task3Extra.prototypes[9].svg_code  = task3ExtraImage(['task3_hex_prism_cylinder.png', 'proto11.png'], 310, 'Цилиндр в правильной шестиугольной призме');
+    task3Extra.prototypes[10].svg_code = task3ExtraImage(['task3_tri_prism_in_cylinder.png', 'tri_cyl.png'], 320, 'Правильная треугольная призма, вписанная в цилиндр');
+
+    task3Extra.prototypes[11].svg_code = task3ExtraCylinder;
+    task3Extra.prototypes[12].svg_code = task3ExtraCone;
+    task3Extra.prototypes[13].svg_code = task3ExtraCone;
+    task3Extra.prototypes[14].svg_code = task3ExtraSphere;
+    task3Extra.prototypes[15].svg_code = task3ExtraImage(['task3_sphere_in_cube.png', 'кпкп.png'], 310, 'Куб, описанный около сферы');
+    task3Extra.prototypes[16].svg_code = task3ExtraRhombusPrism;
+    task3Extra.prototypes[17].svg_code = task3ExtraRhombusPrism;
+    task3Extra.prototypes[18].svg_code = task3ExtraImage(['task3_right_tri_prism.png', 'рто.png'], 310, 'Прямая треугольная призма');
+    task3Extra.prototypes[19].svg_code = task3ExtraImage(['task3_right_tri_prism.png', 'рто.png'], 310, 'Прямая треугольная призма');
+    task3Extra.prototypes[20].svg_code = task3ExtraPyramid;
+    task3Extra.prototypes[21].svg_code = task3ExtraPyramid;
+    task3Extra.prototypes[22].svg_code = task3ExtraTetra;
+    task3Extra.prototypes[23].svg_code = task3ExtraTetra;
+    task3Extra.prototypes[24].svg_code = task3ExtraImage(['task3_tetra_mid.png', 'tetra_mid.png'], 330, 'Многогранник из середин рёбер тетраэдра');
+    task3Extra.prototypes[25].svg_code = task3ExtraHexPrism;
+    task3Extra.prototypes[26].svg_code = task3ExtraImage(['task3_prism_diag.png', 'prism_diag.png'], 330, 'Диагонали правильной четырёхугольной призмы');
 
     window.extraDatabase[3] = task3Extra;
     window.extraDatabase["task3"] = task3Extra;
