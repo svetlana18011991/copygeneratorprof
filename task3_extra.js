@@ -4,7 +4,7 @@
     // ВАЖНО: z1/z2 уже заняты в игре, а f1-f4 — оформлением презентации.
     // Поэтому чертежи дополнительных прототипов 1 и 2 используют уникальные имена:
     // task3_z1.png ... task3_z6.png и task3_f1.png ... task3_f6.png.
-    const TASK3_ASSET_VERSION = 'task3-extra-20260718-3';
+    const TASK3_ASSET_VERSION = 'task3-extra-20260718-4';
 
     function task3ExtraAssetUrl(fileName) {
         try {
@@ -69,13 +69,16 @@
         `<g><path d="M196 38 L196 202 M340 38 L340 202" ${task3SvgAttrs}/><ellipse cx="268" cy="38" rx="72" ry="19" fill="white" stroke="black" stroke-width="2"/><path d="M196 202 C196 212 228 220 268 220 C308 220 340 212 340 202" ${task3SvgAttrs}/><path d="M196 202 C196 192 228 184 268 184 C308 184 340 192 340 202" ${task3SvgDash}/></g>` +
         `</svg>`;
 
-    const task3ExtraTriPrismVessel = `<svg width="310" height="255" viewBox="0 0 310 255" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
-        `<path d="M45 42 L118 105 L263 58 Z M45 42 L45 194 M118 105 L118 235 M263 58 L263 194" ${task3SvgAttrs}/>` +
-        `<path d="M45 194 L118 235 L263 194" ${task3SvgAttrs}/>` +
-        `<path d="M45 194 L263 194" ${task3SvgDash}/>` +
-        `<path d="M45 126 L118 174 L263 139 L263 194 L118 235 L45 194 Z" fill="#d7d7d7" stroke="none"/>` +
-        `<path d="M45 126 L118 174 L263 139" ${task3SvgAttrs}/>` +
-        `<path d="M45 126 L263 139" ${task3SvgDash}/>` +
+    // Прототип 8: координаты перенесены буквально из \triPrismVesselPic в исходном LaTeX.
+    // Никакой перспективной "доработки": верх, уровень жидкости и дно имеют исходные точки.
+    const task3ExtraTriPrismVessel = `<svg width="260" height="300" viewBox="20 30 220 270" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
+        `<path d="M40 130 L90 200 L90 280 L40 210 Z" fill="#d9d9d9" stroke="none"/>` +
+        `<path d="M90 200 L220 150 L220 230 L90 280 Z" fill="#d9d9d9" stroke="none"/>` +
+        `<path d="M40 130 L90 200 L220 150 Z" fill="#ededed" stroke="none"/>` +
+        `<path d="M40 210 L220 230 M40 130 L220 150" ${task3SvgDash}/>` +
+        `<path d="M40 50 L90 120 L220 70 Z" ${task3SvgAttrs}/>` +
+        `<path d="M40 50 L40 210 M90 120 L90 280 M220 70 L220 230" ${task3SvgAttrs}/>` +
+        `<path d="M40 130 L90 200 L220 150 M40 210 L90 280 L220 230" ${task3SvgAttrs}/>` +
         `</svg>`;
 
     const task3ExtraCylinder = `<svg width="230" height="245" viewBox="0 0 230 245" style="display:block;max-width:100%;height:auto;margin:0 auto" xmlns="http://www.w3.org/2000/svg">` +
@@ -108,7 +111,7 @@
 
     const task3Extra = {
     "title": "Дополнительно",
-    "source": "27 дополнительных прототипов. Конфликтующие имена z/f заменены на task3_z/task3_f; простые чертежи встроены как устойчивые SVG.",
+    "source": "27 дополнительных прототипов. Прототип 8 восстановлен по исходным TikZ-координатам; внешние изображения уменьшены до 75%, кроме прототипа 27.",
     "prototypes": [
         {
             "desc": "Прототип 1. Площадь поверхности составного многогранника",
@@ -880,16 +883,16 @@
 };
 
     // Прототипы 1–2. Не используем z1/f1: эти имена заняты другими ресурсами сайта.
-    task3Extra.prototypes[0].svg_code = task3ExtraImage('task3_z1.png', 360, 'Составной многогранник — пример прототипа 1');
+    task3Extra.prototypes[0].svg_code = task3ExtraImage('task3_z1.png', 270, 'Составной многогранник — пример прототипа 1');
     task3Extra.prototypes[0].tasks.forEach((task, index) => {
         const n = index + 2;
-        task.svg_code = task3ExtraImage(`task3_z${n}.png`, 340, `Составной многогранник — вариант z${n}`);
+        task.svg_code = task3ExtraImage(`task3_z${n}.png`, 255, `Составной многогранник — вариант z${n}`);
     });
 
-    task3Extra.prototypes[1].svg_code = task3ExtraImage('task3_f1.png', 360, 'Составной многогранник — пример прототипа 2');
+    task3Extra.prototypes[1].svg_code = task3ExtraImage('task3_f1.png', 270, 'Составной многогранник — пример прототипа 2');
     task3Extra.prototypes[1].tasks.forEach((task, index) => {
         const n = index + 2;
-        task.svg_code = task3ExtraImage(`task3_f${n}.png`, 340, `Составной многогранник — вариант f${n}`);
+        task.svg_code = task3ExtraImage(`task3_f${n}.png`, 255, `Составной многогранник — вариант f${n}`);
     });
 
     // Устойчивые встроенные чертежи: без Base64, transform и повторяющихся id.
@@ -901,24 +904,24 @@
     task3Extra.prototypes[7].svg_code = task3ExtraTriPrismVessel;
 
     // Внешние файлы с уникальными безопасными именами; старые имена оставлены только как запасной вариант.
-    task3Extra.prototypes[8].svg_code  = task3ExtraImage(['task3_square_prism_cylinder.png', 'про.png'], 310, 'Цилиндр в правильной четырёхугольной призме');
-    task3Extra.prototypes[9].svg_code  = task3ExtraImage(['task3_hex_prism_cylinder.png', 'proto11.png'], 310, 'Цилиндр в правильной шестиугольной призме');
-    task3Extra.prototypes[10].svg_code = task3ExtraImage(['task3_tri_prism_in_cylinder.png', 'tri_cyl.png'], 320, 'Правильная треугольная призма, вписанная в цилиндр');
+    task3Extra.prototypes[8].svg_code  = task3ExtraImage(['task3_square_prism_cylinder.png', 'про.png'], 233, 'Цилиндр в правильной четырёхугольной призме');
+    task3Extra.prototypes[9].svg_code  = task3ExtraImage(['task3_hex_prism_cylinder.png', 'proto11.png'], 233, 'Цилиндр в правильной шестиугольной призме');
+    task3Extra.prototypes[10].svg_code = task3ExtraImage(['task3_tri_prism_in_cylinder.png', 'tri_cyl.png'], 240, 'Правильная треугольная призма, вписанная в цилиндр');
 
     task3Extra.prototypes[11].svg_code = task3ExtraCylinder;
     task3Extra.prototypes[12].svg_code = task3ExtraCone;
     task3Extra.prototypes[13].svg_code = task3ExtraCone;
     task3Extra.prototypes[14].svg_code = task3ExtraSphere;
-    task3Extra.prototypes[15].svg_code = task3ExtraImage(['task3_sphere_in_cube.png', 'кпкп.png'], 310, 'Куб, описанный около сферы');
+    task3Extra.prototypes[15].svg_code = task3ExtraImage(['task3_sphere_in_cube.png', 'кпкп.png'], 233, 'Куб, описанный около сферы');
     task3Extra.prototypes[16].svg_code = task3ExtraRhombusPrism;
     task3Extra.prototypes[17].svg_code = task3ExtraRhombusPrism;
-    task3Extra.prototypes[18].svg_code = task3ExtraImage(['task3_right_tri_prism.png', 'рто.png'], 310, 'Прямая треугольная призма');
-    task3Extra.prototypes[19].svg_code = task3ExtraImage(['task3_right_tri_prism.png', 'рто.png'], 310, 'Прямая треугольная призма');
+    task3Extra.prototypes[18].svg_code = task3ExtraImage(['task3_right_tri_prism.png', 'рто.png'], 233, 'Прямая треугольная призма');
+    task3Extra.prototypes[19].svg_code = task3ExtraImage(['task3_right_tri_prism.png', 'рто.png'], 233, 'Прямая треугольная призма');
     task3Extra.prototypes[20].svg_code = task3ExtraPyramid;
     task3Extra.prototypes[21].svg_code = task3ExtraPyramid;
     task3Extra.prototypes[22].svg_code = task3ExtraTetra;
     task3Extra.prototypes[23].svg_code = task3ExtraTetra;
-    task3Extra.prototypes[24].svg_code = task3ExtraImage(['task3_tetra_mid.png', 'tetra_mid.png'], 330, 'Многогранник из середин рёбер тетраэдра');
+    task3Extra.prototypes[24].svg_code = task3ExtraImage(['task3_tetra_mid.png', 'tetra_mid.png'], 248, 'Многогранник из середин рёбер тетраэдра');
     task3Extra.prototypes[25].svg_code = task3ExtraHexPrism;
     task3Extra.prototypes[26].svg_code = task3ExtraImage(['task3_prism_diag.png', 'prism_diag.png'], 330, 'Диагонали правильной четырёхугольной призмы');
 
