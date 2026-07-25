@@ -526,30 +526,30 @@
                 {
                     "text": "На диаграмме Эйлера показаны события $A$ и $B$ в некотором случайном эксперименте, в котором 10 равновозможных элементарных событий. Элементарные события показаны точками. Найдите $P(B\\mid A)$ — условную вероятность события $B$ при условии $A$.",
                     "answer": "0,25",
-                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"./y2.jpg?v=20260725-1\" alt=\"Диаграмма Эйлера y2\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
+                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"https://raw.githubusercontent.com/svetlana18011991/copygeneratorprof/main/y2.jpg?v=20260725-2\" alt=\"Диаграмма Эйлера y2\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
                 },
                 {
                     "text": "На диаграмме Эйлера показаны события $A$ и $B$ в некотором случайном эксперименте, в котором 10 равновозможных элементарных событий. Элементарные события показаны точками. Найдите $P(B\\mid A)$ — условную вероятность события $B$ при условии $A$.",
                     "answer": "0,5",
-                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"./y3.jpg?v=20260725-1\" alt=\"Диаграмма Эйлера y3\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
+                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"https://raw.githubusercontent.com/svetlana18011991/copygeneratorprof/main/y3.jpg?v=20260725-2\" alt=\"Диаграмма Эйлера y3\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
                 },
                 {
                     "text": "На диаграмме Эйлера показаны события $A$ и $B$ в некотором случайном эксперименте, в котором 10 равновозможных элементарных событий. Элементарные события показаны точками. Найдите $P(B\\mid A)$ — условную вероятность события $B$ при условии $A$.",
                     "answer": "0,75",
-                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"./y4.jpg?v=20260725-1\" alt=\"Диаграмма Эйлера y4\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
+                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"https://raw.githubusercontent.com/svetlana18011991/copygeneratorprof/main/y4.jpg?v=20260725-2\" alt=\"Диаграмма Эйлера y4\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
                 },
                 {
                     "text": "На диаграмме Эйлера показаны события $A$ и $B$ в некотором случайном эксперименте, в котором 10 равновозможных элементарных событий. Элементарные события показаны точками. Найдите $P(B\\mid A)$ — условную вероятность события $B$ при условии $A$.",
                     "answer": "0,6",
-                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"./y5.jpg?v=20260725-1\" alt=\"Диаграмма Эйлера y5\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
+                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"https://raw.githubusercontent.com/svetlana18011991/copygeneratorprof/main/y5.jpg?v=20260725-2\" alt=\"Диаграмма Эйлера y5\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
                 },
                 {
                     "text": "На диаграмме Эйлера показаны события $A$ и $B$ в некотором случайном эксперименте, в котором 10 равновозможных элементарных событий. Элементарные события показаны точками. Найдите $P(B\\mid A)$ — условную вероятность события $B$ при условии $A$.",
                     "answer": "0,2",
-                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"./y6.jpg?v=20260725-1\" alt=\"Диаграмма Эйлера y6\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
+                    "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"https://raw.githubusercontent.com/svetlana18011991/copygeneratorprof/main/y6.jpg?v=20260725-2\" alt=\"Диаграмма Эйлера y6\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
                 }
             ],
-            "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"./y1.jpg?v=20260725-1\" alt=\"Диаграмма Эйлера y1\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
+            "svg_code": "<div style=\"text-align:center;width:100%;\"><img src=\"https://raw.githubusercontent.com/svetlana18011991/copygeneratorprof/main/y1.jpg?v=20260725-2\" alt=\"Диаграмма Эйлера y1\" style=\"display:block;width:300px;max-width:100%;height:auto;margin:0 auto;\"></div>"
         },
         {
             "desc": "Прототип 21. Отношение вероятностей по формуле Бернулли",
