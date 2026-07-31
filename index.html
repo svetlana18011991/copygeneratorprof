@@ -23,7 +23,10 @@
     <script src="task6.js"></script>
     <script src="task6_extra.js?v=20260730-1"></script>
     <script src="task7.js"></script>
-   <script src="task8.js"></script>
+    <script src="task7_extra.js?v=20260731-1"></script>
+    <script src="task8.js"></script>
+    <script src="task8_extra_images.js?v=20260731-1"></script>
+    <script src="task8_extra.js?v=20260731-1"></script>
     <script src="task9.js"></script>
     <script src="task10.js"></script>
     <script src="assets_base64_1.js"></script>
@@ -1993,7 +1996,10 @@ body.auth-locked > *:not(#passwordGate) {
         let data = getPrototypeData(tid, kind);
         if (!data || !data.prototypes || !data.prototypes[index]) return;
         let p = data.prototypes[index];
-        tooltip.innerHTML = `${p.svg_code || ''}<div style="font-size: 0.9em;">${p.tasks[0].text}</div>`;
+        const previewTask = p.tasks && p.tasks[0] ? p.tasks[0] : null;
+        const previewVisual = (previewTask && previewTask.svg_code) || p.svg_code || '';
+        const previewText = previewTask ? previewTask.text : p.theory_task || '';
+        tooltip.innerHTML = `${previewVisual}<div style="font-size: 0.9em;">${previewText}</div>`;
         if (window.autoFixSVGArrows) window.autoFixSVGArrows(tooltip);
         tooltip.style.display = 'block';
         if (window.MathJax) MathJax.typesetPromise([tooltip]);
