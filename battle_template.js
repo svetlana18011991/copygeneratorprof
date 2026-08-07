@@ -796,7 +796,7 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
         };
 
     // --- Черновик для Баттла ЕГЭ (унифицированный холст) ---
-    const draftState = { canvas:null, ctx:null, drawing:false, tool:'pen', startX:0, startY:0, snapshot:null, undo:[], redo:[] };
+    const draftState = { canvas:null, ctx:null, drawing:false, tool:'pen', startX:0, startY:0, snapshot:null, undo:[], redo:[], points:[] };
 
     function resizeDraftCanvas(){
         const canvas = $('canvas-battle');
@@ -904,6 +904,7 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
             saveDraftState();
             draftState.lastX = p.x;
             draftState.lastY = p.y;
+            draftState.points = draftState.tool === 'highlighter' ? [p] : [];
         }
     }
 
@@ -915,23 +916,59 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
         const color = $('color-battle') ? $('color-battle').value : '#003399';
         const size = $('size-battle') ? Number($('size-battle').value || 3) : 3;
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.globalAlpha = draftState.tool === 'highlighter' ? 0.28 : 1;
-        ctx.lineWidth = draftState.tool === 'eraser' ? size * 3 : (draftState.tool === 'highlighter' ? Math.max(12, size * 4) : size);
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = draftState.tool === 'eraser' ? size * 3 : size;
         ctx.strokeStyle = draftState.tool === 'eraser' ? 'rgba(255,255,255,1)' : color;
         ctx.fillStyle = color;
 
-        if(draftState.tool === 'pen' || draftState.tool === 'highlighter' || draftState.tool === 'eraser'){
+        // Выделитель перерисовываем как ОДИН непрерывный штрих поверх снимка холста.
+        // Иначе отдельные полупрозрачные сегменты накладываются круглыми концами
+        // и получается цепочка тёмных «бусинок».
+        if(draftState.tool === 'highlighter'){
+            const pts = draftState.points || (draftState.points = []);
+            const prev = pts.length ? pts[pts.length - 1] : null;
+            if(!prev || Math.hypot(p.x-prev.x, p.y-prev.y) >= 0.5) pts.push({x:p.x,y:p.y});
+
+            if(draftState.snapshot) ctx.putImageData(draftState.snapshot,0,0);
+            if(pts.length >= 2){
+                ctx.save();
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.globalAlpha = 0.28;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = Math.max(12, size * 4);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                ctx.moveTo(pts[0].x, pts[0].y);
+                if(pts.length === 2){
+                    ctx.lineTo(pts[1].x, pts[1].y);
+                } else {
+                    for(let i=1;i<pts.length-1;i++){
+                        const midX = (pts[i].x + pts[i+1].x) / 2;
+                        const midY = (pts[i].y + pts[i+1].y) / 2;
+                        ctx.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
+                    }
+                    const last = pts[pts.length-1];
+                    ctx.lineTo(last.x,last.y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+            draftState.lastX = p.x;
+            draftState.lastY = p.y;
+            return;
+        }
+
+        if(draftState.tool === 'pen' || draftState.tool === 'eraser'){
             ctx.beginPath();
             ctx.moveTo(Number.isFinite(draftState.lastX) ? draftState.lastX : p.x, Number.isFinite(draftState.lastY) ? draftState.lastY : p.y);
             ctx.lineTo(p.x,p.y);
             ctx.stroke();
             draftState.lastX = p.x;
             draftState.lastY = p.y;
-            ctx.globalAlpha = 1;
             return;
         }
 
-        ctx.globalAlpha = 1;
         if(draftState.snapshot) ctx.putImageData(draftState.snapshot,0,0);
         ctx.beginPath();
         if(draftState.tool === 'line' || draftState.tool === 'vector'){
@@ -965,6 +1002,7 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
         if(!(draftState.tool === 'pen' || draftState.tool === 'highlighter' || draftState.tool === 'eraser')) saveDraftState();
         draftState.drawing = false;
         draftState.snapshot = null;
+        draftState.points = [];
     }
 
     function syncDraftTaskStatement(){
