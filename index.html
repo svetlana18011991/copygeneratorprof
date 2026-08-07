@@ -44,6 +44,7 @@
     <script src="task12.js"></script>
 
     <script src="task12_extra.js?v=20260807-2"></script>
+    <script src="task13.js?v=20260807-1"></script>
     <style>
         body { background-color: #121212; background-image: radial-gradient(circle at top, rgba(255, 196, 75, 0.14), transparent 42%), radial-gradient(circle at bottom, rgba(255, 166, 64, 0.08), transparent 34%); color: #e0e0e0; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 40px 20px; position: relative; overflow-x: hidden; }
         .generator-starfield {
@@ -1758,10 +1759,12 @@ body.auth-locked > *:not(#passwordGate) {
                     <span>Выбрать все / снять все</span>
                 </label>`;
         data.prototypes.forEach((p, idx) => {
+            const isSecondPart = Number(data.part || 1) >= 2;
+            const protoPrefix = (isSecondPart && p && p.code) ? `${p.code}.` : `${idx + 1}.`;
             listHTML += `
                 <label class="proto-item" onmouseenter="showTooltip('${tid}', ${idx}, event${kindArg})" onmouseleave="hideTooltip()" onmousemove="moveTooltip(event)">
                     <input type="checkbox" id="${getPrototypeCheckboxId(tid, idx, kind)}" checked onchange="syncProtoMaster('${tid}'${kindArg})"> 
-                    <span class="proto-label-text">${idx + 1}. ${getPrototypeDisplayLabel(p, idx, kind)} 👁️</span>
+                    <span class="proto-label-text">${protoPrefix} ${getPrototypeDisplayLabel(p, idx, kind)} 👁️</span>
                 </label>`;
         });
         return listHTML;
@@ -2231,10 +2234,14 @@ body.auth-locked > *:not(#passwordGate) {
 
             const visibleBlockTitle = (kind === 'extra') ? 'Дополнительно' : data.title;
             window.selectedBlockTitles.push(visibleBlockTitle);
-            let activePools = selectedProtos.map(p => ({ 
+            const isSecondPartBlock = Number(data.part || 1) >= 2;
+            let activePools = selectedProtos.map((p, protoIndex) => ({ 
                 tasks: orderedTasks ? [...p.tasks] : shuffleArray([...p.tasks]), 
+                allTasks: [...p.tasks],
                 protoSvg: p.svg_code || "", 
-                theory: p 
+                theory: p,
+                prototype: p,
+                protoIndex: protoIndex
             }));
             let finalTasks = [];
 
@@ -2265,7 +2272,10 @@ body.auth-locked > *:not(#passwordGate) {
                 let pools = activePools.map(pool => ({
                     protoSvg: pool.protoSvg || "",
                     theory: pool.theory,
-                    tasks: shuffleArray([...pool.tasks])
+                    prototype: pool.prototype || pool.theory,
+                    protoIndex: pool.protoIndex,
+                    allTasks: [...(pool.allTasks || pool.tasks || [])],
+                    tasks: orderedTasks ? [...pool.tasks] : shuffleArray([...pool.tasks])
                 })).filter(pool => pool.tasks.length > 0);
 
                 if (!orderedTasks) {
@@ -2290,7 +2300,10 @@ body.auth-locked > *:not(#passwordGate) {
                         roundTasks.push({
                             ...task,
                             svg: task.svg_code || pool.protoSvg || "",
-                            theory: pool.theory
+                            theory: pool.theory,
+                            prototype: pool.prototype || pool.theory,
+                            protoIndex: pool.protoIndex,
+                            allProtoTasks: [...(pool.allTasks || [])]
                         });
                     });
                 }
@@ -2307,6 +2320,19 @@ body.auth-locked > *:not(#passwordGate) {
                 const cycleTasks = finalTasks.length === 0 ? [...oneFullRound] : buildPrototypeRound();
                 const needNow = actualCount - finalTasks.length;
                 finalTasks.push(...cycleTasks.slice(0, needNow));
+            }
+            if (isSecondPartBlock) {
+                const selectedIdsByProto = {};
+                finalTasks.forEach(t => {
+                    const key = String(t.protoIndex ?? '');
+                    selectedIdsByProto[key] = selectedIdsByProto[key] || new Set();
+                    selectedIdsByProto[key].add(String(t.id ?? t.text ?? ''));
+                });
+                finalTasks.forEach(t => {
+                    const key = String(t.protoIndex ?? '');
+                    const selectedIds = selectedIdsByProto[key] || new Set();
+                    t.analogs = (t.allProtoTasks || []).filter(a => !selectedIds.has(String(a.id ?? a.text ?? '')));
+                });
             }
             hasContent = true;
 
@@ -2326,7 +2352,7 @@ body.auth-locked > *:not(#passwordGate) {
                 }
                 
                 let theoryHtml = "";
-                if (item.theory) {
+                if (!isSecondPartBlock && item.theory) {
                     theoryHtml = `
                         <h3>Разбор аналогичного задания</h3>
                         <div style='background:#f9f9f9;padding:15px;border-left:4px solid #ff8c00;margin-bottom:15px;border-radius:6px;'>
@@ -2349,7 +2375,39 @@ body.auth-locked > *:not(#passwordGate) {
                     theoryHtml += `</ul>`;
                 }
 
-                window.currentGeneratedTasks.push({ text: item.text, svg: mainSvg, answer: String(item.answer), theory: theoryHtml, showCorrectOnError: showCorrectOnError, instantCheck: instantCheck });
+                let analogsHtml = "";
+                if (isSecondPartBlock) {
+                    const protoCode = item.prototype && item.prototype.code ? item.prototype.code : "";
+                    const protoName = item.prototype && item.prototype.desc ? item.prototype.desc : "Похожие задания";
+                    const analogList = Array.isArray(item.analogs) ? item.analogs : [];
+                    analogsHtml = `<h3 style="margin-top:0;color:#003399;">Аналоги${protoCode ? ` — прототип ${protoCode}` : ""}</h3><div style="color:#555;margin-bottom:14px;">${protoName}</div>`;
+                    if (!analogList.length) {
+                        analogsHtml += `<div style="padding:14px;background:#f5f5f5;border-radius:8px;">Все задания этого прототипа уже вошли в текущий вариант.</div>`;
+                    } else {
+                        analogsHtml += `<ol style="padding-left:24px;">`;
+                        analogList.forEach(a => {
+                            analogsHtml += `<li style="margin-bottom:20px;"><div>${a.text}</div>`;
+                            if (showCorrectOnError) analogsHtml += `<div style="margin-top:8px;padding:9px 12px;background:#eef6ff;border-left:3px solid #003399;border-radius:5px;"><b>Ответ:</b> ${a.answer}</div>`;
+                            analogsHtml += `</li>`;
+                        });
+                        analogsHtml += `</ol>`;
+                    }
+                }
+
+                window.currentGeneratedTasks.push({
+                    text: item.text,
+                    svg: mainSvg,
+                    answer: String(item.answer),
+                    theory: theoryHtml,
+                    analogsHtml: analogsHtml,
+                    analogs: isSecondPartBlock ? (item.analogs || []).map(a => ({ id: a.id, text: a.text, answer: a.answer })) : [],
+                    part: isSecondPartBlock ? 2 : 1,
+                    isSecondPart: isSecondPartBlock,
+                    prototypeCode: item.prototype && item.prototype.code ? item.prototype.code : "",
+                    prototypeTitle: item.prototype && item.prototype.desc ? item.prototype.desc : "",
+                    showCorrectOnError: showCorrectOnError,
+                    instantCheck: instantCheck
+                });
                 
                 let stickerHTMLInteractive = "";
                 let stickerHTMLPrint = "";
@@ -2393,10 +2451,16 @@ body.auth-locked > *:not(#passwordGate) {
                     nextStickerTarget += 3 + Math.floor(Math.random() * 2);
                 }
 
-                // Добавляем новые кнопки: Мгновенная проверка и Разбор
-                let instantBtn = instantCheck ? `<button class="btn-instant" onclick="checkSingle(this, ${taskCounter}, '${item.answer}')" style="background: #e8f5e9; border: 1px solid #4CAF50; border-radius: 6px; font-size: 18px; cursor: pointer; padding: 8px 12px; outline: none; transition: 0.2s;" title="Проверить">✅</button>` : "";
+                // Первая часть: ввод ответа и разбор. Вторая часть: аналоги и самопроверка по ответу.
+                let instantBtn = (!isSecondPartBlock && instantCheck) ? `<button class="btn-instant" onclick="checkSingle(this, ${taskCounter}, '${item.answer}')" style="background: #e8f5e9; border: 1px solid #4CAF50; border-radius: 6px; font-size: 18px; cursor: pointer; padding: 8px 12px; outline: none; transition: 0.2s;" title="Проверить">✅</button>` : "";
                 let drawBtn = `<button class="btn-settings" style="background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; font-size: 18px; padding: 8px 12px;" onclick="window.toggleCanvas('${taskCounter}')" title="Открыть черновик">✏️</button>`;
-                let helpBtn = includeExplanations && item.theory ? `<button id="btn-help-${taskCounter}" class="btn-settings btn-help" style="display:none; background: #e3f2fd; color: #003399; border: 1px solid #003399; font-weight: bold; padding: 10px 15px;" onclick="window.openTheoryModalLocal('theory-data-${taskCounter}')">РАЗБОР</button><div id="theory-data-${taskCounter}" style="display:none;">${encodeURIComponent(theoryHtml)}</div>` : "";
+                let helpBtn = (!isSecondPartBlock && includeExplanations && item.theory) ? `<button id="btn-help-${taskCounter}" class="btn-settings btn-help" style="display:none; background: #e3f2fd; color: #003399; border: 1px solid #003399; font-weight: bold; padding: 10px 15px;" onclick="window.openTheoryModalLocal('theory-data-${taskCounter}')">РАЗБОР</button><div id="theory-data-${taskCounter}" style="display:none;">${encodeURIComponent(theoryHtml)}</div>` : "";
+                let secondPartButtons = isSecondPartBlock ? `
+                    ${instantCheck ? `<button class="btn-settings second-answer-btn" id="second-answer-btn-${taskCounter}" style="background:#e8f5e9;color:#1b5e20;border:1px solid #4CAF50;font-weight:bold;padding:9px 13px;" onclick="window.showSecondPartAnswer('${taskCounter}')">ПОКАЗАТЬ ОТВЕТ</button>` : ""}
+                    <button class="btn-settings" style="background:#e3f2fd;color:#003399;border:1px solid #003399;font-weight:bold;padding:9px 13px;" onclick="window.openTheoryModalLocal('analogs-data-${taskCounter}')">АНАЛОГИ</button>
+                    <div id="analogs-data-${taskCounter}" style="display:none;">${encodeURIComponent(analogsHtml)}</div>
+                    <div id="second-answer-data-${taskCounter}" style="display:none;">${encodeURIComponent(String(item.answer))}</div>
+                ` : "";
 
                 const draftDiagramTaskNum = parseInt(String(tid).replace(/\D/g, '')) || 0;
                 const needsDraftDiagram = [1, 2, 3, 8, 11].includes(draftDiagramTaskNum);
@@ -2446,7 +2510,9 @@ body.auth-locked > *:not(#passwordGate) {
                     }
                 </style><div id="draft-diagram-card-${taskCounter}" class="draft-diagram-card-${taskCounter}">${draftDiagramSource}</div>` : "";
                 
-                let scratchpadHTML = `<div id="draw-wrapper-${taskCounter}" style="display:none; margin-top: 20px; width: 100%; transition: all 0.3s ease; clear: both;">
+                const scratchViewportStyle = isSecondPartBlock ? "height:650px;overflow-y:auto;overflow-x:hidden;border:2px solid #bbdefb;border-radius:8px;background:#fff;" : "height:320px;overflow:hidden;border:2px solid #bbdefb;border-radius:8px;background:#fff;";
+                const scratchWorkspaceHeight = isSecondPartBlock ? 1600 : 320;
+                let scratchpadHTML = `<div id="draw-wrapper-${taskCounter}" class="${isSecondPartBlock ? 'second-part-scratchpad' : ''}" style="display:none; margin-top: 20px; width: 100%; transition: all 0.3s ease; clear: both;">
                     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px; background: #e3f2fd; padding: 8px 15px; border-radius: 8px; border: 1px solid #bbdefb; color: #333;">
                         <button onclick="window.setTool('${taskCounter}', 'pointer')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Указатель (Перетаскивание)">👆</button>
                         <button onclick="window.setTool('${taskCounter}', 'zoom')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Лупа: нажмите на чертёж, чтобы открыть его крупно">🔍</button>
@@ -2471,14 +2537,20 @@ body.auth-locked > *:not(#passwordGate) {
                         <button onclick="window.clearCanvas('${taskCounter}')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Очистить всё">🗑️</button>
                         <input type="hidden" id="tool-${taskCounter}" value="pen">
                     </div>
-                    <div style="position:relative; background-color: #fff; background-size: 20px 20px; background-image: linear-gradient(to right, #d2e3f2 1px, transparent 1px), linear-gradient(to bottom, #d2e3f2 1px, transparent 1px); border: 2px solid #bbdefb; border-radius: 8px; overflow: hidden; height: 320px;">${draftDiagramHTML}<canvas id="canvas-${taskCounter}" style="position:absolute; left:0; top:0; z-index:2; display:block; width:100%; height:100%; touch-action: none; cursor: crosshair;"></canvas></div>
+                    ${isSecondPartBlock ? `<div style="font-size:13px;color:#557;margin:-1px 0 7px 2px;">Большой черновик: поле в 5 раз длиннее обычного, прокручивается вниз.</div>` : ""}
+                    <div style="${scratchViewportStyle}"><div style="position:relative;width:100%;height:${scratchWorkspaceHeight}px;background-color:#fff;background-size:20px 20px;background-image:linear-gradient(to right,#d2e3f2 1px,transparent 1px),linear-gradient(to bottom,#d2e3f2 1px,transparent 1px);">${draftDiagramHTML}<canvas id="canvas-${taskCounter}" style="position:absolute;left:0;top:0;z-index:2;display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;"></canvas></div></div>
                 </div>`;
 
-                currentInteractiveHTML += `<div class="generated-task-block" style="margin-bottom:30px; clear:both; overflow:visible; position:relative; border-bottom:1px dashed #ddd; padding:8px 0 20px;"><div style="display:flex; align-items:flex-start; justify-content:space-between; overflow:visible;"><div style="display:flex; align-items:flex-start; gap:15px; flex-grow:1; min-width:0; overflow:visible;"><div style="flex-shrink:0; font-weight:bold; font-size:1.1em; padding-top:2px;">${taskCounter}.</div>${mainSvg ? `<div class="generated-task-diagram" style="flex-shrink:0; min-width:150px; max-width:350px; padding:22px 8px 6px; box-sizing:border-box; overflow:visible;">${mainSvg}</div>` : ""}<div style="flex-grow:1; min-width:0;"><div>${item.text}</div><div style="margin-top:15px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; clear:both;"><input type="text" class="ans-box" id="ans-interactive-${taskCounter}" placeholder="Ответ..." data-ans="${item.answer}" style="padding:10px 15px; border:2px solid #ccc; border-radius:6px; font-size:16px; font-weight:bold; width:150px; outline:none; transition:0.3s;">${instantBtn}${drawBtn}${helpBtn}<span class="answer-feedback" id="feedback-${taskCounter}" style="font-weight:bold; font-size:15px; display:none;"></span></div></div></div>${stickerHTMLInteractive}</div>${scratchpadHTML}</div>`;
+                const taskActionArea = isSecondPartBlock
+                    ? `<div style="margin-top:15px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;clear:both;">${drawBtn}${secondPartButtons}<div class="second-part-final-answer" id="second-final-answer-${taskCounter}" style="display:none;width:100%;margin-top:8px;padding:12px 14px;background:#eef6ff;border-left:4px solid #003399;border-radius:6px;"><b>Ответ:</b> ${item.answer}</div></div>`
+                    : `<div style="margin-top:15px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; clear:both;"><input type="text" class="ans-box" id="ans-interactive-${taskCounter}" placeholder="Ответ..." data-ans="${item.answer}" style="padding:10px 15px; border:2px solid #ccc; border-radius:6px; font-size:16px; font-weight:bold; width:150px; outline:none; transition:0.3s;">${instantBtn}${drawBtn}${helpBtn}<span class="answer-feedback" id="feedback-${taskCounter}" style="font-weight:bold; font-size:15px; display:none;"></span></div>`;
+                currentInteractiveHTML += `<div class="generated-task-block ${isSecondPartBlock ? 'second-part-task' : 'first-part-task'}" data-part="${isSecondPartBlock ? 2 : 1}" style="margin-bottom:30px; clear:both; overflow:visible; position:relative; border-bottom:1px dashed #ddd; padding:8px 0 20px;"><div style="display:flex; align-items:flex-start; justify-content:space-between; overflow:visible;"><div style="display:flex; align-items:flex-start; gap:15px; flex-grow:1; min-width:0; overflow:visible;"><div style="flex-shrink:0; font-weight:bold; font-size:1.1em; padding-top:2px;">${taskCounter}.</div>${mainSvg ? `<div class="generated-task-diagram" style="flex-shrink:0; min-width:150px; max-width:350px; padding:22px 8px 6px; box-sizing:border-box; overflow:visible;">${mainSvg}</div>` : ""}<div style="flex-grow:1; min-width:0;"><div>${item.text}</div>${taskActionArea}</div></div>${stickerHTMLInteractive}</div>${scratchpadHTML}</div>`;
                 
-                currentPrintHTML += `<div class="task-print-block"><div class="task-print-flex"><div class="task-print-num">${taskCounter}</div>${mainSvg ? `<div class="task-print-img">${mainSvg}</div>` : ""}<div class="task-print-text"><div>${item.text}</div><div class="task-print-answer">Ответ: ______________________________</div></div>${stickerHTMLPrint}</div></div>`;
+                currentPrintHTML += `<div class="task-print-block"><div class="task-print-flex"><div class="task-print-num">${taskCounter}</div>${mainSvg ? `<div class="task-print-img">${mainSvg}</div>` : ""}<div class="task-print-text"><div>${item.text}</div>${isSecondPartBlock ? `<div class="task-print-answer" style="margin-top:10px;color:#777;">Решение выполняется с полным обоснованием.</div>` : `<div class="task-print-answer">Ответ: ______________________________</div>`}</div>${stickerHTMLPrint}</div></div>`;
                 
-                currentAnswersHTML += `<div style="margin-bottom: 10px; font-size: 18px;"><b>${taskCounter}.</b> Ответ: <strong style="color: #d32f2f;">${item.answer}</strong></div>`;
+                currentAnswersHTML += isSecondPartBlock
+                    ? `<div style="margin-bottom:18px;font-size:18px;"><b>${taskCounter}.</b><div style="margin-top:6px;color:#d32f2f;">${item.answer}</div></div>`
+                    : `<div style="margin-bottom: 10px; font-size: 18px;"><b>${taskCounter}.</b> Ответ: <strong style="color: #d32f2f;">${item.answer}</strong></div>`;
             });
             currentInteractiveHTML += `</div>`; currentPrintHTML += `</div>`; currentAnswersHTML += `</div>`;
         }
@@ -2537,6 +2609,16 @@ body.auth-locked > *:not(#passwordGate) {
                 document.getElementById('modal-overlay').style.display = 'flex';
                 if(window.MathJax) MathJax.typesetPromise([document.getElementById('modal-overlay')]);
             }
+        };
+        window.showSecondPartAnswer = function(id) {
+            const data = document.getElementById('second-answer-data-' + id);
+            const target = document.getElementById('second-final-answer-' + id);
+            const btn = document.getElementById('second-answer-btn-' + id);
+            if (!data || !target) return;
+            target.innerHTML = '<b>Ответ:</b> ' + decodeURIComponent(data.textContent || '');
+            target.style.display = 'block';
+            if (btn) btn.style.display = 'none';
+            if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([target]).catch(()=>{});
         };
         window.toggleCanvas = function(id) {
             let w = document.getElementById('draw-wrapper-' + id);
@@ -2886,10 +2968,20 @@ body.auth-locked > *:not(#passwordGate) {
                 '</div>' +
             '</div>';
 
+            const secondPartTasks = Array.from(document.querySelectorAll('.second-part-task'));
+            if (SHOW_CORRECT_ON_ERROR) {
+                secondPartTasks.forEach(task => {
+                    const answer = task.querySelector('.second-part-final-answer');
+                    if (answer) answer.style.display = 'block';
+                });
+                if (window.MathJax && MathJax.typesetPromise && secondPartTasks.length) MathJax.typesetPromise(secondPartTasks).catch(()=>{});
+            }
+            const secondPartBadge = secondPartTasks.length ? '<div style="min-width:170px; padding:10px 14px; border-radius:8px; background:#e3f2fd; color:#003399;"><b>Вторая часть:</b> ' + secondPartTasks.length + '<br><span style="font-size:12px;font-weight:normal;">проверяется по полному решению</span></div>' : '';
+
             document.getElementById('res-box').innerHTML = '<div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;">' +
                 '<div style="min-width:120px; padding:10px 14px; border-radius:8px; background:#e8f5e9; color:#2e7d32;"><b>Верно:</b> ' + c + '</div>' +
                 '<div style="min-width:120px; padding:10px 14px; border-radius:8px; background:#ffebee; color:#c62828;"><b>Неверно:</b> ' + ic + '</div>' +
-                '<div style="min-width:120px; padding:10px 14px; border-radius:8px; background:#f5f5f5; color:#555;"><b>Не решено:</b> ' + e + '</div>' +
+                '<div style="min-width:120px; padding:10px 14px; border-radius:8px; background:#f5f5f5; color:#555;"><b>Не решено:</b> ' + e + '</div>' + secondPartBadge +
             '</div>' + detailsHTML;
             document.getElementById('res-box').style.display = 'block';
             document.getElementById('btn-check').style.display = 'none';
@@ -3188,7 +3280,17 @@ body.auth-locked > *:not(#passwordGate) {
         let a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="Ответы.html"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
     }
 
-    function openGameMenu() { if (window.currentGeneratedTasks.length === 0) { alert("Сгенерируйте вариант!"); return; } document.getElementById('game-modal').style.display='flex'; }
+    function getGameEligibleTasks() {
+        return (window.currentGeneratedTasks || []).filter(t => Number(t.part || (t.isSecondPart ? 2 : 1)) < 2);
+    }
+    function openGameMenu() {
+        if (window.currentGeneratedTasks.length === 0) { alert("Сгенерируйте вариант!"); return; }
+        const eligible = getGameEligibleTasks();
+        const skipped = window.currentGeneratedTasks.length - eligible.length;
+        if (eligible.length === 0) { alert("Игры создаются только по заданиям первой части (№1–12). В выбранном варианте нет заданий первой части."); return; }
+        if (skipped > 0) alert("Игра создаётся только по заданиям первой части (№1–12). Задания второй части (№13–19) в игру не войдут.");
+        document.getElementById('game-modal').style.display='flex';
+    }
     function openPresentationMenu() { 
         if (window.currentGeneratedTasks.length === 0) { alert("Сгенерируйте вариант!"); return; } 
         window.generatorSettings = window.generatorSettings || {};
@@ -3200,11 +3302,12 @@ body.auth-locked > *:not(#passwordGate) {
     }
 
     function generateTowerGame() {
-        if (window.currentGeneratedTasks.length !== 9) { alert("Для игры 'Башня знаний' нужно ровно 9 заданий."); return; }
+        const eligibleTasks = getGameEligibleTasks();
+        if (eligibleTasks.length !== 9) { alert("Для игры 'Башня знаний' нужно ровно 9 заданий первой части (№1–12)."); return; }
         
         const towerShowCorrectOnError = document.getElementById('toggle-show-correct') ? document.getElementById('toggle-show-correct').checked : false;
 
-        let gameQuestions = window.currentGeneratedTasks.map(t => {
+        let gameQuestions = eligibleTasks.map(t => {
             let fullPrompt = t.text;
             if (t.svg) {
                 fullPrompt = `<div style="background: #ffffff; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: #000;">${t.svg}</div>` + fullPrompt;
@@ -3447,7 +3550,9 @@ body.auth-locked > *:not(#passwordGate) {
         const note = document.getElementById('motivation-editor-note');
         if (note) note.style.display = 'none';
 
-        const questions = window.currentGeneratedTasks.map(t => {
+        const eligibleTasks = getGameEligibleTasks();
+        if (!eligibleTasks.length) { alert("Мотивационная игра создаётся только по заданиям первой части (№1–12)."); return; }
+        const questions = eligibleTasks.map(t => {
             let fullPrompt = t.text || '';
             if (t.svg) {
                 fullPrompt = `<div style="background:#fff; padding:14px; border-radius:10px; margin-bottom:12px; text-align:center; color:#000;">${t.svg}</div>` + fullPrompt;
@@ -3497,7 +3602,9 @@ body.auth-locked > *:not(#passwordGate) {
         if (window.currentGeneratedTasks.length === 0) { alert("Сначала сгенерируйте вариант."); return; }
         if (typeof BATTLE_TEMPLATE === 'undefined') { alert("Не найден battle_template.js. Подключите файл рядом с index.html."); return; }
 
-        let gameQuestions = window.currentGeneratedTasks.map(t => {
+        const eligibleTasks = getGameEligibleTasks();
+        if (!eligibleTasks.length) { alert("Баттл создаётся только по заданиям первой части (№1–12)."); return; }
+        let gameQuestions = eligibleTasks.map(t => {
             let fullPrompt = t.text;
             if (t.svg) {
                 fullPrompt = `<div style="background:#fff; padding:14px; border-radius:10px; margin-bottom:12px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.14); color:#000;">${t.svg}</div>` + fullPrompt;
@@ -3544,7 +3651,7 @@ body.auth-locked > *:not(#passwordGate) {
 
 </script>
 
-<script src="presentations.js?v=20260807-1"></script>
+<script src="presentations.js?v=20260807-2"></script>
 
 <script>
 (function(){
