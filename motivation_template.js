@@ -287,6 +287,7 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
                 <button type="button" data-tool="pointer" onclick="setTool('pointer')" title="Указатель">👆</button>
                 <button type="button" data-tool="zoom" onclick="setTool('zoom')" title="Лупа: нажмите на чертёж, чтобы открыть его крупно">🔍</button>
                 <button type="button" data-tool="pen" onclick="setTool('pen')" title="Карандаш">🖊️</button>
+                <button type="button" data-tool="highlighter" onclick="setTool('highlighter')" title="Выделитель — полупрозрачный маркер">🖍️</button>
                 <button type="button" onclick="undoDraft()" title="Отменить">↶</button>
                 <button type="button" onclick="redoDraft()" title="Повторить">↷</button>
                 <select id="toolSelect" onchange="setTool(this.value)">
@@ -606,7 +607,7 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
         return {x:e.clientX-r.left, y:e.clientY-r.top};
     }
     function getBounds(obj){
-        if(obj.tool === 'pen' || obj.tool === 'eraser'){
+        if(obj.tool === 'pen' || obj.tool === 'highlighter' || obj.tool === 'eraser'){
             const xs = obj.points.map(p=>p.x), ys = obj.points.map(p=>p.y);
             return {minX:Math.min(...xs), minY:Math.min(...ys), maxX:Math.max(...xs), maxY:Math.max(...ys)};
         }
@@ -631,11 +632,13 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
         ctx.scale(obj.scale || 1, obj.scale || 1);
         ctx.translate(-(obj.cx || 0), -(obj.cy || 0));
         ctx.lineWidth = obj.tool === 'eraser' ? (obj.size || 3) * 3 : (obj.size || 3);
+        if (obj.tool === 'highlighter') ctx.lineWidth = Math.max(12, (Number(obj.size) || 3) * 4);
+        ctx.globalAlpha = obj.tool === 'highlighter' ? 0.28 : 1;
         ctx.strokeStyle = obj.tool === 'eraser' ? '#ffffff' : (obj.color || '#003399');
         ctx.fillStyle = obj.color || '#003399';
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
-        if(obj.tool === 'pen' || obj.tool === 'eraser'){
+        if(obj.tool === 'pen' || obj.tool === 'highlighter' || obj.tool === 'eraser'){
             const pts = obj.points || [];
             if(pts.length === 1){
                 ctx.beginPath();
@@ -724,7 +727,7 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
         const color = document.getElementById('drawColor').value || '#003399';
         const size = Number(document.getElementById('drawSize').value || 3);
         draft.isDrawing = true;
-        if(tool === 'pen' || tool === 'eraser'){
+        if(tool === 'pen' || tool === 'highlighter' || tool === 'eraser'){
             draft.currentObj = {tool,color,size,points:[p],cx:p.x,cy:p.y,scale:1,angle:0};
         }else{
             draft.currentObj = {tool,color,size,sx:p.x,sy:p.y,ex:p.x,ey:p.y,cx:p.x,cy:p.y,scale:1,angle:0};
@@ -744,7 +747,7 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
             renderDraft(); return;
         }
         if(!draft.isDrawing || !draft.currentObj) return;
-        if(draft.currentObj.tool === 'pen' || draft.currentObj.tool === 'eraser'){
+        if(draft.currentObj.tool === 'pen' || draft.currentObj.tool === 'highlighter' || draft.currentObj.tool === 'eraser'){
             const events = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [e];
             for(const evt of events){
                 const next = pointerPos(evt);

@@ -276,6 +276,7 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
                 <button type="button" data-tool-btn="pointer" title="Указатель">👆</button>
                 <button type="button" data-tool-btn="zoom" title="Лупа: нажмите на чертёж, чтобы открыть его крупно">🔍</button>
                 <button type="button" data-tool-btn="pen" title="Карандаш">🖊️</button>
+                <button type="button" data-tool-btn="highlighter" title="Выделитель — полупрозрачный маркер">🖍️</button>
                 <button type="button" id="undoBattle" title="Отменить">↶</button>
                 <button type="button" id="redoBattle" title="Повторить">↷</button>
                 <select id="tool-select-battle">
@@ -899,10 +900,10 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
         draftState.drawing = true;
         draftState.startX = p.x; draftState.startY = p.y;
         draftState.snapshot = ctx.getImageData(0,0,canvas.width,canvas.height);
-        if(draftState.tool === 'pen' || draftState.tool === 'eraser'){
+        if(draftState.tool === 'pen' || draftState.tool === 'highlighter' || draftState.tool === 'eraser'){
             saveDraftState();
-            ctx.beginPath();
-            ctx.moveTo(p.x,p.y);
+            draftState.lastX = p.x;
+            draftState.lastY = p.y;
         }
     }
 
@@ -914,14 +915,23 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
         const color = $('color-battle') ? $('color-battle').value : '#003399';
         const size = $('size-battle') ? Number($('size-battle').value || 3) : 3;
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.lineWidth = draftState.tool === 'eraser' ? size * 3 : size;
+        ctx.globalAlpha = draftState.tool === 'highlighter' ? 0.28 : 1;
+        ctx.lineWidth = draftState.tool === 'eraser' ? size * 3 : (draftState.tool === 'highlighter' ? Math.max(12, size * 4) : size);
         ctx.strokeStyle = draftState.tool === 'eraser' ? 'rgba(255,255,255,1)' : color;
         ctx.fillStyle = color;
 
-        if(draftState.tool === 'pen' || draftState.tool === 'eraser'){
-            ctx.lineTo(p.x,p.y); ctx.stroke(); return;
+        if(draftState.tool === 'pen' || draftState.tool === 'highlighter' || draftState.tool === 'eraser'){
+            ctx.beginPath();
+            ctx.moveTo(Number.isFinite(draftState.lastX) ? draftState.lastX : p.x, Number.isFinite(draftState.lastY) ? draftState.lastY : p.y);
+            ctx.lineTo(p.x,p.y);
+            ctx.stroke();
+            draftState.lastX = p.x;
+            draftState.lastY = p.y;
+            ctx.globalAlpha = 1;
+            return;
         }
 
+        ctx.globalAlpha = 1;
         if(draftState.snapshot) ctx.putImageData(draftState.snapshot,0,0);
         ctx.beginPath();
         if(draftState.tool === 'line' || draftState.tool === 'vector'){
@@ -952,7 +962,7 @@ const BATTLE_TEMPLATE = `<!DOCTYPE html>
 
     function endDraft(){
         if(!draftState.drawing) return;
-        if(!(draftState.tool === 'pen' || draftState.tool === 'eraser')) saveDraftState();
+        if(!(draftState.tool === 'pen' || draftState.tool === 'highlighter' || draftState.tool === 'eraser')) saveDraftState();
         draftState.drawing = false;
         draftState.snapshot = null;
     }

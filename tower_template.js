@@ -78,7 +78,7 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
             <canvas id="c"></canvas>
             <div id="hud"><div class="pill" id="leftPill">Башня: <b id="heightTxt">0</b><span style="opacity:.5">|</span>Осталось: <b id="remainNum">9</b></div><div id="progressWrap">Прогресс<div id="bar"><div></div></div><span id="pct">0%</span></div><div class="pill" id="scorePill">Счёт: <b id="scoreNum">0</b></div></div>
             <button id="nextBtn" disabled>Далее →</button>
-            <div id="overlay" role="dialog" aria-modal="true"><div id="card"><div id="cardHeader"><div><div id="title">Вопрос</div><div id="q">...</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><div style="display:flex; align-items:center; gap:10px;"><button id="draftBtn" type="button" title="Открыть черновик">✏️</button><div id="badge">1 / 9</div></div></div></div><div id="answers"></div><div id="inputRow"><input id="ansInput" type="text" placeholder="Введите ответ..." autocomplete="off" /><button id="submit">ОК</button></div><div id="msg"></div><div id="hint">Верно → блок опускается и становится этажом (+100). Неверно → обугливание, взрыв и исчезает.</div></div><div id="drawPanel" onclick="event.stopPropagation();"><div id="drawTools"><button type="button" onclick="window.setTool('tower', 'pointer')" title="Указатель (Перетаскивание)">👆</button><button type="button" onclick="window.setTool('tower', 'zoom')" title="Лупа: нажмите на чертёж, чтобы открыть его крупно">🔍</button><button type="button" onclick="window.setTool('tower', 'pen')" title="Карандаш">🖊️</button><select id="tool-select-tower" onchange="window.setTool('tower', this.value)"><option value="" disabled selected hidden>🔺 Фигуры</option><option value="line">📏 Прямая</option><option value="vector">↗️ Вектор</option><option value="circle">⭕ Окружность</option><option value="triangle">🔺 Треугольник</option><option value="cylinder">🛢️ Цилиндр</option><option value="cone">🍦 Конус</option><option value="sphere">🔮 Сфера</option></select><input type="color" id="color-tower" value="#003399" title="Цвет"><input type="range" id="size-tower" min="1" max="15" value="3" title="Толщина линии"><button type="button" onclick="window.setTool('tower', 'eraser')" title="Ластик">🧽</button><div style="flex-grow:1;"></div><button type="button" onclick="window.clearCanvas('tower')" title="Очистить всё">🗑️</button><button id="drawClose" type="button" title="Закрыть">×</button><input type="hidden" id="tool-tower" value="pen"></div><div id="drawCanvasWrap"><div id="towerDraftDiagram"></div><canvas id="canvas-tower"></canvas></div></div></div>
+            <div id="overlay" role="dialog" aria-modal="true"><div id="card"><div id="cardHeader"><div><div id="title">Вопрос</div><div id="q">...</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><div style="display:flex; align-items:center; gap:10px;"><button id="draftBtn" type="button" title="Открыть черновик">✏️</button><div id="badge">1 / 9</div></div></div></div><div id="answers"></div><div id="inputRow"><input id="ansInput" type="text" placeholder="Введите ответ..." autocomplete="off" /><button id="submit">ОК</button></div><div id="msg"></div><div id="hint">Верно → блок опускается и становится этажом (+100). Неверно → обугливание, взрыв и исчезает.</div></div><div id="drawPanel" onclick="event.stopPropagation();"><div id="drawTools"><button type="button" onclick="window.setTool('tower', 'pointer')" title="Указатель (Перетаскивание)">👆</button><button type="button" onclick="window.setTool('tower', 'zoom')" title="Лупа: нажмите на чертёж, чтобы открыть его крупно">🔍</button><button type="button" onclick="window.setTool('tower', 'pen')" title="Карандаш">🖊️</button><button type="button" onclick="window.setTool('tower', 'highlighter')" title="Выделитель — полупрозрачный маркер">🖍️</button><select id="tool-select-tower" onchange="window.setTool('tower', this.value)"><option value="" disabled selected hidden>🔺 Фигуры</option><option value="line">📏 Прямая</option><option value="vector">↗️ Вектор</option><option value="circle">⭕ Окружность</option><option value="triangle">🔺 Треугольник</option><option value="cylinder">🛢️ Цилиндр</option><option value="cone">🍦 Конус</option><option value="sphere">🔮 Сфера</option></select><input type="color" id="color-tower" value="#003399" title="Цвет"><input type="range" id="size-tower" min="1" max="15" value="3" title="Толщина линии"><button type="button" onclick="window.setTool('tower', 'eraser')" title="Ластик">🧽</button><div style="flex-grow:1;"></div><button type="button" onclick="window.clearCanvas('tower')" title="Очистить всё">🗑️</button><button id="drawClose" type="button" title="Закрыть">×</button><input type="hidden" id="tool-tower" value="pen"></div><div id="drawCanvasWrap"><div id="towerDraftDiagram"></div><canvas id="canvas-tower"></canvas></div></div></div>
             <div id="start"><div id="startCard"><h1>Башня знаний</h1><p></p><button id="play">▶ Начать</button><div id="err" style="display:none;"></div></div></div>
             <div id="finish"><div id="finishCard"><div id="finishTitle">Отлично!</div><div id="finishText">Заработано <b id="finishScore">0</b> баллов из 900</div><div id="finishCustomText" style="color:var(--text); margin-bottom:14px; font-size:16px; line-height:1.4; display:none;"></div><div id="stats"><div class="stat"><b id="stCorrect">0</b><div>правильных ответов</div></div><div class="stat"><b id="stWrong">0</b><div>неправильных ответов</div></div><div class="stat"><b id="stHeight">0</b><div>блоков в башне</div></div></div><button id="restart">↻ Сыграть ещё раз</button></div></div>
         </div>
@@ -272,7 +272,7 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
 
             function getRawBounds(obj) {
                 let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                if (obj.tool === 'pen' || obj.tool === 'eraser') {
+                if (obj.tool === 'pen' || obj.tool === 'highlighter' || obj.tool === 'eraser') {
                     if(!obj.points || obj.points.length === 0) return {minX:0, minY:0, maxX:0, maxY:0};
                     obj.points.forEach(p => { minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y); });
                 } else {
@@ -284,7 +284,7 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
                     else if (obj.tool === 'triangle') { minX = Math.min(sx, ex, sx + dx/2); maxX = Math.max(sx, ex, sx + dx/2); minY = Math.min(sy, ey); maxY = Math.max(sy, ey); }
                     else if (obj.tool === 'cylinder' || obj.tool === 'cone') { minX = sx - rx; maxX = sx + rx; let h = ry * 0.2; minY = Math.min(sy - h, ey - h); maxY = Math.max(sy + h, ey + h); }
                 }
-                let pad = parseFloat(obj.size) || 3;
+                let pad = obj.tool === 'highlighter' ? Math.max(12, (parseFloat(obj.size) || 3) * 4) / 2 : (parseFloat(obj.size) || 3);
                 return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad };
             }
             function smoothPath(points) {
@@ -318,7 +318,9 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
                 ctx.translate((obj.x || 0) + cx, (obj.y || 0) + cy);
                 ctx.rotate(obj.angle || 0); ctx.scale(s, s); ctx.translate(-cx, -cy);
                 ctx.strokeStyle = obj.color; ctx.lineWidth = obj.size; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-                if (obj.tool === 'pen' || obj.tool === 'eraser') {
+                ctx.globalAlpha = obj.tool === 'highlighter' ? 0.28 : 1;
+                if (obj.tool === 'highlighter') ctx.lineWidth = Math.max(12, (parseFloat(obj.size) || 3) * 4);
+                if (obj.tool === 'pen' || obj.tool === 'highlighter' || obj.tool === 'eraser') {
                     ctx.globalCompositeOperation = obj.tool === 'eraser' ? 'destination-out' : 'source-over';
                     if(obj.tool === 'eraser') ctx.lineWidth = obj.size * 3;
                     ctx.beginPath();
@@ -348,6 +350,8 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
                     else if (obj.tool === 'cone') { let w = rx, h = ry * 0.2; if(w>0 && h>0){ctx.moveTo(sx, sy); ctx.lineTo(sx - w, ey); ctx.moveTo(sx, sy); ctx.lineTo(sx + w, ey); ctx.stroke(); ctx.beginPath(); ctx.ellipse(sx, ey, w, h, 0, 0, Math.PI); ctx.stroke(); ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.ellipse(sx, ey, w, h, 0, Math.PI, 2*Math.PI); ctx.stroke(); ctx.setLineDash([]);} }
                     else if (obj.tool === 'sphere') { ctx.arc(sx, sy, r, 0, 2 * Math.PI); ctx.stroke(); if(r>0){ctx.beginPath(); ctx.ellipse(sx, sy, r, r*0.3, 0, 0, Math.PI); ctx.stroke(); ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.ellipse(sx, sy, r, r*0.3, 0, Math.PI, 2*Math.PI); ctx.stroke(); ctx.setLineDash([]);} }
                 }
+                ctx.globalAlpha = 1;
+                ctx.globalCompositeOperation = 'source-over';
                 if (isSelected) {
                     let b = getRawBounds(obj); ctx.strokeStyle = 'rgba(255, 140, 0, 0.7)'; ctx.lineWidth = 1.5 / s; ctx.setLineDash([5 / s, 5 / s]); ctx.strokeRect(b.minX - 5, b.minY - 5, b.maxX - b.minX + 10, b.maxY - b.minY + 10); ctx.setLineDash([]);
                     let rotHX = (b.minX + b.maxX)/2, rotHY = b.minY - 25; ctx.beginPath(); ctx.moveTo(rotHX, b.minY - 5); ctx.lineTo(rotHX, rotHY); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(rotHX, rotHY, 5 / s, 0, Math.PI*2); ctx.fill(); ctx.stroke();
@@ -401,7 +405,7 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
                     renderAll();
                 } else {
                     currentObj = { tool: tool, color: color, size: size, x: 0, y: 0, scale: 1, angle: 0 };
-                    if (tool === 'pen' || tool === 'eraser') { currentObj.points = []; addFreePoint(currentObj, p); }
+                    if (tool === 'pen' || tool === 'highlighter' || tool === 'eraser') { currentObj.points = []; addFreePoint(currentObj, p); }
                     else { currentObj.sx = p.x; currentObj.sy = p.y; currentObj.ex = p.x; currentObj.ey = p.y; }
                 }
                 if (e.cancelable) e.preventDefault();
@@ -415,7 +419,7 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
                     renderAll(); return;
                 }
                 if (!currentObj) return;
-                if (currentObj.tool === 'pen' || currentObj.tool === 'eraser') {
+                if (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser') {
                     const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
                     events.forEach(ev => addFreePoint(currentObj, getPos(ev)));
                 } else { currentObj.ex = p.x; currentObj.ey = p.y; }
@@ -424,7 +428,7 @@ const TOWER_TEMPLATE = `<!DOCTYPE html>
             function endDraw(e) {
                 if (!isDrawing) return; isDrawing = false;
                 if (currentObj) {
-                    if (currentObj.tool === 'pen' || currentObj.tool === 'eraser' || Math.hypot((currentObj.ex||0)-(currentObj.sx||0), (currentObj.ey||0)-(currentObj.sy||0)) > 3) {
+                    if (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser' || Math.hypot((currentObj.ex||0)-(currentObj.sx||0), (currentObj.ey||0)-(currentObj.sy||0)) > 3) {
                         let b = getRawBounds(currentObj); currentObj.cx = (b.minX + b.maxX)/2; currentObj.cy = (b.minY + b.maxY)/2; objects.push(currentObj);
                     }
                     currentObj = null;
