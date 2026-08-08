@@ -50,7 +50,7 @@
     <script src="task16.js?v=20260809-2"></script>
     <script src="task17.js?v=20260809-1"></script>
     <script src="task18.js?v=20260809-1"></script>
-    <script src="task19.js?v=20260809-1"></script>
+    <script src="task19.js?v=20260809-2"></script>
     <style>
         body { background-color: #121212; background-image: radial-gradient(circle at top, rgba(255, 196, 75, 0.14), transparent 42%), radial-gradient(circle at bottom, rgba(255, 166, 64, 0.08), transparent 34%); color: #e0e0e0; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 40px 20px; position: relative; overflow-x: hidden; }
         .generator-starfield {
@@ -340,6 +340,14 @@
 
         .btn-generate { display: block; width: 100%; background: transparent; color: #ff8c00; border: 2px solid #ff8c00; padding: 15px; font-size: 1.2em; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; margin-top: 25px; transition: 0.3s; }
         .btn-generate:hover { background: #ff8c00; color: #121212; box-shadow: 0 0 15px rgba(255, 140, 0, 0.4); }
+        .random-variant-panel { margin: 0 0 22px; padding: 18px 20px; border: 1px solid rgba(255,140,0,.55); border-radius: 12px; background: linear-gradient(135deg, rgba(255,140,0,.13), rgba(255,196,75,.04)); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+        .random-variant-panel-title { color:#ffb347; font-size:1.12em; font-weight:800; margin-bottom:6px; }
+        .random-variant-panel-note { color:#c8c8c8; font-size:.92em; line-height:1.45; margin-bottom:13px; }
+        .btn-random-variant { width:100%; border:2px solid #ff8c00; background:#ff8c00; color:#161616; border-radius:9px; padding:13px 15px; font-size:1.05em; font-weight:900; cursor:pointer; transition:.22s; }
+        .btn-random-variant:hover { filter:brightness(1.08); box-shadow:0 0 18px rgba(255,140,0,.35); transform:translateY(-1px); }
+        .random-replace-btn { flex:0 0 auto; border:1px solid #ffb74d; background:#fff8ee; color:#e65100; border-radius:7px; padding:6px 9px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+        .random-replace-btn:hover { background:#ffedd4; }
+        #random-inline-answers { display:none; margin-top:18px; padding:18px 20px; border:2px dashed #7b1fa2; border-radius:10px; background:#fff; color:#222; }
         .btn-group { display: none; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
         .btn-dl { flex: 1; min-width: 200px; color: white; border: none; padding: 15px 10px; font-size: 1.05em; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; text-align: center; }
         .btn-dl:hover { filter: brightness(1.15); box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
@@ -1159,6 +1167,12 @@ body.auth-locked > *:not(#passwordGate) {
     <main class="main-content">
         <h2 style="margin: 0 0 8px 0; text-align: center;">Генератор вариантов</h2>
         <div style="text-align: center; color: #bbb; font-size: 1.05em; margin-bottom: 25px; border-bottom: 1px dashed #555; padding-bottom: 15px;">Генератор вариантов - ЕГЭ профильный</div>
+
+        <div class="random-variant-panel">
+            <div class="random-variant-panel-title">🎲 Быстрый случайный вариант</div>
+            <div class="random-variant-panel-note">По одному заданию каждого номера 1–19. Для заданий 1–12 используются только основные задачи; дополнительные блоки первой части в случайный вариант не попадают. Сначала случайно выбирается прототип, затем задача внутри него.</div>
+            <button type="button" class="btn-random-variant" onclick="generateRandomVariant(event)">🎲 Сгенерировать случайный вариант</button>
+        </div>
         
         <div class="task-row">
             <div class="row-header" style="flex-wrap: wrap; gap: 15px;">
@@ -1248,12 +1262,15 @@ body.auth-locked > *:not(#passwordGate) {
         <div id="info-board"></div>
         
         <div id="btn-group" class="btn-group">
+            <button id="random-reroll-btn" class="btn-dl" style="display:none;background:#ef6c00;" onclick="generateRandomVariant(event)">🎲 Другой вариант</button>
+            <button id="random-answers-btn" class="btn-dl" style="display:none;background:#7b1fa2;" onclick="toggleRandomVariantAnswers()">🔑 Показать ответы</button>
             <button class="btn-dl btn-html" onclick="downloadStudentHTML()">💻 Интерактивный вариант</button>
             <button class="btn-dl btn-pdf" onclick="downloadPrintPDF()">🖨️ Файл для печати (PDF)</button>
             <button class="btn-dl btn-ans" onclick="downloadAnswers()">🔑 Ключи (Ответы)</button>
             <button class="btn-dl" style="background: #e65100;" onclick="openGameMenu()">🎮 Создать игру</button>
             <button class="btn-dl" style="background: #1976d2;" onclick="openPresentationMenu()">🎬 Создать презентацию</button>
         </div>
+        <div id="random-inline-answers"></div>
         
         <div id="output-section"></div>
     </main>
@@ -1976,6 +1993,148 @@ body.auth-locked > *:not(#passwordGate) {
         input.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
+    window.randomVariantMode = false;
+    window.randomVariantPicks = null;
+    window.randomVariantNumber = null;
+
+    function getCurrentVariantTitle() {
+        return window.randomVariantMode && window.randomVariantNumber
+            ? `Случайный вариант №${window.randomVariantNumber}`
+            : 'Тренировочный вариант';
+    }
+
+    function getRandomTaskPick(tid, avoidPick = null) {
+        const data = window.database && window.database[tid];
+        if (!data || !Array.isArray(data.prototypes)) return null;
+
+        const protos = data.prototypes
+            .map((p, protoIndex) => ({ p, protoIndex }))
+            .filter(x => x.p && Array.isArray(x.p.tasks) && x.p.tasks.length > 0);
+        if (!protos.length) return null;
+
+        const makePick = () => {
+            const proto = protos[Math.floor(Math.random() * protos.length)];
+            const taskIndex = Math.floor(Math.random() * proto.p.tasks.length);
+            const task = proto.p.tasks[taskIndex];
+            return {
+                protoIndex: proto.protoIndex,
+                taskIndex,
+                taskKey: String(task && (task.id ?? task.text ?? taskIndex))
+            };
+        };
+
+        // При замене стараемся действительно получить другую задачу.
+        for (let attempt = 0; attempt < 40; attempt++) {
+            const pick = makePick();
+            if (!avoidPick || pick.protoIndex !== avoidPick.protoIndex || pick.taskKey !== avoidPick.taskKey) return pick;
+        }
+
+        const all = [];
+        protos.forEach(({p, protoIndex}) => p.tasks.forEach((task, taskIndex) => {
+            const pick = { protoIndex, taskIndex, taskKey: String(task && (task.id ?? task.text ?? taskIndex)) };
+            if (!avoidPick || pick.protoIndex !== avoidPick.protoIndex || pick.taskKey !== avoidPick.taskKey) all.push(pick);
+        }));
+        return all.length ? all[Math.floor(Math.random() * all.length)] : makePick();
+    }
+
+    function buildRandomVariantPicks() {
+        const picks = {};
+        const missing = [];
+        for (let n = 1; n <= 19; n++) {
+            const tid = `task${n}`;
+            const pick = getRandomTaskPick(tid);
+            if (pick) picks[tid] = pick;
+            else missing.push(n);
+        }
+        return { picks, missing };
+    }
+
+    function setRandomVariantButtonsVisible(visible) {
+        const reroll = document.getElementById('random-reroll-btn');
+        const answers = document.getElementById('random-answers-btn');
+        const box = document.getElementById('random-inline-answers');
+        if (reroll) reroll.style.display = visible ? '' : 'none';
+        if (answers) {
+            answers.style.display = visible ? '' : 'none';
+            answers.textContent = '🔑 Показать ответы';
+        }
+        if (box) {
+            box.style.display = 'none';
+            box.innerHTML = '';
+        }
+    }
+
+    function generateRandomVariant(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const infoBoard = document.getElementById('info-board');
+        const btn = event && event.currentTarget ? event.currentTarget : null;
+        if (btn) {
+            btn.disabled = true;
+            btn.dataset.oldText = btn.textContent;
+            btn.textContent = '🎲 Собираю вариант...';
+        }
+
+        setTimeout(() => {
+            try {
+                const result = buildRandomVariantPicks();
+                if (result.missing.length) {
+                    throw new Error(`Не загружена база заданий: ${result.missing.join(', ')}. Проверьте файлы task1.js–task19.js рядом с index.html.`);
+                }
+                window.randomVariantPicks = result.picks;
+                window.randomVariantMode = true;
+                window.randomVariantNumber = Math.floor(1000 + Math.random() * 9000);
+                generateVariant({ useRandomPicks: true });
+                const output = document.getElementById('output-section');
+                if (output) output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (err) {
+                console.error(err);
+                if (infoBoard) {
+                    infoBoard.style.display = 'block';
+                    infoBoard.innerHTML = '<b>Не удалось собрать случайный вариант:</b> ' + (err && err.message ? err.message : err);
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = btn.dataset.oldText || '🎲 Сгенерировать случайный вариант';
+                }
+            }
+        }, 0);
+    }
+
+    function replaceRandomVariantTask(tid) {
+        if (!window.randomVariantMode || !window.randomVariantPicks || !window.randomVariantPicks[tid]) return;
+        const oldPick = window.randomVariantPicks[tid];
+        const nextPick = getRandomTaskPick(tid, oldPick);
+        if (!nextPick) return;
+        window.randomVariantPicks[tid] = nextPick;
+        generateVariant({ useRandomPicks: true });
+        const num = parseInt(String(tid).replace(/\D/g, ''), 10);
+        requestAnimationFrame(() => {
+            const el = document.querySelector(`.generated-task-block[data-random-task-number="${num}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }
+
+    function toggleRandomVariantAnswers() {
+        if (!window.randomVariantMode) return;
+        const box = document.getElementById('random-inline-answers');
+        const btn = document.getElementById('random-answers-btn');
+        if (!box || !btn) return;
+        const opening = box.style.display === 'none' || !box.style.display;
+        if (opening) {
+            box.innerHTML = `<h3 style="margin-top:0;color:#7b1fa2;">Ответы к ${getCurrentVariantTitle().toLowerCase()}</h3>${currentAnswersHTML}`;
+            box.style.display = 'block';
+            btn.textContent = '🙈 Скрыть ответы';
+            if (window.MathJax) MathJax.typesetPromise([box]).catch(() => {});
+        } else {
+            box.style.display = 'none';
+            btn.textContent = '🔑 Показать ответы';
+        }
+    }
+
     function safeGenerateVariant(event) {
         if (event) {
             event.preventDefault();
@@ -1993,7 +2152,7 @@ body.auth-locked > *:not(#passwordGate) {
 
         setTimeout(() => {
             try {
-                generateVariant();
+                generateVariant({ useRandomPicks: false });
             } catch (err) {
                 console.error(err);
                 if (infoBoard) {
@@ -2111,7 +2270,7 @@ body.auth-locked > *:not(#passwordGate) {
 
         let previewCode = currentInteractiveHTML.replace(/class="btn-settings btn-help" style="display:none;/g, 'class="btn-settings btn-help" style="display:inline-flex;');
         let outputSection = document.getElementById('output-section');
-        outputSection.innerHTML = `<div class="theme-wrapper bg-${theme}"${themeWrapperStyle}><div class="preview-paper">${timerDisplay}<h1 style="color: #003399; text-align: center; border-bottom: 2px solid #ff8c00; padding-bottom: 15px; margin-top: 0;">Тренировочный вариант</h1>${signatureHTML}${previewCode}</div></div>`;
+        outputSection.innerHTML = `<div class="theme-wrapper bg-${theme}"${themeWrapperStyle}><div class="preview-paper">${timerDisplay}<h1 style="color: #003399; text-align: center; border-bottom: 2px solid #ff8c00; padding-bottom: 15px; margin-top: 0;">${getCurrentVariantTitle()}</h1>${signatureHTML}${previewCode}</div></div>`;
         applySafeSvgPadding(outputSection);
         if (window.MathJax) {
             MathJax.typesetPromise([outputSection])
@@ -2167,7 +2326,14 @@ body.auth-locked > *:not(#passwordGate) {
         return array;
     }
 
-    function generateVariant() {
+    function generateVariant(options = {}) {
+        const useRandomPicks = !!(options && options.useRandomPicks && window.randomVariantPicks);
+        if (!useRandomPicks) {
+            window.randomVariantMode = false;
+            window.randomVariantPicks = null;
+            window.randomVariantNumber = null;
+            setRandomVariantButtonsVisible(false);
+        }
         const infoBoard = document.getElementById('info-board');
         infoBoard.style.display = 'none';
         infoBoard.innerHTML = '';
@@ -2252,20 +2418,32 @@ body.auth-locked > *:not(#passwordGate) {
         let sortedTaskIds = getUniqueTaskIds();
 
         let generationBlocks = [];
-        sortedTaskIds.forEach(tid => {
-            const mainCountInput = document.getElementById(`count-${tid}`);
-            const mainCount = mainCountInput ? (parseInt(mainCountInput.value) || 0) : 0;
-            if (mainCount > 0) {
-                generationBlocks.push({ tid, kind: 'main', data: window.database[tid], requiredCount: mainCount });
+        if (useRandomPicks) {
+            // Случайный полный вариант: только main-база.
+            // Для 1–12 это принципиально исключает файлы task*_extra.js.
+            // В 13–19 расширенные аналоги уже входят в основные task13–task19.
+            for (let n = 1; n <= 19; n++) {
+                const tid = `task${n}`;
+                const data = window.database[tid];
+                const randomPick = window.randomVariantPicks[tid];
+                if (data && randomPick) generationBlocks.push({ tid, kind: 'main', data, requiredCount: 1, randomPick });
             }
+        } else {
+            sortedTaskIds.forEach(tid => {
+                const mainCountInput = document.getElementById(`count-${tid}`);
+                const mainCount = mainCountInput ? (parseInt(mainCountInput.value) || 0) : 0;
+                if (mainCount > 0) {
+                    generationBlocks.push({ tid, kind: 'main', data: window.database[tid], requiredCount: mainCount });
+                }
 
-            const extraData = getExtraTaskData(tid);
-            const extraCountInput = document.getElementById(`count-extra-${tid}`);
-            const extraCount = extraCountInput ? (parseInt(extraCountInput.value) || 0) : 0;
-            if (extraData && extraCount > 0) {
-                generationBlocks.push({ tid, kind: 'extra', data: extraData, requiredCount: extraCount });
-            }
-        });
+                const extraData = getExtraTaskData(tid);
+                const extraCountInput = document.getElementById(`count-extra-${tid}`);
+                const extraCount = extraCountInput ? (parseInt(extraCountInput.value) || 0) : 0;
+                if (extraData && extraCount > 0) {
+                    generationBlocks.push({ tid, kind: 'extra', data: extraData, requiredCount: extraCount });
+                }
+            });
+        }
 
         for (let block of generationBlocks) {
             let tid = block.tid;
@@ -2274,23 +2452,31 @@ body.auth-locked > *:not(#passwordGate) {
             let kind = block.kind || 'main';
             if (!data || !Array.isArray(data.prototypes)) continue;
 
-            let selectedProtos = data.prototypes.filter((p, idx) => {
-                const cb = document.getElementById(getPrototypeCheckboxId(tid, idx, kind));
-                return cb && cb.checked;
-            });
+            const randomPick = useRandomPicks ? block.randomPick : null;
+            let selectedProtos = randomPick
+                ? [data.prototypes[randomPick.protoIndex]].filter(Boolean)
+                : data.prototypes.filter((p, idx) => {
+                    const cb = document.getElementById(getPrototypeCheckboxId(tid, idx, kind));
+                    return cb && cb.checked;
+                });
             if (selectedProtos.length === 0) continue;
 
             const visibleBlockTitle = (kind === 'extra') ? 'Дополнительно' : data.title;
             window.selectedBlockTitles.push(visibleBlockTitle);
             const isSecondPartBlock = Number(data.part || 1) >= 2;
-            let activePools = selectedProtos.map((p, protoIndex) => ({ 
-                tasks: orderedTasks ? [...p.tasks] : shuffleArray([...p.tasks]), 
-                allTasks: [...p.tasks],
-                protoSvg: p.svg_code || "", 
-                theory: p,
-                prototype: p,
-                protoIndex: protoIndex
-            }));
+            let activePools = selectedProtos.map((p, selectedIndex) => {
+                const originalProtoIndex = randomPick ? randomPick.protoIndex : data.prototypes.indexOf(p);
+                const chosenTask = randomPick && p.tasks ? p.tasks[randomPick.taskIndex] : null;
+                const poolTasks = chosenTask ? [chosenTask] : (orderedTasks ? [...p.tasks] : shuffleArray([...p.tasks]));
+                return {
+                    tasks: poolTasks,
+                    allTasks: [...p.tasks],
+                    protoSvg: p.svg_code || "",
+                    theory: p,
+                    prototype: p,
+                    protoIndex: originalProtoIndex >= 0 ? originalProtoIndex : selectedIndex
+                };
+            });
             let finalTasks = [];
 
             const availableCount = activePools.reduce((sum, pool) => sum + pool.tasks.length, 0);
@@ -2384,6 +2570,13 @@ body.auth-locked > *:not(#passwordGate) {
             }
             hasContent = true;
 
+            if (useRandomPicks && parseInt(String(tid).replace(/\D/g, ''), 10) === 13) {
+                const secondPartHeading = `<div style="margin:34px 0 12px;padding:11px 14px;border-bottom:2px solid #ff8c00;color:#ff8c00;font-size:21px;font-weight:800;text-align:center;">Задания с развёрнутым ответом</div>`;
+                currentInteractiveHTML += secondPartHeading;
+                currentPrintHTML += secondPartHeading;
+                currentAnswersHTML += `<h2 style="color:#ff8c00;text-align:center;">Задания с развёрнутым ответом</h2>`;
+            }
+
             let blockTitle = `<h3 style="background: #e3f2fd; padding: 10px 15px; border-left: 4px solid #003399; margin-top: 30px; border-radius: 0 6px 6px 0; color: #003399;">${visibleBlockTitle}</h3>`;
             currentInteractiveHTML += blockTitle + `<div style="font-size: 16px;">`;
             currentPrintHTML += blockTitle + `<div style="font-size: 16px;">`;
@@ -2464,7 +2657,10 @@ body.auth-locked > *:not(#passwordGate) {
                     prototypeCode: item.prototype && item.prototype.code ? item.prototype.code : "",
                     prototypeTitle: item.prototype && item.prototype.desc ? `${item.prototype.desc} (${Array.isArray(item.prototype.tasks) ? item.prototype.tasks.length : 0})` : "",
                     showCorrectOnError: showCorrectOnError,
-                    instantCheck: instantCheck
+                    instantCheck: instantCheck,
+                    taskId: item.id ?? null,
+                    taskTid: tid,
+                    randomVariant: useRandomPicks
                 });
                 
                 let stickerHTMLInteractive = "";
@@ -2601,7 +2797,9 @@ body.auth-locked > *:not(#passwordGate) {
                 const taskActionArea = isSecondPartBlock
                     ? `<div style="margin-top:15px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;clear:both;">${drawBtn}${secondPartButtons}<div class="second-part-final-answer" id="second-final-answer-${taskCounter}" style="display:none;width:100%;margin-top:8px;padding:12px 14px;background:#eef6ff;border-left:4px solid #003399;border-radius:6px;"><b>Ответ:</b> ${item.answer}</div></div>`
                     : `<div style="margin-top:15px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; clear:both;"><input type="text" class="ans-box" id="ans-interactive-${taskCounter}" placeholder="Ответ..." data-ans="${item.answer}" style="padding:10px 15px; border:2px solid #ccc; border-radius:6px; font-size:16px; font-weight:bold; width:150px; outline:none; transition:0.3s;">${instantBtn}${drawBtn}${helpBtn}<span class="answer-feedback" id="feedback-${taskCounter}" style="font-weight:bold; font-size:15px; display:none;"></span></div>`;
-                currentInteractiveHTML += `<div class="generated-task-block ${isSecondPartBlock ? 'second-part-task' : 'first-part-task'}" data-part="${isSecondPartBlock ? 2 : 1}" style="margin-bottom:30px; clear:both; overflow:visible; position:relative; border-bottom:1px dashed #ddd; padding:8px 0 20px;"><div style="display:flex; align-items:flex-start; justify-content:space-between; overflow:visible;"><div style="display:flex; align-items:flex-start; gap:15px; flex-grow:1; min-width:0; overflow:visible;"><div style="flex-shrink:0; font-weight:bold; font-size:1.1em; padding-top:2px;">${taskCounter}.</div>${mainSvg ? `<div class="generated-task-diagram" style="flex-shrink:0; min-width:150px; max-width:350px; padding:22px 8px 6px; box-sizing:border-box; overflow:visible;">${mainSvg}</div>` : ""}<div style="flex-grow:1; min-width:0;"><div>${item.text}</div>${taskActionArea}</div></div>${stickerHTMLInteractive}</div>${scratchpadHTML}</div>`;
+                const randomTaskNumber = parseInt(String(tid).replace(/\D/g, ''), 10);
+                const randomReplaceButton = useRandomPicks ? `<button type="button" class="random-replace-btn" onclick="replaceRandomVariantTask('${tid}')" title="Заменить только это задание, остальные оставить">🎲 Заменить</button>` : '';
+                currentInteractiveHTML += `<div class="generated-task-block ${isSecondPartBlock ? 'second-part-task' : 'first-part-task'}" data-part="${isSecondPartBlock ? 2 : 1}" data-random-task-number="${randomTaskNumber}" style="margin-bottom:30px; clear:both; overflow:visible; position:relative; border-bottom:1px dashed #ddd; padding:8px 0 20px;"><div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; overflow:visible;"><div style="display:flex; align-items:flex-start; gap:15px; flex-grow:1; min-width:0; overflow:visible;"><div style="flex-shrink:0; font-weight:bold; font-size:1.1em; padding-top:2px;">${taskCounter}.</div>${mainSvg ? `<div class="generated-task-diagram" style="flex-shrink:0; min-width:150px; max-width:350px; padding:22px 8px 6px; box-sizing:border-box; overflow:visible;">${mainSvg}</div>` : ""}<div style="flex-grow:1; min-width:0;"><div>${item.text}</div>${taskActionArea}</div></div><div style="display:flex;align-items:flex-start;gap:8px;">${randomReplaceButton}${stickerHTMLInteractive}</div></div>${scratchpadHTML}</div>`;
                 
                 currentPrintHTML += `<div class="task-print-block"><div class="task-print-flex"><div class="task-print-num">${taskCounter}</div>${mainSvg ? `<div class="task-print-img">${mainSvg}</div>` : ""}<div class="task-print-text"><div>${item.text}</div>${isSecondPartBlock ? `<div class="task-print-answer" style="margin-top:10px;color:#777;">Решение выполняется с полным обоснованием.</div>` : `<div class="task-print-answer">Ответ: ______________________________</div>`}</div>${stickerHTMLPrint}</div></div>`;
                 
@@ -2612,7 +2810,12 @@ body.auth-locked > *:not(#passwordGate) {
             currentInteractiveHTML += `</div>`; currentPrintHTML += `</div>`; currentAnswersHTML += `</div>`;
         }
 
-        if (hasContent) { document.getElementById('output-section').style.display = 'block'; document.getElementById('btn-group').style.display = 'flex'; renderPreview(); }
+        if (hasContent) {
+            document.getElementById('output-section').style.display = 'block';
+            document.getElementById('btn-group').style.display = 'flex';
+            setRandomVariantButtonsVisible(useRandomPicks);
+            renderPreview();
+        }
     }
 
     window.CANVAS_LOGIC_SCRIPT = `
@@ -2831,6 +3034,7 @@ body.auth-locked > *:not(#passwordGate) {
 
     function downloadStudentHTML() {
         if (!currentInteractiveHTML) { alert("Сначала сгенерируйте вариант!"); return; }
+        const variantTitle = getCurrentVariantTitle();
         let theme = document.getElementById("theme-select").value;
         let customBg = getSelectedCustomBg();
         let timerValue = document.getElementById("timer-input").value;
@@ -2881,7 +3085,7 @@ body.auth-locked > *:not(#passwordGate) {
     <div class="theme-wrapper bg-${theme}">
         <div class="paper">
             <div class="timer-box" id="timer-display">⏱ 00:00</div>
-            <h1 style="text-align: center; color: #003399; border-bottom: 2px solid #ff8c00; padding-bottom: 15px; margin-top:0;">Тренировочный вариант</h1>
+            <h1 style="text-align: center; color: #003399; border-bottom: 2px solid #ff8c00; padding-bottom: 15px; margin-top:0;">${variantTitle}</h1>
             ${sig}
             ${currentInteractiveHTML}
             <button id="btn-check" onclick="checkAll()" style="display:block; width:100%; padding:15px; font-size:18px; font-weight:bold; background:#ff8c00; color:#fff; border:none; border-radius:8px; cursor:pointer; margin-top:30px; transition:0.3s;">ПОДВЕСТИ ИТОГИ</button>
@@ -3058,6 +3262,7 @@ body.auth-locked > *:not(#passwordGate) {
 
     function downloadPrintPDF() {
         if (!currentPrintHTML) { alert("Сначала сгенерируйте вариант!"); return; }
+        const variantTitle = getCurrentVariantTitle();
 
         let teacherName = document.getElementById('teacher-name').value.trim();
         let sigPrint = "";
@@ -3309,8 +3514,8 @@ body.auth-locked > *:not(#passwordGate) {
     <div id="print-footer-fixed">Шкатулка математических интерактивов</div>
     <main class="print-page">
         <header class="print-header">
-            <h1 class="print-title">Тренировочный вариант</h1>
-            <div class="print-subtitle">ЕГЭ профильная математика · задания 1–12</div>
+            <h1 class="print-title">${variantTitle}</h1>
+            <div class="print-subtitle">ЕГЭ профильная математика · ${window.randomVariantMode ? 'полный вариант 1–19' : 'тренировочный набор'}</div>
             ${sigPrint}
         </header>
         ${currentPrintHTML}
