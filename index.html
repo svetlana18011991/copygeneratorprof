@@ -1794,7 +1794,7 @@ body.auth-locked > *:not(#passwordGate) {
             const taskNumber = parseInt(String(tid).replace(/\D/g, ''), 10);
             if (taskNumber === 13) {
                 container.innerHTML += `
-                <div style="margin:30px 0 14px; padding:11px 14px; border-bottom:2px solid #003399; color:#003399; font-size:21px; font-weight:800; letter-spacing:0.1px;">
+                <div style="margin:30px 0 14px; padding:11px 14px; border-bottom:2px solid #ff8c00; color:#ff8c00; font-size:21px; font-weight:800; letter-spacing:0.1px; text-align:center;">
                     Задания с развёрнутым ответом
                 </div>`;
             }
@@ -2045,6 +2045,39 @@ body.auth-locked > *:not(#passwordGate) {
     }
 
     function hideTooltip() { tooltip.style.display = 'none'; }
+
+    function buildInlineScratchpadHTML(draftId) {
+        return `<div id="draw-wrapper-${draftId}" style="display:none; margin-top:12px; width:100%; clear:both;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:5px;background:#e3f2fd;padding:7px 10px;border-radius:8px;border:1px solid #bbdefb;color:#333;">
+                <button onclick="window.setTool('${draftId}', 'pointer')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Указатель">👆</button>
+                <button onclick="window.setTool('${draftId}', 'pen')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Карандаш">🖊️</button>
+                <button onclick="window.setTool('${draftId}', 'highlighter')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Выделитель">🖍️</button>
+                <button onclick="window.undoCanvas('${draftId}')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Отменить">↶</button>
+                <button onclick="window.redoCanvas('${draftId}')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Повторить">↷</button>
+                <select id="tool-select-${draftId}" onchange="window.setTool('${draftId}', this.value)" style="background:#fff;border:1px solid #90caf9;border-radius:4px;padding:4px 7px;font-size:13px;cursor:pointer;color:#003399;font-weight:500;">
+                    <option value="" disabled selected hidden>🔺 Фигуры</option>
+                    <option value="line">📏 Прямая</option>
+                    <option value="vector">↗️ Вектор</option>
+                    <option value="circle">⭕ Окружность</option>
+                    <option value="triangle">🔺 Треугольник</option>
+                    <option value="cylinder">🛢️ Цилиндр</option>
+                    <option value="cone">🍦 Конус</option>
+                    <option value="sphere">🔮 Сфера</option>
+                </select>
+                <input type="color" id="color-${draftId}" value="#003399" style="cursor:pointer;height:28px;width:34px;border:none;background:transparent;padding:0;" title="Цвет">
+                <input type="range" id="size-${draftId}" min="1" max="15" value="3" style="cursor:pointer;width:70px;" title="Толщина линии">
+                <button onclick="window.setTool('${draftId}', 'eraser')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Ластик">🧽</button>
+                <div style="flex-grow:1;"></div>
+                <button onclick="window.clearCanvas('${draftId}')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Очистить всё">🗑️</button>
+                <input type="hidden" id="tool-${draftId}" value="pen">
+            </div>
+            <div style="height:280px;overflow-y:auto;overflow-x:hidden;border:2px solid #bbdefb;border-radius:8px;background:#fff;">
+                <div style="position:relative;width:100%;height:720px;background-color:#fff;background-size:20px 20px;background-image:linear-gradient(to right,#d2e3f2 1px,transparent 1px),linear-gradient(to bottom,#d2e3f2 1px,transparent 1px);">
+                    <canvas id="canvas-${draftId}" style="position:absolute;left:0;top:0;z-index:2;display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;"></canvas>
+                </div>
+            </div>
+        </div>`;
+    }
 
     function openTheoryModalLocal(dataId) {
         let el = document.getElementById(dataId);
@@ -2365,22 +2398,29 @@ body.auth-locked > *:not(#passwordGate) {
                 let theoryHtml = "";
                 if (!isSecondPartBlock && item.theory) {
                     theoryHtml = `
-                        <h3>Разбор аналогичного задания</h3>
-                        <div style='background:#f9f9f9;padding:15px;border-left:4px solid #ff8c00;margin-bottom:15px;border-radius:6px;'>
-                            <p style='margin-top:0;'><b>Задача:</b></p>
-                            <div style='min-height: 60px;'>${theorySvgCode ? '<div style="float:left; margin-right: 20px; margin-bottom: 10px; max-width: 300px;">' + theorySvgCode + '</div>' : ''}${item.theory.theory_task}</div><div style='clear:both;'></div>
-                            <p style='margin-top: 20px;'><b>Решение:</b></p>
-                            <div>${item.theory.theory_sol}</div>
+                        <div id="theory-solution-${taskCounter}">
+                            <h3>Разбор аналогичного задания</h3>
+                            <div style='background:#f9f9f9;padding:15px;border-left:4px solid #ff8c00;margin-bottom:15px;border-radius:6px;'>
+                                <p style='margin-top:0;'><b>Задача:</b></p>
+                                <div style='min-height: 60px;'>${theorySvgCode ? '<div style="float:left; margin-right: 20px; margin-bottom: 10px; max-width: 300px;">' + theorySvgCode + '</div>' : ''}${item.theory.theory_task}</div><div style='clear:both;'></div>
+                                <p style='margin-top: 20px;'><b>Решение:</b></p>
+                                <div>${item.theory.theory_sol}</div>
+                                <div style="display:flex;justify-content:flex-end;margin-top:18px;padding-top:12px;border-top:1px solid #e6e6e6;">
+                                    <button type="button" onclick="document.getElementById('theory-solution-${taskCounter}').style.display='none'" style="background:#fff3e0;color:#e65100;border:1px solid #ffb74d;border-radius:7px;padding:8px 17px;font-weight:700;cursor:pointer;">Скрыть</button>
+                                </div>
+                            </div>
                         </div>
                         <h4 style='color: #ff8c00;'>Задачи для отработки:</h4>
                         <ul style='padding-left:20px;'>
                     `;
                     if(item.theory.tasks) {
-                        item.theory.tasks.forEach(t => {
+                        item.theory.tasks.forEach((t, practiceIndex) => {
                             let tSvgCode = t.svg_code || "";
                             if (tSvgCode) { let tmp = document.createElement('div'); tmp.innerHTML = tSvgCode; window.autoFixSVGArrows(tmp); applySafeSvgPadding(tmp); tSvgCode = tmp.innerHTML; }
                             let tSvg = tSvgCode ? `<br><div style="margin:10px 0; max-width:300px;">${tSvgCode}</div>` : '';
-                            theoryHtml += `<li style='margin-bottom:15px;'>${t.text}${tSvg}<br><span style='color:#003399;cursor:pointer;border-bottom:1px dashed #003399;' onclick='this.innerText="Ответ: ${t.answer}"; this.style.border="none"; this.style.fontWeight="bold";'>Показать ответ</span></li>`;
+                            const practiceDraftId = `practice-${taskCounter}-${practiceIndex + 1}`;
+                            const practiceScratchpad = buildInlineScratchpadHTML(practiceDraftId);
+                            theoryHtml += `<li style='margin-bottom:18px;'><div style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;min-width:0;">${t.text}${tSvg}</div><button type="button" onclick="window.toggleCanvas('${practiceDraftId}')" title="Открыть черновик" style="flex:0 0 auto;background:#fff3e0;color:#e65100;border:1px solid #ffcc80;border-radius:6px;font-size:18px;padding:5px 9px;cursor:pointer;">✏️</button></div><div style="margin-top:7px;"><span style='color:#003399;cursor:pointer;border-bottom:1px dashed #003399;' onclick='this.innerText="Ответ: ${t.answer}"; this.style.border="none"; this.style.fontWeight="bold";'>Показать ответ</span></div>${practiceScratchpad}</li>`;
                         });
                     }
                     theoryHtml += `</ul>`;
@@ -2397,8 +2437,10 @@ body.auth-locked > *:not(#passwordGate) {
                         analogsHtml += `<div style="padding:14px;background:#f5f5f5;border-radius:8px;">Все похожие задания этого типа уже вошли в текущий вариант.</div>`;
                     } else {
                         analogsHtml += `<ol style="padding-left:24px;">`;
-                        analogList.forEach(a => {
-                            analogsHtml += `<li style="margin-bottom:20px;"><div>${a.text}</div>`;
+                        analogList.forEach((a, analogIndex) => {
+                            const analogDraftId = `analog-${taskCounter}-${analogIndex + 1}`;
+                            const analogScratchpad = buildInlineScratchpadHTML(analogDraftId);
+                            analogsHtml += `<li style="margin-bottom:20px;"><div style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;min-width:0;">${a.text}</div><button type="button" onclick="window.toggleCanvas('${analogDraftId}')" title="Открыть черновик" style="flex:0 0 auto;background:#fff3e0;color:#e65100;border:1px solid #ffcc80;border-radius:6px;font-size:18px;padding:5px 9px;cursor:pointer;">✏️</button></div>${analogScratchpad}`;
                             if (showCorrectOnError) analogsHtml += `<div style="margin-top:8px;padding:9px 12px;background:#eef6ff;border-left:3px solid #003399;border-radius:5px;"><b>Ответ:</b> ${a.answer}</div>`;
                             analogsHtml += `</li>`;
                         });
@@ -2636,9 +2678,10 @@ body.auth-locked > *:not(#passwordGate) {
             if (w.style.display === 'none' || w.style.display === '') { w.style.display = 'block'; setTimeout(() => window.initMainCanvas(id), 50); } else { w.style.display = 'none'; }
         };
         window.initMainCanvas = function(id) {
-            if (window.mainCanvases[id]) return;
             let canvas = document.getElementById('canvas-' + id); 
             if(!canvas) return;
+            if (window.mainCanvases[id] && window.mainCanvases[id].canvas === canvas) return;
+            if (window.mainCanvases[id] && window.mainCanvases[id].canvas !== canvas) delete window.mainCanvases[id];
             let ctx = canvas.getContext('2d');
             const canvasRect = canvas.getBoundingClientRect();
             canvas.width = Math.max(1, Math.round(canvasRect.width || canvas.clientWidth || canvas.parentElement.clientWidth || 750));
