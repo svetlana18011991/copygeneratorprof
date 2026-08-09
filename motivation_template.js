@@ -4,7 +4,7 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <title>Мотивационное послание</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], processEscapes: true, macros: { tg: '\\\\operatorname{tg}', ctg: '\\\\operatorname{ctg}' } }, startup: { typeset: false } };<\/script>
+    <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], processEscapes: true }, startup: { typeset: false } };<\/script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
     <style>
         :root{
@@ -238,6 +238,8 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
             box-shadow:0 2px 8px rgba(0,0,0,.08);padding:10px;max-width:42%;max-height:72%;overflow:hidden;pointer-events:none;
         }
         .draftDiagram svg,.draftDiagram img{display:block;max-width:100%!important;max-height:220px!important;width:auto!important;height:auto!important}
+        .draftDiagram.tropinki-draft{width:min(42%,350px);max-width:350px;max-height:72%;}
+        .draftDiagram.tropinki-draft svg,.draftDiagram.tropinki-draft img{max-height:220px!important;}
         #draftCanvas{position:absolute;inset:0;z-index:2;width:100%;height:100%;touch-action:none;cursor:crosshair;background:transparent}
         @media(max-width:850px){.main{grid-template-columns:1fr}.side{order:-1}.top{flex-direction:column;align-items:flex-start}.canvasWrap{height:280px}}
     </style>
@@ -287,7 +289,6 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
                 <button type="button" data-tool="pointer" onclick="setTool('pointer')" title="Указатель">👆</button>
                 <button type="button" data-tool="zoom" onclick="setTool('zoom')" title="Лупа: нажмите на чертёж, чтобы открыть его крупно">🔍</button>
                 <button type="button" data-tool="pen" onclick="setTool('pen')" title="Карандаш">🖊️</button>
-                <button type="button" data-tool="highlighter" onclick="setTool('highlighter')" title="Выделитель — полупрозрачный маркер">🖍️</button>
                 <button type="button" onclick="undoDraft()" title="Отменить">↶</button>
                 <button type="button" onclick="redoDraft()" title="Повторить">↷</button>
                 <select id="toolSelect" onchange="setTool(this.value)">
@@ -549,49 +550,6 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
         renderDraft();
     }
 
-
-        window.openDraftVisualZoom = window.openDraftVisualZoom || function(sourceEl) {
-            if (!sourceEl) return;
-            const visual = sourceEl.matches && sourceEl.matches('svg,img,picture,canvas') ? sourceEl : sourceEl.querySelector('svg,img,picture,canvas');
-            if (!visual) return;
-            let overlay = document.getElementById('draftVisualZoomOverlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'draftVisualZoomOverlay';
-                overlay.style.cssText = 'position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
-                overlay.innerHTML = '<div style="position:relative;width:min(1100px,96vw);height:min(820px,90vh);background:#fff;border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.55);overflow:hidden;display:flex;flex-direction:column;"><div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;background:#eef6ff;border-bottom:1px solid #c9dff2;"><button type="button" data-z="out" title="Уменьшить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">−</button><button type="button" data-z="reset" title="Исходный размер" style="font-size:16px;border:1px solid #90caf9;background:#fff;border-radius:8px;height:36px;cursor:pointer;">100%</button><button type="button" data-z="in" title="Увеличить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">+</button><button type="button" data-z="close" title="Закрыть" style="margin-left:auto;font-size:24px;border:1px solid #ffcc80;background:#fff3e0;color:#e65100;border-radius:8px;width:38px;height:36px;cursor:pointer;">×</button></div><div data-z="viewport" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;background:#fff;"><div data-z="content" style="transform-origin:center center;transition:transform .12s ease;"></div></div></div>';
-                document.body.appendChild(overlay);
-                const close = () => { overlay.style.display = 'none'; document.body.style.overflow = overlay.dataset.oldOverflow || ''; };
-                overlay.addEventListener('click', e => { if (e.target === overlay || e.target.closest('[data-z="close"]')) close(); });
-                document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.style.display !== 'none') close(); });
-                overlay.querySelector('[data-z="in"]').addEventListener('click', () => { overlay._scale = Math.min(4, (overlay._scale || 1) + .25); overlay._apply(); });
-                overlay.querySelector('[data-z="out"]').addEventListener('click', () => { overlay._scale = Math.max(.5, (overlay._scale || 1) - .25); overlay._apply(); });
-                overlay.querySelector('[data-z="reset"]').addEventListener('click', () => { overlay._scale = 1; overlay._apply(); });
-                overlay.querySelector('[data-z="viewport"]').addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); overlay._scale = Math.max(.5, Math.min(4, (overlay._scale || 1) + (e.deltaY < 0 ? .15 : -.15))); overlay._apply(); }, {passive:false});
-            }
-            const content = overlay.querySelector('[data-z="content"]');
-            content.innerHTML = '';
-            let clone;
-            if (visual.tagName && visual.tagName.toLowerCase() === 'canvas') {
-                clone = document.createElement('img');
-                try { clone.src = visual.toDataURL('image/png'); } catch(e) { return; }
-            } else clone = visual.cloneNode(true);
-            clone.removeAttribute && clone.removeAttribute('id');
-            clone.style.cssText = 'display:block;max-width:none!important;max-height:none!important;width:auto!important;height:auto!important;min-width:min(760px,82vw);object-fit:contain;margin:auto;';
-            if (clone.tagName && clone.tagName.toLowerCase() === 'svg') {
-                const vb = clone.getAttribute('viewBox');
-                if (!clone.getAttribute('width')) clone.setAttribute('width', vb ? Math.max(760, Number(vb.split(/\\s+/)[2]) * 2) : 900);
-                if (!clone.getAttribute('height') && vb) clone.setAttribute('height', Math.max(520, Number(vb.split(/\\s+/)[3]) * 2));
-            }
-            content.appendChild(clone);
-            overlay._scale = 1;
-            overlay._apply = () => { content.style.transform = 'scale(' + overlay._scale + ')'; overlay.querySelector('[data-z="reset"]').textContent = Math.round(overlay._scale * 100) + '%'; };
-            overlay._apply();
-            overlay.dataset.oldOverflow = document.body.style.overflow || '';
-            document.body.style.overflow = 'hidden';
-            overlay.style.display = 'flex';
-        };
-
     function getTool(){ return window.currentDraftTool || 'pen'; }
     window.setTool = function(tool){
         window.currentDraftTool = tool || 'pen';
@@ -602,12 +560,82 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
         if(c) c.style.cursor = window.currentDraftTool === 'pointer' ? 'move' : (window.currentDraftTool === 'zoom' ? 'zoom-in' : 'crosshair');
     };
 
+
+    function openMotivationDraftZoomModal(sourceEl){
+        if(!sourceEl || !sourceEl.innerHTML.trim()) return;
+        const old = document.getElementById('motivation-draft-zoom-modal');
+        if(old){ old.remove(); return; }
+
+        const previousOverflow = document.body.style.overflow || '';
+        const overlay = document.createElement('div');
+        overlay.id = 'motivation-draft-zoom-modal';
+        overlay.dataset.previousOverflow = previousOverflow;
+        overlay.setAttribute('role','dialog');
+        overlay.setAttribute('aria-modal','true');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(7,18,31,.88);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;';
+
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:relative;width:min(96vw,1700px);height:94vh;background:#fff;border:3px solid #19b8b0;border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.55);overflow:hidden;display:flex;flex-direction:column;';
+
+        const head = document.createElement('div');
+        head.style.cssText = 'flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:10px 14px;background:#e9fbf9;border-bottom:1px solid #9adfd9;color:#073b4c;font:700 17px Arial,sans-serif;';
+        head.innerHTML = '<span style="font-size:23px;">🔍</span><span>Увеличенный чертёж</span><span style="margin-left:auto;font-size:13px;font-weight:500;color:#526273;">Нажмите на чертёж ещё раз, чтобы закрыть</span>';
+
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.innerHTML = '&times;';
+        close.title = 'Закрыть';
+        close.style.cssText = 'margin-left:6px;width:38px;height:38px;border:1px solid #ef7f1a;border-radius:10px;background:#fff;color:#d95f02;font:700 28px/30px Arial;cursor:pointer;';
+        head.appendChild(close);
+
+        const viewport = document.createElement('div');
+        viewport.style.cssText = 'flex:1 1 auto;min-height:0;overflow:hidden;background:#f4f8fb;padding:18px;box-sizing:border-box;cursor:zoom-out;';
+        const diagram = document.createElement('div');
+        diagram.innerHTML = sourceEl.innerHTML;
+        diagram.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box;';
+        diagram.querySelectorAll('img,svg,picture,canvas').forEach(function(media){
+            media.style.setProperty('display','block','important');
+            media.style.setProperty('width','auto','important');
+            media.style.setProperty('height','auto','important');
+            media.style.setProperty('min-width','0','important');
+            media.style.setProperty('min-height','0','important');
+            media.style.setProperty('max-width','100%','important');
+            media.style.setProperty('max-height','100%','important');
+            media.style.setProperty('margin','auto','important');
+            media.style.setProperty('object-fit','contain','important');
+            media.style.setProperty('cursor','zoom-out','important');
+            media.style.setProperty('box-sizing','border-box','important');
+            media.style.setProperty('pointer-events','auto','important');
+        });
+
+        viewport.appendChild(diagram);
+        modal.appendChild(head);
+        modal.appendChild(viewport);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+
+        function closeZoom(){
+            const current = document.getElementById('motivation-draft-zoom-modal');
+            if(current){
+                document.body.style.overflow = current.dataset.previousOverflow || '';
+                current.remove();
+            }
+            document.removeEventListener('keydown', onKey);
+        }
+        function onKey(e){ if(e.key === 'Escape') closeZoom(); }
+        close.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); closeZoom(); });
+        overlay.addEventListener('click', function(e){ if(e.target === overlay) closeZoom(); });
+        diagram.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); closeZoom(); });
+        document.addEventListener('keydown', onKey);
+    }
+
     function pointerPos(e){
         const r = draft.canvas.getBoundingClientRect();
         return {x:e.clientX-r.left, y:e.clientY-r.top};
     }
     function getBounds(obj){
-        if(obj.tool === 'pen' || obj.tool === 'highlighter' || obj.tool === 'eraser'){
+        if(obj.tool === 'pen' || obj.tool === 'eraser'){
             const xs = obj.points.map(p=>p.x), ys = obj.points.map(p=>p.y);
             return {minX:Math.min(...xs), minY:Math.min(...ys), maxX:Math.max(...xs), maxY:Math.max(...ys)};
         }
@@ -631,14 +659,17 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
         ctx.rotate(obj.angle || 0);
         ctx.scale(obj.scale || 1, obj.scale || 1);
         ctx.translate(-(obj.cx || 0), -(obj.cy || 0));
-        ctx.lineWidth = obj.tool === 'eraser' ? (obj.size || 3) * 3 : (obj.size || 3);
-        if (obj.tool === 'highlighter') ctx.lineWidth = Math.max(12, (Number(obj.size) || 3) * 4);
-        ctx.globalAlpha = obj.tool === 'highlighter' ? 0.28 : 1;
-        ctx.strokeStyle = obj.tool === 'eraser' ? '#ffffff' : (obj.color || '#003399');
-        ctx.fillStyle = obj.color || '#003399';
+        // Ластик должен стирать только рисунок на прозрачном canvas,
+        // а не закрашивать его белым. Тогда клетчатый фон .canvasWrap
+        // остаётся видимым и после стирания.
+        const isEraser = obj.tool === 'eraser';
+        ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+        ctx.lineWidth = isEraser ? (obj.size || 3) * 3 : (obj.size || 3);
+        ctx.strokeStyle = isEraser ? 'rgba(0,0,0,1)' : (obj.color || '#003399');
+        ctx.fillStyle = isEraser ? 'rgba(0,0,0,1)' : (obj.color || '#003399');
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
-        if(obj.tool === 'pen' || obj.tool === 'highlighter' || obj.tool === 'eraser'){
+        if(obj.tool === 'pen' || obj.tool === 'eraser'){
             const pts = obj.points || [];
             if(pts.length === 1){
                 ctx.beginPath();
@@ -707,11 +738,12 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
         const tool = getTool();
         e.preventDefault();
         if(tool === 'zoom'){
-            const box = document.getElementById('draftDiagram');
-            const visual = box && box.querySelector('svg,img,picture,canvas');
-            if(visual){
-                const r = visual.getBoundingClientRect();
-                if(e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) window.openDraftVisualZoom(visual);
+            const figure = document.getElementById('draftDiagram');
+            if(figure && figure.style.display !== 'none' && figure.innerHTML.trim()){
+                const r = figure.getBoundingClientRect();
+                if(e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
+                    openMotivationDraftZoomModal(figure);
+                }
             }
             return;
         }
@@ -727,7 +759,7 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
         const color = document.getElementById('drawColor').value || '#003399';
         const size = Number(document.getElementById('drawSize').value || 3);
         draft.isDrawing = true;
-        if(tool === 'pen' || tool === 'highlighter' || tool === 'eraser'){
+        if(tool === 'pen' || tool === 'eraser'){
             draft.currentObj = {tool,color,size,points:[p],cx:p.x,cy:p.y,scale:1,angle:0};
         }else{
             draft.currentObj = {tool,color,size,sx:p.x,sy:p.y,ex:p.x,ey:p.y,cx:p.x,cy:p.y,scale:1,angle:0};
@@ -747,7 +779,7 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
             renderDraft(); return;
         }
         if(!draft.isDrawing || !draft.currentObj) return;
-        if(draft.currentObj.tool === 'pen' || draft.currentObj.tool === 'highlighter' || draft.currentObj.tool === 'eraser'){
+        if(draft.currentObj.tool === 'pen' || draft.currentObj.tool === 'eraser'){
             const events = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [e];
             for(const evt of events){
                 const next = pointerPos(evt);
@@ -823,6 +855,8 @@ window.MOTIVATION_TEMPLATE = `<!DOCTYPE html>
         const q = questions[currentIndex] || {};
         const visual = q.svg || firstVisualFromHtml(q.prompt || q.text || '');
         d.innerHTML = visual || '';
+        const isTropinki = /(?:Тропинк|Tropinka|План сюжета[^<]{0,80}Тропинки)/i.test(String(visual || '') + ' ' + String(q.prompt || q.text || ''));
+        d.classList.toggle('tropinki-draft', !!isTropinki);
         d.style.display = visual ? 'block' : 'none';
     }
 
