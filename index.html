@@ -2926,13 +2926,43 @@ body.auth-locked > *:not(#passwordGate) {
                 ctx.save(); let cx = obj.cx || 0; let cy = obj.cy || 0; let s = obj.scale || 1;
                 ctx.translate((obj.x || 0) + cx, (obj.y || 0) + cy); ctx.rotate(obj.angle || 0); ctx.scale(s, s); ctx.translate(-cx, -cy);
                 ctx.strokeStyle = obj.color; ctx.lineWidth = obj.size;
+                // Для рукописных линий всегда используем круглые окончания и стыки.
+                // Это важно после любых операций с canvas/context и убирает острые углы.
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
                 ctx.globalAlpha = obj.tool === 'highlighter' ? 0.28 : 1;
                 if (obj.tool === 'highlighter') ctx.lineWidth = Math.max(12, (parseFloat(obj.size) || 3) * 4);
                 if (obj.tool === 'pen' || obj.tool === 'highlighter' || obj.tool === 'eraser') {
                     ctx.globalCompositeOperation = obj.tool === 'eraser' ? 'destination-out' : 'source-over';
                     if(obj.tool === 'eraser') ctx.lineWidth = obj.size * 3;
                     ctx.beginPath();
-                    if(obj.points && obj.points.length > 0) { ctx.moveTo(obj.points[0].x, obj.points[0].y); for(let i=1; i<obj.points.length; i++) ctx.lineTo(obj.points[i].x, obj.points[i].y); }
+                    if (obj.points && obj.points.length > 0) {
+                        const pts = obj.points;
+                        if (pts.length === 1) {
+                            // Обычный короткий тап/клик тоже должен оставлять круглую точку.
+                            ctx.moveTo(pts[0].x, pts[0].y);
+                            ctx.lineTo(pts[0].x + 0.01, pts[0].y + 0.01);
+                        } else if (pts.length === 2) {
+                            ctx.moveTo(pts[0].x, pts[0].y);
+                            ctx.lineTo(pts[1].x, pts[1].y);
+                        } else {
+                            // Сглаживаем рукописный штрих кривыми через середины соседних точек.
+                            // Раньше здесь был lineTo по каждой сырой mouse/touch-точке,
+                            // из-за чего буквы выглядели как угловатая ломаная.
+                            ctx.moveTo(pts[0].x, pts[0].y);
+                            for (let i = 1; i < pts.length - 1; i++) {
+                                const midX = (pts[i].x + pts[i + 1].x) / 2;
+                                const midY = (pts[i].y + pts[i + 1].y) / 2;
+                                ctx.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
+                            }
+                            ctx.quadraticCurveTo(
+                                pts[pts.length - 1].x,
+                                pts[pts.length - 1].y,
+                                pts[pts.length - 1].x,
+                                pts[pts.length - 1].y
+                            );
+                        }
+                    }
                     ctx.stroke();
                 } else {
                     ctx.globalCompositeOperation = 'source-over'; ctx.beginPath();
