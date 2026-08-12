@@ -2891,10 +2891,17 @@ body.auth-locked > *:not(#passwordGate) {
             if(!canvas) return;
             if (window.mainCanvases[id] && window.mainCanvases[id].canvas === canvas) return;
             if (window.mainCanvases[id] && window.mainCanvases[id].canvas !== canvas) delete window.mainCanvases[id];
-            let ctx = canvas.getContext('2d');
+            let ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
             const canvasRect = canvas.getBoundingClientRect();
-            canvas.width = Math.max(1, Math.round(canvasRect.width || canvas.clientWidth || canvas.parentElement.clientWidth || 750));
-            canvas.height = Math.max(1, Math.round(canvasRect.height || canvas.clientHeight || canvas.parentElement.clientHeight || 250)); 
+            const cssWidth = Math.max(1, Math.round(canvasRect.width || canvas.clientWidth || canvas.parentElement.clientWidth || 750));
+            const cssHeight = Math.max(1, Math.round(canvasRect.height || canvas.clientHeight || canvas.parentElement.clientHeight || 250));
+            // Рисуем в физическом разрешении экрана. Без этого на Retina/масштабированных
+            // дисплеях рукописная линия выглядит зубчатой и "острой".
+            const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+            canvas.width = Math.max(1, Math.round(cssWidth * dpr));
+            canvas.height = Math.max(1, Math.round(cssHeight * dpr));
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.imageSmoothingEnabled = true;
             ctx.lineCap = 'round'; ctx.lineJoin = 'round';
             
             let objects = []; let currentObj = null; let draggingObj = null; let action = null; 
@@ -2997,11 +3004,97 @@ body.auth-locked > *:not(#passwordGate) {
             }
 
             function getLocalPos(p, obj) { let cx = obj.cx || 0, cy = obj.cy || 0; let tx = (obj.x || 0) + cx, ty = (obj.y || 0) + cy; let nx = p.x - tx, ny = p.y - ty; let angle = -(obj.angle || 0); let rx = nx * Math.cos(angle) - ny * Math.sin(angle); let ry = nx * Math.sin(angle) + ny * Math.cos(angle); let scale = obj.scale || 1; return {x: (rx / scale) + cx, y: (ry / scale) + cy}; }
-            function renderAll() { ctx.clearRect(0, 0, canvas.width, canvas.height); objects.forEach(obj => drawObj(ctx, obj, draggingObj === obj)); if (currentObj) drawObj(ctx, currentObj, false); }
-            function getPos(e) { const rect = canvas.getBoundingClientRect(); let x = e.clientX, y = e.clientY; if (e.touches && e.touches.length > 0) { x = e.touches[0].clientX; y = e.touches[0].clientY; } return { x: x - rect.left, y: y - rect.top }; }
+            function clearPhysicalCanvas() {
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+            }
+            function renderAll(includeCurrent = true) {
+                clearPhysicalCanvas();
+                objects.forEach(obj => drawObj(ctx, obj, draggingObj === obj));
+                if (includeCurrent && currentObj) drawObj(ctx, currentObj, false);
+            }
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                let point = e;
+                if (e.touches && e.touches.length > 0) point = e.touches[0];
+                else if (e.changedTouches && e.changedTouches.length > 0) point = e.changedTouches[0];
+                return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+            }
+            function getEventPoints(e) {
+                let events = [e];
+                if (e && typeof e.getCoalescedEvents === 'function') {
+                    const coalesced = e.getCoalescedEvents();
+                    if (coalesced && coalesced.length) events = coalesced;
+                }
+                return events.map(getPos);
+            }
+            function appendStrokePoint(obj, p, force = false) {
+                if (!obj || !obj.points) return false;
+                const pts = obj.points;
+                if (!pts.length) { pts.push(p); return true; }
+                const last = pts[pts.length - 1];
+                const dx = p.x - last.x, dy = p.y - last.y;
+                const dist = Math.hypot(dx, dy);
+                if (!force && dist < 0.45) return false;
+
+                // Если браузер прислал редкую точку, добавляем промежуточные.
+                // Это особенно заметно при быстром письме мышью и стилусом.
+                const maxStep = 2.4;
+                if (dist > maxStep) {
+                    const steps = Math.ceil(dist / maxStep);
+                    for (let i = 1; i <= steps; i++) {
+                        const t = i / steps;
+                        pts.push({ x: last.x + dx * t, y: last.y + dy * t });
+                    }
+                } else {
+                    pts.push(p);
+                }
+                return true;
+            }
+
+            function drawLiveStrokeTail(obj) {
+                if (!obj || !obj.points || obj.points.length < 2) return;
+                const pts = obj.points;
+                // Берём небольшой хвост. Старые части штриха уже находятся на canvas,
+                // поэтому нет необходимости очищать и перерисовывать многотысячепиксельный черновик.
+                const start = Math.max(0, pts.length - 10);
+                const tail = pts.slice(start);
+
+                ctx.save();
+                ctx.strokeStyle = obj.color;
+                ctx.lineWidth = parseFloat(obj.size) || 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.globalAlpha = 1;
+                ctx.globalCompositeOperation = obj.tool === 'eraser' ? 'destination-out' : 'source-over';
+                if (obj.tool === 'eraser') ctx.lineWidth = (parseFloat(obj.size) || 3) * 3;
+
+                ctx.beginPath();
+                if (tail.length === 2) {
+                    ctx.moveTo(tail[0].x, tail[0].y);
+                    ctx.lineTo(tail[1].x, tail[1].y);
+                } else {
+                    ctx.moveTo(tail[0].x, tail[0].y);
+                    for (let i = 1; i < tail.length - 1; i++) {
+                        const midX = (tail[i].x + tail[i + 1].x) / 2;
+                        const midY = (tail[i].y + tail[i + 1].y) / 2;
+                        ctx.quadraticCurveTo(tail[i].x, tail[i].y, midX, midY);
+                    }
+                    const last = tail[tail.length - 1];
+                    ctx.quadraticCurveTo(last.x, last.y, last.x, last.y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
 
             function startDraw(e) {
-                isDrawing = true; let p = getPos(e); 
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                isDrawing = true; let p = getPos(e);
+                if (e.pointerId != null && canvas.setPointerCapture) {
+                    try { canvas.setPointerCapture(e.pointerId); } catch(_) {}
+                }
                 let tool = document.getElementById('tool-' + id).value; let color = document.getElementById('color-' + id).value; let size = document.getElementById('size-' + id).value;
                 if (tool === 'zoom') {
                     isDrawing = false;
@@ -3025,24 +3118,92 @@ body.auth-locked > *:not(#passwordGate) {
                     }
                     if (!hitHandle) { draggingObj = null; action = null; for (let i = objects.length - 1; i >= 0; i--) { if (objects[i].tool === 'eraser') continue; let lp = getLocalPos(p, objects[i]); let b = getRawBounds(objects[i]); if (lp.x >= b.minX && lp.x <= b.maxX && lp.y >= b.minY && lp.y <= b.maxY) { draggingObj = objects[i]; action = 'move'; dragStartX = p.x; dragStartY = p.y; break; } } }
                     renderAll();
-                } else { currentObj = { tool: tool, color: color, size: size, x: 0, y: 0, scale: 1, angle: 0 }; if (tool === 'pen' || tool === 'highlighter' || tool === 'eraser') { currentObj.points = [p]; } else { currentObj.sx = p.x; currentObj.sy = p.y; currentObj.ex = p.x; currentObj.ey = p.y; } }
+                } else {
+                    currentObj = { tool: tool, color: color, size: size, x: 0, y: 0, scale: 1, angle: 0 };
+                    if (tool === 'pen' || tool === 'highlighter' || tool === 'eraser') {
+                        currentObj.points = [p];
+                    } else {
+                        currentObj.sx = p.x; currentObj.sy = p.y; currentObj.ex = p.x; currentObj.ey = p.y;
+                    }
+                }
                 if (e.cancelable) e.preventDefault();
             }
 
             function draw(e) {
-                if (!isDrawing) return; if (e.cancelable) e.preventDefault(); let p = getPos(e);
-                if (document.getElementById('tool-' + id).value === 'pointer' && draggingObj && action) {
+                if (!isDrawing) return;
+                if (e.cancelable) e.preventDefault();
+
+                const toolNow = document.getElementById('tool-' + id).value;
+                const eventPoints = getEventPoints(e);
+                const p = eventPoints[eventPoints.length - 1] || getPos(e);
+
+                if (toolNow === 'pointer' && draggingObj && action) {
                     if (action === 'move') { draggingObj.x = (draggingObj.x || 0) + (p.x - dragStartX); draggingObj.y = (draggingObj.y || 0) + (p.y - dragStartY); dragStartX = p.x; dragStartY = p.y; }
                     else if (action === 'scale') { let tx = (draggingObj.x||0) + (draggingObj.cx||0); let ty = (draggingObj.y||0) + (draggingObj.cy||0); let currentDist = Math.hypot(p.x - tx, p.y - ty); draggingObj.scale = Math.max(0.1, initialScale * (currentDist / dragStartDist)); }
                     else if (action === 'rotate') { let tx = (draggingObj.x||0) + (draggingObj.cx||0); let ty = (draggingObj.y||0) + (draggingObj.cy||0); let currentAngle = Math.atan2(p.y - ty, p.x - tx); draggingObj.angle = initialAngle + (currentAngle - dragStartAngle); }
                     renderAll();
-                } else if (currentObj) { if (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser') { currentObj.points.push(p); } else { currentObj.ex = p.x; currentObj.ey = p.y; } renderAll(); }
+                } else if (currentObj) {
+                    if (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser') {
+                        let changed = false;
+                        for (const ep of eventPoints) changed = appendStrokePoint(currentObj, ep) || changed;
+                        if (changed) {
+                            // Для обычного карандаша и ластика рисуем только свежий хвост:
+                            // это резко уменьшает задержку на длинном черновике.
+                            if (currentObj.tool === 'pen' || currentObj.tool === 'eraser') drawLiveStrokeTail(currentObj);
+                            else renderAll();
+                        }
+                    } else {
+                        currentObj.ex = p.x; currentObj.ey = p.y;
+                        renderAll();
+                    }
+                }
             }
 
-            function stopDraw() { if(!isDrawing) return; isDrawing = false; let changed = false; if (currentObj) { let b = getRawBounds(currentObj); currentObj.cx = (b.minX + b.maxX) / 2; currentObj.cy = (b.minY + b.maxY) / 2; objects.push(currentObj); currentObj = null; changed = true; } else if (draggingObj && action) { changed = true; } action = null; if (changed) saveHistory(); renderAll(); }
+            function stopDraw(e) {
+                if(!isDrawing) return;
+                if (e && e.cancelable) e.preventDefault();
 
-            canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); window.addEventListener('mouseup', stopDraw);
-            canvas.addEventListener('touchstart', startDraw, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); window.addEventListener('touchend', stopDraw);
+                // Добавляем точную последнюю координату, чтобы конец буквы не обрывался.
+                if (currentObj && (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser') && e && e.clientX != null) {
+                    appendStrokePoint(currentObj, getPos(e), true);
+                }
+
+                isDrawing = false;
+                let changed = false;
+                if (currentObj) {
+                    let b = getRawBounds(currentObj);
+                    currentObj.cx = (b.minX + b.maxX) / 2;
+                    currentObj.cy = (b.minY + b.maxY) / 2;
+                    objects.push(currentObj);
+                    currentObj = null;
+                    changed = true;
+                } else if (draggingObj && action) {
+                    changed = true;
+                }
+                action = null;
+                if (changed) saveHistory();
+                renderAll();
+
+                if (e && e.pointerId != null && canvas.releasePointerCapture) {
+                    try { if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId); } catch(_) {}
+                }
+            }
+
+            // Pointer Events дают намного более плотный поток координат для мыши, стилуса и пальца.
+            // getCoalescedEvents() выше забирает промежуточные точки, которые браузер обычно скрывает.
+            if (window.PointerEvent) {
+                canvas.addEventListener('pointerdown', startDraw, {passive: false});
+                canvas.addEventListener('pointermove', draw, {passive: false});
+                canvas.addEventListener('pointerup', stopDraw, {passive: false});
+                canvas.addEventListener('pointercancel', stopDraw, {passive: false});
+            } else {
+                canvas.addEventListener('mousedown', startDraw);
+                canvas.addEventListener('mousemove', draw);
+                window.addEventListener('mouseup', stopDraw);
+                canvas.addEventListener('touchstart', startDraw, {passive: false});
+                canvas.addEventListener('touchmove', draw, {passive: false});
+                window.addEventListener('touchend', stopDraw, {passive: false});
+            }
             
             window.mainCanvases[id] = { canvas, ctx, objects, renderAll, undo, redo, saveHistory };
             saveHistory();
