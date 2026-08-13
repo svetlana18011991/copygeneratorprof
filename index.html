@@ -2004,7 +2004,7 @@ body.auth-locked > *:not(#passwordGate) {
 
     function getCurrentVariantTitle() {
         return window.randomVariantMode && window.randomVariantNumber
-            ? `Случайный вариант №${window.randomVariantNumber}`
+            ? `Вариант №${window.randomVariantNumber}`
             : 'Тренировочный вариант';
     }
 
@@ -2932,6 +2932,26 @@ body.auth-locked > *:not(#passwordGate) {
                 let pad = obj.tool === 'highlighter' ? Math.max(12, (parseFloat(obj.size) || 3) * 4) / 2 : (parseFloat(obj.size) || 3); return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad };
             }
             
+            function drawSmoothFreehandPath(targetCtx, points) {
+                if (!points || points.length === 0) return;
+                targetCtx.beginPath();
+                targetCtx.moveTo(points[0].x, points[0].y);
+                if (points.length === 1) {
+                    targetCtx.lineTo(points[0].x + 0.01, points[0].y + 0.01);
+                } else if (points.length === 2) {
+                    targetCtx.lineTo(points[1].x, points[1].y);
+                } else {
+                    for (let i = 1; i < points.length - 1; i++) {
+                        const midX = (points[i].x + points[i + 1].x) / 2;
+                        const midY = (points[i].y + points[i + 1].y) / 2;
+                        targetCtx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+                    }
+                    const last = points[points.length - 1];
+                    targetCtx.lineTo(last.x, last.y);
+                }
+                targetCtx.stroke();
+            }
+
             function drawObj(ctx, obj, isSelected) {
                 ctx.save(); let cx = obj.cx || 0; let cy = obj.cy || 0; let s = obj.scale || 1;
                 ctx.translate((obj.x || 0) + cx, (obj.y || 0) + cy); ctx.rotate(obj.angle || 0); ctx.scale(s, s); ctx.translate(-cx, -cy);
@@ -2941,9 +2961,9 @@ body.auth-locked > *:not(#passwordGate) {
                 if (obj.tool === 'pen' || obj.tool === 'highlighter' || obj.tool === 'eraser') {
                     ctx.globalCompositeOperation = obj.tool === 'eraser' ? 'destination-out' : 'source-over';
                     if(obj.tool === 'eraser') ctx.lineWidth = obj.size * 3;
-                    ctx.beginPath();
-                    if(obj.points && obj.points.length > 0) { ctx.moveTo(obj.points[0].x, obj.points[0].y); for(let i=1; i<obj.points.length; i++) ctx.lineTo(obj.points[i].x, obj.points[i].y); }
-                    ctx.stroke();
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    drawSmoothFreehandPath(ctx, obj.points || []);
                 } else {
                     ctx.globalCompositeOperation = 'source-over'; ctx.beginPath();
                     let sx = obj.sx, sy = obj.sy, ex = obj.ex, ey = obj.ey; let dx = ex - sx, dy = ey - sy; let rx = Math.abs(dx), ry = Math.abs(dy); let r = Math.sqrt(dx*dx + dy*dy);
@@ -2978,7 +2998,50 @@ body.auth-locked > *:not(#passwordGate) {
 
             function getLocalPos(p, obj) { let cx = obj.cx || 0, cy = obj.cy || 0; let tx = (obj.x || 0) + cx, ty = (obj.y || 0) + cy; let nx = p.x - tx, ny = p.y - ty; let angle = -(obj.angle || 0); let rx = nx * Math.cos(angle) - ny * Math.sin(angle); let ry = nx * Math.sin(angle) + ny * Math.cos(angle); let scale = obj.scale || 1; return {x: (rx / scale) + cx, y: (ry / scale) + cy}; }
             function renderAll() { ctx.clearRect(0, 0, canvas.width, canvas.height); objects.forEach(obj => drawObj(ctx, obj, draggingObj === obj)); if (currentObj) drawObj(ctx, currentObj, false); }
-            function getPos(e) { const rect = canvas.getBoundingClientRect(); let x = e.clientX, y = e.clientY; if (e.touches && e.touches.length > 0) { x = e.touches[0].clientX; y = e.touches[0].clientY; } return { x: x - rect.left, y: y - rect.top }; }
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                let x = e.clientX, y = e.clientY;
+                if (e.touches && e.touches.length > 0) { x = e.touches[0].clientX; y = e.touches[0].clientY; }
+                const scaleX = rect.width ? canvas.width / rect.width : 1;
+                const scaleY = rect.height ? canvas.height / rect.height : 1;
+                return { x: (x - rect.left) * scaleX, y: (y - rect.top) * scaleY };
+            }
+
+            function appendFreehandPoint(obj, p, drawIncrementally = true) {
+                if (!obj || !obj.points) return;
+                const pts = obj.points;
+                const prev = pts[pts.length - 1];
+                if (prev && Math.hypot(p.x - prev.x, p.y - prev.y) < 0.45) return;
+                pts.push(p);
+                if (!drawIncrementally || pts.length < 2) return;
+
+                ctx.save();
+                ctx.strokeStyle = obj.color;
+                ctx.lineWidth = obj.tool === 'highlighter' ? Math.max(12, (parseFloat(obj.size) || 3) * 4) : (obj.tool === 'eraser' ? (parseFloat(obj.size) || 3) * 3 : (parseFloat(obj.size) || 3));
+                ctx.globalAlpha = obj.tool === 'highlighter' ? 0.28 : 1;
+                ctx.globalCompositeOperation = obj.tool === 'eraser' ? 'destination-out' : 'source-over';
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+
+                if (pts.length === 2) {
+                    const a = pts[0], b = pts[1];
+                    ctx.moveTo(a.x, a.y);
+                    ctx.lineTo((a.x + b.x) / 2, (a.y + b.y) / 2);
+                } else {
+                    const a = pts[pts.length - 3];
+                    const b = pts[pts.length - 2];
+                    const c = pts[pts.length - 1];
+                    const startX = (a.x + b.x) / 2;
+                    const startY = (a.y + b.y) / 2;
+                    const endX = (b.x + c.x) / 2;
+                    const endY = (b.y + c.y) / 2;
+                    ctx.moveTo(startX, startY);
+                    ctx.quadraticCurveTo(b.x, b.y, endX, endY);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
 
             function startDraw(e) {
                 isDrawing = true; let p = getPos(e); 
@@ -3010,19 +3073,74 @@ body.auth-locked > *:not(#passwordGate) {
             }
 
             function draw(e) {
-                if (!isDrawing) return; if (e.cancelable) e.preventDefault(); let p = getPos(e);
+                if (!isDrawing) return;
+                if (e.cancelable) e.preventDefault();
+                let p = getPos(e);
                 if (document.getElementById('tool-' + id).value === 'pointer' && draggingObj && action) {
                     if (action === 'move') { draggingObj.x = (draggingObj.x || 0) + (p.x - dragStartX); draggingObj.y = (draggingObj.y || 0) + (p.y - dragStartY); dragStartX = p.x; dragStartY = p.y; }
                     else if (action === 'scale') { let tx = (draggingObj.x||0) + (draggingObj.cx||0); let ty = (draggingObj.y||0) + (draggingObj.cy||0); let currentDist = Math.hypot(p.x - tx, p.y - ty); draggingObj.scale = Math.max(0.1, initialScale * (currentDist / dragStartDist)); }
                     else if (action === 'rotate') { let tx = (draggingObj.x||0) + (draggingObj.cx||0); let ty = (draggingObj.y||0) + (draggingObj.cy||0); let currentAngle = Math.atan2(p.y - ty, p.x - tx); draggingObj.angle = initialAngle + (currentAngle - dragStartAngle); }
                     renderAll();
-                } else if (currentObj) { if (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser') { currentObj.points.push(p); } else { currentObj.ex = p.x; currentObj.ey = p.y; } renderAll(); }
+                } else if (currentObj) {
+                    if (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser') {
+                        const samples = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [];
+                        if (samples && samples.length) {
+                            samples.forEach(sample => appendFreehandPoint(currentObj, getPos(sample), true));
+                        } else {
+                            appendFreehandPoint(currentObj, p, true);
+                        }
+                    } else {
+                        currentObj.ex = p.x;
+                        currentObj.ey = p.y;
+                        renderAll();
+                    }
+                }
             }
 
-            function stopDraw() { if(!isDrawing) return; isDrawing = false; let changed = false; if (currentObj) { let b = getRawBounds(currentObj); currentObj.cx = (b.minX + b.maxX) / 2; currentObj.cy = (b.minY + b.maxY) / 2; objects.push(currentObj); currentObj = null; changed = true; } else if (draggingObj && action) { changed = true; } action = null; if (changed) saveHistory(); renderAll(); }
+            function stopDraw(e) {
+                if(!isDrawing) return;
+                if (currentObj && e && (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser')) {
+                    const hasPointerCoords = Number.isFinite(e.clientX) && Number.isFinite(e.clientY);
+                    const hasTouchCoords = e.changedTouches && e.changedTouches.length > 0;
+                    if (hasPointerCoords || hasTouchCoords) {
+                        const sourceEvent = hasPointerCoords ? e : e.changedTouches[0];
+                        const finalPoint = getPos(sourceEvent);
+                        appendFreehandPoint(currentObj, finalPoint, true);
+                    }
+                }
+                isDrawing = false;
+                let changed = false;
+                if (currentObj) {
+                    let b = getRawBounds(currentObj);
+                    currentObj.cx = (b.minX + b.maxX) / 2;
+                    currentObj.cy = (b.minY + b.maxY) / 2;
+                    objects.push(currentObj);
+                    currentObj = null;
+                    changed = true;
+                } else if (draggingObj && action) { changed = true; }
+                action = null;
+                if (changed) saveHistory();
+                renderAll();
+            }
 
-            canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); window.addEventListener('mouseup', stopDraw);
-            canvas.addEventListener('touchstart', startDraw, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); window.addEventListener('touchend', stopDraw);
+            if (window.PointerEvent) {
+                canvas.addEventListener('pointerdown', function(e) {
+                    if (canvas.setPointerCapture && e.pointerId !== undefined) {
+                        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+                    }
+                    startDraw(e);
+                });
+                canvas.addEventListener('pointermove', draw);
+                canvas.addEventListener('pointerup', stopDraw);
+                canvas.addEventListener('pointercancel', stopDraw);
+            } else {
+                canvas.addEventListener('mousedown', startDraw);
+                canvas.addEventListener('mousemove', draw);
+                window.addEventListener('mouseup', stopDraw);
+                canvas.addEventListener('touchstart', startDraw, {passive: false});
+                canvas.addEventListener('touchmove', draw, {passive: false});
+                window.addEventListener('touchend', stopDraw);
+            }
             
             window.mainCanvases[id] = { canvas, ctx, objects, renderAll, undo, redo, saveHistory };
             saveHistory();
