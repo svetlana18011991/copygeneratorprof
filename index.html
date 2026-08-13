@@ -2214,15 +2214,25 @@ body.auth-locked > *:not(#passwordGate) {
 
     function hideTooltip() { tooltip.style.display = 'none'; }
 
-    function buildInlineScratchpadHTML(draftId) {
-        return `<div id="draw-wrapper-${draftId}" style="display:none; margin-top:12px; width:100%; clear:both;">
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:5px;background:#e3f2fd;padding:7px 10px;border-radius:8px;border:1px solid #bbdefb;color:#333;">
-                <button onclick="window.setTool('${draftId}', 'pointer')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Указатель">👆</button>
-                <button onclick="window.setTool('${draftId}', 'pen')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Карандаш">🖊️</button>
-                <button onclick="window.setTool('${draftId}', 'highlighter')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Выделитель">🖍️</button>
-                <button onclick="window.undoCanvas('${draftId}')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Отменить">↶</button>
-                <button onclick="window.redoCanvas('${draftId}')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Повторить">↷</button>
-                <select id="tool-select-${draftId}" onchange="window.setTool('${draftId}', this.value)" style="background:#fff;border:1px solid #90caf9;border-radius:4px;padding:4px 7px;font-size:13px;cursor:pointer;color:#003399;font-weight:500;">
+    function buildInlineScratchpadHTML(draftId, isSecondPart = false) {
+        // Черновик в аналогах/задачах для отработки использует ТОЧНО ТУ ЖЕ
+        // структуру рабочего canvas, что и черновик обычного интерактивного задания.
+        // Отличается только режим рабочей области по части:
+        // 1 часть — без прокрутки; 2 часть — длинное поле с вертикальной прокруткой.
+        const scratchViewportStyle = isSecondPart
+            ? "height:320px;overflow-y:auto;overflow-x:hidden;border:2px solid #bbdefb;border-radius:8px;background:#fff;"
+            : "height:320px;overflow:hidden;border:2px solid #bbdefb;border-radius:8px;background:#fff;";
+        const scratchWorkspaceHeight = isSecondPart ? 2880 : 320;
+
+        return `<div id="draw-wrapper-${draftId}" class="${isSecondPart ? 'second-part-scratchpad' : ''}" style="display:none; margin-top:20px; width:100%; transition:all 0.3s ease; clear:both;">
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:5px; background:#e3f2fd; padding:8px 15px; border-radius:8px; border:1px solid #bbdefb; color:#333;">
+                <button onclick="window.setTool('${draftId}', 'pointer')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Указатель (Перетаскивание)">👆</button>
+                <button onclick="window.setTool('${draftId}', 'zoom')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Лупа">🔍</button>
+                <button onclick="window.setTool('${draftId}', 'pen')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Карандаш">🖊️</button>
+                <button onclick="window.setTool('${draftId}', 'highlighter')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Выделитель — полупрозрачный маркер">🖍️</button>
+                <button onclick="window.undoCanvas('${draftId}')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Отменить действие">↶</button>
+                <button onclick="window.redoCanvas('${draftId}')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Повторить действие">↷</button>
+                <select id="tool-select-${draftId}" onchange="window.setTool('${draftId}', this.value)" style="background:#fff; border:1px solid #90caf9; border-radius:4px; padding:4px 8px; font-size:14px; cursor:pointer; outline:none; color:#003399; font-weight:500;">
                     <option value="" disabled selected hidden>🔺 Фигуры</option>
                     <option value="line">📏 Прямая</option>
                     <option value="vector">↗️ Вектор</option>
@@ -2232,16 +2242,16 @@ body.auth-locked > *:not(#passwordGate) {
                     <option value="cone">🍦 Конус</option>
                     <option value="sphere">🔮 Сфера</option>
                 </select>
-                <input type="color" id="color-${draftId}" value="#003399" style="cursor:pointer;height:28px;width:34px;border:none;background:transparent;padding:0;" title="Цвет">
-                <input type="range" id="size-${draftId}" min="1" max="15" value="3" style="cursor:pointer;width:70px;" title="Толщина линии">
-                <button onclick="window.setTool('${draftId}', 'eraser')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Ластик">🧽</button>
+                <input type="color" id="color-${draftId}" value="#003399" style="cursor:pointer; height:30px; width:35px; border:none; background:transparent; padding:0;" title="Цвет">
+                <input type="range" id="size-${draftId}" min="1" max="15" value="3" style="cursor:pointer; width:80px;" title="Толщина линии">
+                <button onclick="window.setTool('${draftId}', 'eraser')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Ластик">🧽</button>
                 <div style="flex-grow:1;"></div>
-                <button onclick="window.clearCanvas('${draftId}')" style="background:none;border:none;cursor:pointer;font-size:19px;" title="Очистить всё">🗑️</button>
+                <button onclick="window.clearCanvas('${draftId}')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Очистить всё">🗑️</button>
                 <input type="hidden" id="tool-${draftId}" value="pen">
             </div>
-            <div style="height:280px;overflow-y:auto;overflow-x:hidden;border:2px solid #bbdefb;border-radius:8px;background:#fff;">
-                <div style="position:relative;width:100%;height:2160px;background-color:#fff;background-size:20px 20px;background-image:linear-gradient(to right,#d2e3f2 1px,transparent 1px),linear-gradient(to bottom,#d2e3f2 1px,transparent 1px);">
-                    <canvas id="canvas-${draftId}" style="position:absolute;left:0;top:0;z-index:2;display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;"></canvas>
+            <div style="${scratchViewportStyle}">
+                <div style="position:relative; width:100%; height:${scratchWorkspaceHeight}px; background-color:#fff; background-size:20px 20px; background-image:linear-gradient(to right,#d2e3f2 1px,transparent 1px),linear-gradient(to bottom,#d2e3f2 1px,transparent 1px);">
+                    <canvas id="canvas-${draftId}" style="position:absolute; left:0; top:0; z-index:2; display:block; width:100%; height:100%; touch-action:none; cursor:crosshair;"></canvas>
                 </div>
             </div>
         </div>`;
@@ -2621,7 +2631,7 @@ body.auth-locked > *:not(#passwordGate) {
                             if (tSvgCode) { let tmp = document.createElement('div'); tmp.innerHTML = tSvgCode; window.autoFixSVGArrows(tmp); applySafeSvgPadding(tmp); tSvgCode = tmp.innerHTML; }
                             let tSvg = tSvgCode ? `<br><div style="margin:10px 0; max-width:300px;">${tSvgCode}</div>` : '';
                             const practiceDraftId = `practice-${taskCounter}-${practiceIndex + 1}`;
-                            const practiceScratchpad = buildInlineScratchpadHTML(practiceDraftId);
+                            const practiceScratchpad = buildInlineScratchpadHTML(practiceDraftId, false);
                             theoryHtml += `<li style='margin-bottom:18px;'><div style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;min-width:0;">${t.text}${tSvg}</div><button type="button" onclick="window.toggleCanvas('${practiceDraftId}')" title="Открыть черновик" style="flex:0 0 auto;background:#fff3e0;color:#e65100;border:1px solid #ffcc80;border-radius:6px;font-size:18px;padding:5px 9px;cursor:pointer;">✏️</button></div><div style="margin-top:7px;"><span style='color:#003399;cursor:pointer;border-bottom:1px dashed #003399;' onclick='this.innerText="Ответ: ${t.answer}"; this.style.border="none"; this.style.fontWeight="bold";'>Показать ответ</span></div>${practiceScratchpad}</li>`;
                         });
                     }
@@ -2638,7 +2648,7 @@ body.auth-locked > *:not(#passwordGate) {
                         analogsHtml += `<ol style="padding-left:24px;">`;
                         analogList.forEach((a, analogIndex) => {
                             const analogDraftId = `analog-${taskCounter}-${analogIndex + 1}`;
-                            const analogScratchpad = buildInlineScratchpadHTML(analogDraftId);
+                            const analogScratchpad = buildInlineScratchpadHTML(analogDraftId, true);
                             analogsHtml += `<li style="margin-bottom:20px;"><div style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;min-width:0;">${a.text}</div><button type="button" onclick="window.toggleCanvas('${analogDraftId}')" title="Открыть черновик" style="flex:0 0 auto;background:#fff3e0;color:#e65100;border:1px solid #ffcc80;border-radius:6px;font-size:18px;padding:5px 9px;cursor:pointer;">✏️</button></div>${analogScratchpad}`;
                             if (showCorrectOnError) analogsHtml += `<div style="margin-top:8px;padding:9px 12px;background:#eef6ff;border-left:3px solid #003399;border-radius:5px;"><b>Ответ:</b> ${a.answer}</div>`;
                             analogsHtml += `</li>`;
@@ -2891,17 +2901,10 @@ body.auth-locked > *:not(#passwordGate) {
             if(!canvas) return;
             if (window.mainCanvases[id] && window.mainCanvases[id].canvas === canvas) return;
             if (window.mainCanvases[id] && window.mainCanvases[id].canvas !== canvas) delete window.mainCanvases[id];
-            let ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+            let ctx = canvas.getContext('2d');
             const canvasRect = canvas.getBoundingClientRect();
-            const cssWidth = Math.max(1, Math.round(canvasRect.width || canvas.clientWidth || canvas.parentElement.clientWidth || 750));
-            const cssHeight = Math.max(1, Math.round(canvasRect.height || canvas.clientHeight || canvas.parentElement.clientHeight || 250));
-            // Рисуем в физическом разрешении экрана. Без этого на Retina/масштабированных
-            // дисплеях рукописная линия выглядит зубчатой и "острой".
-            const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-            canvas.width = Math.max(1, Math.round(cssWidth * dpr));
-            canvas.height = Math.max(1, Math.round(cssHeight * dpr));
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.imageSmoothingEnabled = true;
+            canvas.width = Math.max(1, Math.round(canvasRect.width || canvas.clientWidth || canvas.parentElement.clientWidth || 750));
+            canvas.height = Math.max(1, Math.round(canvasRect.height || canvas.clientHeight || canvas.parentElement.clientHeight || 250)); 
             ctx.lineCap = 'round'; ctx.lineJoin = 'round';
             
             let objects = []; let currentObj = null; let draggingObj = null; let action = null; 
@@ -2933,43 +2936,13 @@ body.auth-locked > *:not(#passwordGate) {
                 ctx.save(); let cx = obj.cx || 0; let cy = obj.cy || 0; let s = obj.scale || 1;
                 ctx.translate((obj.x || 0) + cx, (obj.y || 0) + cy); ctx.rotate(obj.angle || 0); ctx.scale(s, s); ctx.translate(-cx, -cy);
                 ctx.strokeStyle = obj.color; ctx.lineWidth = obj.size;
-                // Для рукописных линий всегда используем круглые окончания и стыки.
-                // Это важно после любых операций с canvas/context и убирает острые углы.
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
                 ctx.globalAlpha = obj.tool === 'highlighter' ? 0.28 : 1;
                 if (obj.tool === 'highlighter') ctx.lineWidth = Math.max(12, (parseFloat(obj.size) || 3) * 4);
                 if (obj.tool === 'pen' || obj.tool === 'highlighter' || obj.tool === 'eraser') {
                     ctx.globalCompositeOperation = obj.tool === 'eraser' ? 'destination-out' : 'source-over';
                     if(obj.tool === 'eraser') ctx.lineWidth = obj.size * 3;
                     ctx.beginPath();
-                    if (obj.points && obj.points.length > 0) {
-                        const pts = obj.points;
-                        if (pts.length === 1) {
-                            // Обычный короткий тап/клик тоже должен оставлять круглую точку.
-                            ctx.moveTo(pts[0].x, pts[0].y);
-                            ctx.lineTo(pts[0].x + 0.01, pts[0].y + 0.01);
-                        } else if (pts.length === 2) {
-                            ctx.moveTo(pts[0].x, pts[0].y);
-                            ctx.lineTo(pts[1].x, pts[1].y);
-                        } else {
-                            // Сглаживаем рукописный штрих кривыми через середины соседних точек.
-                            // Раньше здесь был lineTo по каждой сырой mouse/touch-точке,
-                            // из-за чего буквы выглядели как угловатая ломаная.
-                            ctx.moveTo(pts[0].x, pts[0].y);
-                            for (let i = 1; i < pts.length - 1; i++) {
-                                const midX = (pts[i].x + pts[i + 1].x) / 2;
-                                const midY = (pts[i].y + pts[i + 1].y) / 2;
-                                ctx.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
-                            }
-                            ctx.quadraticCurveTo(
-                                pts[pts.length - 1].x,
-                                pts[pts.length - 1].y,
-                                pts[pts.length - 1].x,
-                                pts[pts.length - 1].y
-                            );
-                        }
-                    }
+                    if(obj.points && obj.points.length > 0) { ctx.moveTo(obj.points[0].x, obj.points[0].y); for(let i=1; i<obj.points.length; i++) ctx.lineTo(obj.points[i].x, obj.points[i].y); }
                     ctx.stroke();
                 } else {
                     ctx.globalCompositeOperation = 'source-over'; ctx.beginPath();
@@ -3004,97 +2977,11 @@ body.auth-locked > *:not(#passwordGate) {
             }
 
             function getLocalPos(p, obj) { let cx = obj.cx || 0, cy = obj.cy || 0; let tx = (obj.x || 0) + cx, ty = (obj.y || 0) + cy; let nx = p.x - tx, ny = p.y - ty; let angle = -(obj.angle || 0); let rx = nx * Math.cos(angle) - ny * Math.sin(angle); let ry = nx * Math.sin(angle) + ny * Math.cos(angle); let scale = obj.scale || 1; return {x: (rx / scale) + cx, y: (ry / scale) + cy}; }
-            function clearPhysicalCanvas() {
-                ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.restore();
-            }
-            function renderAll(includeCurrent = true) {
-                clearPhysicalCanvas();
-                objects.forEach(obj => drawObj(ctx, obj, draggingObj === obj));
-                if (includeCurrent && currentObj) drawObj(ctx, currentObj, false);
-            }
-            function getPos(e) {
-                const rect = canvas.getBoundingClientRect();
-                let point = e;
-                if (e.touches && e.touches.length > 0) point = e.touches[0];
-                else if (e.changedTouches && e.changedTouches.length > 0) point = e.changedTouches[0];
-                return { x: point.clientX - rect.left, y: point.clientY - rect.top };
-            }
-            function getEventPoints(e) {
-                let events = [e];
-                if (e && typeof e.getCoalescedEvents === 'function') {
-                    const coalesced = e.getCoalescedEvents();
-                    if (coalesced && coalesced.length) events = coalesced;
-                }
-                return events.map(getPos);
-            }
-            function appendStrokePoint(obj, p, force = false) {
-                if (!obj || !obj.points) return false;
-                const pts = obj.points;
-                if (!pts.length) { pts.push(p); return true; }
-                const last = pts[pts.length - 1];
-                const dx = p.x - last.x, dy = p.y - last.y;
-                const dist = Math.hypot(dx, dy);
-                if (!force && dist < 0.45) return false;
-
-                // Если браузер прислал редкую точку, добавляем промежуточные.
-                // Это особенно заметно при быстром письме мышью и стилусом.
-                const maxStep = 2.4;
-                if (dist > maxStep) {
-                    const steps = Math.ceil(dist / maxStep);
-                    for (let i = 1; i <= steps; i++) {
-                        const t = i / steps;
-                        pts.push({ x: last.x + dx * t, y: last.y + dy * t });
-                    }
-                } else {
-                    pts.push(p);
-                }
-                return true;
-            }
-
-            function drawLiveStrokeTail(obj) {
-                if (!obj || !obj.points || obj.points.length < 2) return;
-                const pts = obj.points;
-                // Берём небольшой хвост. Старые части штриха уже находятся на canvas,
-                // поэтому нет необходимости очищать и перерисовывать многотысячепиксельный черновик.
-                const start = Math.max(0, pts.length - 10);
-                const tail = pts.slice(start);
-
-                ctx.save();
-                ctx.strokeStyle = obj.color;
-                ctx.lineWidth = parseFloat(obj.size) || 3;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.globalAlpha = 1;
-                ctx.globalCompositeOperation = obj.tool === 'eraser' ? 'destination-out' : 'source-over';
-                if (obj.tool === 'eraser') ctx.lineWidth = (parseFloat(obj.size) || 3) * 3;
-
-                ctx.beginPath();
-                if (tail.length === 2) {
-                    ctx.moveTo(tail[0].x, tail[0].y);
-                    ctx.lineTo(tail[1].x, tail[1].y);
-                } else {
-                    ctx.moveTo(tail[0].x, tail[0].y);
-                    for (let i = 1; i < tail.length - 1; i++) {
-                        const midX = (tail[i].x + tail[i + 1].x) / 2;
-                        const midY = (tail[i].y + tail[i + 1].y) / 2;
-                        ctx.quadraticCurveTo(tail[i].x, tail[i].y, midX, midY);
-                    }
-                    const last = tail[tail.length - 1];
-                    ctx.quadraticCurveTo(last.x, last.y, last.x, last.y);
-                }
-                ctx.stroke();
-                ctx.restore();
-            }
+            function renderAll() { ctx.clearRect(0, 0, canvas.width, canvas.height); objects.forEach(obj => drawObj(ctx, obj, draggingObj === obj)); if (currentObj) drawObj(ctx, currentObj, false); }
+            function getPos(e) { const rect = canvas.getBoundingClientRect(); let x = e.clientX, y = e.clientY; if (e.touches && e.touches.length > 0) { x = e.touches[0].clientX; y = e.touches[0].clientY; } return { x: x - rect.left, y: y - rect.top }; }
 
             function startDraw(e) {
-                if (e.pointerType === 'mouse' && e.button !== 0) return;
-                isDrawing = true; let p = getPos(e);
-                if (e.pointerId != null && canvas.setPointerCapture) {
-                    try { canvas.setPointerCapture(e.pointerId); } catch(_) {}
-                }
+                isDrawing = true; let p = getPos(e); 
                 let tool = document.getElementById('tool-' + id).value; let color = document.getElementById('color-' + id).value; let size = document.getElementById('size-' + id).value;
                 if (tool === 'zoom') {
                     isDrawing = false;
@@ -3118,92 +3005,24 @@ body.auth-locked > *:not(#passwordGate) {
                     }
                     if (!hitHandle) { draggingObj = null; action = null; for (let i = objects.length - 1; i >= 0; i--) { if (objects[i].tool === 'eraser') continue; let lp = getLocalPos(p, objects[i]); let b = getRawBounds(objects[i]); if (lp.x >= b.minX && lp.x <= b.maxX && lp.y >= b.minY && lp.y <= b.maxY) { draggingObj = objects[i]; action = 'move'; dragStartX = p.x; dragStartY = p.y; break; } } }
                     renderAll();
-                } else {
-                    currentObj = { tool: tool, color: color, size: size, x: 0, y: 0, scale: 1, angle: 0 };
-                    if (tool === 'pen' || tool === 'highlighter' || tool === 'eraser') {
-                        currentObj.points = [p];
-                    } else {
-                        currentObj.sx = p.x; currentObj.sy = p.y; currentObj.ex = p.x; currentObj.ey = p.y;
-                    }
-                }
+                } else { currentObj = { tool: tool, color: color, size: size, x: 0, y: 0, scale: 1, angle: 0 }; if (tool === 'pen' || tool === 'highlighter' || tool === 'eraser') { currentObj.points = [p]; } else { currentObj.sx = p.x; currentObj.sy = p.y; currentObj.ex = p.x; currentObj.ey = p.y; } }
                 if (e.cancelable) e.preventDefault();
             }
 
             function draw(e) {
-                if (!isDrawing) return;
-                if (e.cancelable) e.preventDefault();
-
-                const toolNow = document.getElementById('tool-' + id).value;
-                const eventPoints = getEventPoints(e);
-                const p = eventPoints[eventPoints.length - 1] || getPos(e);
-
-                if (toolNow === 'pointer' && draggingObj && action) {
+                if (!isDrawing) return; if (e.cancelable) e.preventDefault(); let p = getPos(e);
+                if (document.getElementById('tool-' + id).value === 'pointer' && draggingObj && action) {
                     if (action === 'move') { draggingObj.x = (draggingObj.x || 0) + (p.x - dragStartX); draggingObj.y = (draggingObj.y || 0) + (p.y - dragStartY); dragStartX = p.x; dragStartY = p.y; }
                     else if (action === 'scale') { let tx = (draggingObj.x||0) + (draggingObj.cx||0); let ty = (draggingObj.y||0) + (draggingObj.cy||0); let currentDist = Math.hypot(p.x - tx, p.y - ty); draggingObj.scale = Math.max(0.1, initialScale * (currentDist / dragStartDist)); }
                     else if (action === 'rotate') { let tx = (draggingObj.x||0) + (draggingObj.cx||0); let ty = (draggingObj.y||0) + (draggingObj.cy||0); let currentAngle = Math.atan2(p.y - ty, p.x - tx); draggingObj.angle = initialAngle + (currentAngle - dragStartAngle); }
                     renderAll();
-                } else if (currentObj) {
-                    if (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser') {
-                        let changed = false;
-                        for (const ep of eventPoints) changed = appendStrokePoint(currentObj, ep) || changed;
-                        if (changed) {
-                            // Для обычного карандаша и ластика рисуем только свежий хвост:
-                            // это резко уменьшает задержку на длинном черновике.
-                            if (currentObj.tool === 'pen' || currentObj.tool === 'eraser') drawLiveStrokeTail(currentObj);
-                            else renderAll();
-                        }
-                    } else {
-                        currentObj.ex = p.x; currentObj.ey = p.y;
-                        renderAll();
-                    }
-                }
+                } else if (currentObj) { if (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser') { currentObj.points.push(p); } else { currentObj.ex = p.x; currentObj.ey = p.y; } renderAll(); }
             }
 
-            function stopDraw(e) {
-                if(!isDrawing) return;
-                if (e && e.cancelable) e.preventDefault();
+            function stopDraw() { if(!isDrawing) return; isDrawing = false; let changed = false; if (currentObj) { let b = getRawBounds(currentObj); currentObj.cx = (b.minX + b.maxX) / 2; currentObj.cy = (b.minY + b.maxY) / 2; objects.push(currentObj); currentObj = null; changed = true; } else if (draggingObj && action) { changed = true; } action = null; if (changed) saveHistory(); renderAll(); }
 
-                // Добавляем точную последнюю координату, чтобы конец буквы не обрывался.
-                if (currentObj && (currentObj.tool === 'pen' || currentObj.tool === 'highlighter' || currentObj.tool === 'eraser') && e && e.clientX != null) {
-                    appendStrokePoint(currentObj, getPos(e), true);
-                }
-
-                isDrawing = false;
-                let changed = false;
-                if (currentObj) {
-                    let b = getRawBounds(currentObj);
-                    currentObj.cx = (b.minX + b.maxX) / 2;
-                    currentObj.cy = (b.minY + b.maxY) / 2;
-                    objects.push(currentObj);
-                    currentObj = null;
-                    changed = true;
-                } else if (draggingObj && action) {
-                    changed = true;
-                }
-                action = null;
-                if (changed) saveHistory();
-                renderAll();
-
-                if (e && e.pointerId != null && canvas.releasePointerCapture) {
-                    try { if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId); } catch(_) {}
-                }
-            }
-
-            // Pointer Events дают намного более плотный поток координат для мыши, стилуса и пальца.
-            // getCoalescedEvents() выше забирает промежуточные точки, которые браузер обычно скрывает.
-            if (window.PointerEvent) {
-                canvas.addEventListener('pointerdown', startDraw, {passive: false});
-                canvas.addEventListener('pointermove', draw, {passive: false});
-                canvas.addEventListener('pointerup', stopDraw, {passive: false});
-                canvas.addEventListener('pointercancel', stopDraw, {passive: false});
-            } else {
-                canvas.addEventListener('mousedown', startDraw);
-                canvas.addEventListener('mousemove', draw);
-                window.addEventListener('mouseup', stopDraw);
-                canvas.addEventListener('touchstart', startDraw, {passive: false});
-                canvas.addEventListener('touchmove', draw, {passive: false});
-                window.addEventListener('touchend', stopDraw, {passive: false});
-            }
+            canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); window.addEventListener('mouseup', stopDraw);
+            canvas.addEventListener('touchstart', startDraw, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); window.addEventListener('touchend', stopDraw);
             
             window.mainCanvases[id] = { canvas, ctx, objects, renderAll, undo, redo, saveHistory };
             saveHistory();
@@ -3241,6 +3060,13 @@ body.auth-locked > *:not(#passwordGate) {
             sig = `<div style="text-align:center;font-family:'Caveat';font-size:26px;color:#003399;margin-top:-10px;margin-bottom:25px;">Вариант ${verb}: ${teacherName}</div>`;
         }
         let showCorrectOnError = document.getElementById('toggle-show-correct').checked;
+
+        // «🎲 Заменить» нужна только в генераторе. В скачанный ученический
+        // вариант кнопку не переносим.
+        const studentInteractiveHTML = currentInteractiveHTML.replace(
+            /<button\b[^>]*class=["'][^"']*\brandom-replace-btn\b[^"']*["'][^>]*>[\s\S]*?<\/button>/gi,
+            ''
+        );
         
         let html = `<!DOCTYPE html>
 <html>
@@ -3280,7 +3106,7 @@ body.auth-locked > *:not(#passwordGate) {
             <div class="timer-box" id="timer-display">⏱ 00:00</div>
             <h1 style="text-align: center; color: #003399; border-bottom: 2px solid #ff8c00; padding-bottom: 15px; margin-top:0;">${variantTitle}</h1>
             ${sig}
-            ${currentInteractiveHTML}
+            ${studentInteractiveHTML}
             <button id="btn-check" onclick="checkAll()" style="display:block; width:100%; padding:15px; font-size:18px; font-weight:bold; background:#ff8c00; color:#fff; border:none; border-radius:8px; cursor:pointer; margin-top:30px; transition:0.3s;">ПОДВЕСТИ ИТОГИ</button>
             <div id="res-box" style="display:none; text-align:center; margin-top:30px; padding:20px; background:rgba(255,255,255,0.9); border:2px dashed #003399; border-radius:8px; font-size:1.2em; font-weight:bold;"></div>
         </div>
