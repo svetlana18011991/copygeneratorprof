@@ -1,5 +1,5 @@
 (function() {
-    window.archiveExtraDatabase = window.archiveExtraDatabase || {};
+    window.extraDatabase = window.extraDatabase || {};
 
     const task12Extra = {
     "title": "Дополнительно",
@@ -376,6 +376,6 @@
     ]
 };
 
-    window.archiveExtraDatabase["oldTask12"] = task12Extra;
-    window.archiveExtraDatabase["oldTask12"] = task12Extra;
+    window.extraDatabase["archive"] = task12Extra;
+    window.extraDatabase["archive"] = task12Extra;
 })();
