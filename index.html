@@ -31,11 +31,13 @@
     <script src="task10.js?v=20260921-4"></script>
     <script src="task10_extra.js?v=20260921-4"></script>
     <script src="task11.js?v=20260921-4"></script>
+    <script src="task11_images_1.js?v=20260921-5"></script>
+    <script src="task11_images_2.js?v=20260921-5"></script>
     <script src="task11_extra.js?v=20260921-4"></script>
     <script src="task11_extra_images.js"></script>
-    <script src="task12.js?v=20260921-4"></script>
-    <script src="task12_extra.js?v=20260921-4"></script>
-    <script src="task13.js?v=20260921-4"></script>
+    <script src="task12.js?v=20260921-5"></script>
+    <script src="task12_extra.js?v=20260921-5"></script>
+    <script src="task13.js?v=20260923-1"></script>
     <script src="task14.js?v=20260921-4"></script>
     <script src="task15.js?v=20260921-4"></script>
     <script src="task16.js?v=20260921-4"></script>
@@ -43,8 +45,8 @@
     <script src="task18.js?v=20260921-4"></script>
     <script src="task19.js?v=20260921-4"></script>
     <script src="task20.js?v=20260921-4"></script>
-    <script src="archive_task12.js?v=20260921-4"></script>
-    <script src="archive_task12_extra.js?v=20260921-4"></script>
+    <script src="archive_task12.js?v=20260921-5"></script>
+    <script src="archive_task12_extra.js?v=20260921-5"></script>
     <style>
         body { background-color: #121212; background-image: radial-gradient(circle at top, rgba(255, 196, 75, 0.14), transparent 42%), radial-gradient(circle at bottom, rgba(255, 166, 64, 0.08), transparent 34%); color: #e0e0e0; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 40px 20px; position: relative; overflow-x: hidden; }
         .generator-starfield {
@@ -363,6 +365,22 @@
         .btn-generate { display: block; width: 100%; background: transparent; color: #ff8c00; border: 2px solid #ff8c00; padding: 15px; font-size: 1.2em; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; margin-top: 25px; transition: 0.3s; }
         .btn-generate:hover { background: #ff8c00; color: #121212; box-shadow: 0 0 15px rgba(255, 140, 0, 0.4); }
         .random-variant-panel { margin: 0 0 22px; padding: 18px 20px; border: 1px solid rgba(255,140,0,.55); border-radius: 12px; background: linear-gradient(135deg, rgba(255,140,0,.13), rgba(255,196,75,.04)); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+
+        /* Панель полной пачки — расположение и логика как в генераторе ОГЭ. */
+        .ege-generation-row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin:15px 0 12px;}
+        .ege-variant-count-label{color:#ffb347;font-weight:700;font-size:16px;}
+        #ege-variant-count{width:85px;padding:11px 9px;border:2px solid #ff8c00;border-radius:9px;background:#201e1a;color:#fff;font-size:18px;text-align:center;font-weight:700;}
+        .random-variant-panel .ege-fast-btn{flex:1 1 270px;width:auto;margin:0;padding:12px 15px;font-size:1.03em;}
+        .ege-fast-manual-tip{font-size:12px;line-height:1.45;color:#bbb;margin-top:6px;}
+        .ege-manual-generation{display:flex;flex-direction:column;gap:8px;scroll-margin-top:110px;margin:20px 0;}
+        .ege-manual-generation .btn-generate{margin:0;}
+        .ege-manual-hint{font-size:12px;text-align:center;color:#bbb;}
+        .ege-manual-hint a{color:#ffb347;}
+        .ege-variant-switch{display:none;margin:12px 0 20px;padding:14px 18px;border-radius:12px;background:rgba(255,140,0,.12);border:1px solid rgba(255,140,0,.5);text-align:center;color:#ffe5cc;}
+        .ege-variant-switch label{font-weight:700;margin-right:12px;}
+        .ege-variant-switch select{background:#29231f;color:white;border:1px solid #ff8c00;padding:9px 13px;border-radius:8px;font-weight:700;}
+        .ege-variant-switch .ege-switch-note{font-size:13px;margin-top:7px;opacity:.9;}
+        @media(max-width:640px){.random-variant-panel{padding:13px}.ege-generation-row{gap:8px}.random-variant-panel .ege-fast-btn{flex-basis:100%;}}
         .random-variant-panel-title { color:#ffb347; font-size:1.12em; font-weight:800; margin-bottom:6px; }
         .random-variant-panel-note { color:#c8c8c8; font-size:.92em; line-height:1.45; margin-bottom:13px; }
         .btn-random-variant { width:100%; border:2px solid #ff8c00; background:#ff8c00; color:#161616; border-radius:9px; padding:13px 15px; font-size:1.05em; font-weight:900; cursor:pointer; transition:.22s; }
@@ -1107,16 +1125,16 @@ body.auth-locked > *:not(#passwordGate) {
 
             <p>Генератор позволяет собирать тренировочные варианты по заданиям <strong>1–20 ЕГЭ профильного уровня</strong>. Можно настроить вариант вручную или за один клик получить полный случайный вариант, а затем скачать интерактивную версию, файл для печати, ключи, презентацию или игру.</p>
 
-            <h3>1. Быстрый случайный вариант</h3>
-            <p>В верхней части страницы находится кнопка <strong>«🎲 Сгенерировать случайный вариант»</strong>. Она автоматически выбирает <strong>по одному заданию каждого номера 1–20</strong>.</p>
+            <h3>1. Быстрые полные варианты</h3>
+            <p>В верхней панели укажите <strong>количество полных вариантов от 1 до 40</strong> и нажмите <strong>«🎲 Сгенерировать полные варианты»</strong>. В каждый вариант автоматически попадёт <strong>по одному заданию каждого номера 1–20</strong>.</p>
             <ul>
                 <li>для заданий <strong>1–13</strong> в случайный вариант попадают только основные задачи; дополнительные задачи первой части не используются;</li>
                 <li>для заданий <strong>14–20</strong> используется полная текущая база;</li>
-                <li>сначала случайно выбирается прототип, а затем случайная задача внутри этого прототипа — так разные типы заданий получают более равные шансы;</li>
-                <li>кнопка <strong>«🎲 Другой вариант»</strong> полностью пересобирает случайный вариант;</li>
+                <li>прототипы каждого номера сначала проходят без повторов, а затем перемешиваются для следующего круга; задачи внутри прототипов также перебираются по очереди;</li>
+                <li>после сборки нескольких вариантов появляется переключатель, с помощью которого можно просматривать любой готовый вариант;</li>
                 <li>кнопка <strong>«🎲 Заменить»</strong> возле отдельного задания меняет только его, остальные задания остаются прежними.</li>
             </ul>
-            <p>Для случайного варианта используется общая кнопка <strong>«🔑 Ключи (Ответы)»</strong>. Если отдельное задание было заменено, ключ формируется уже для обновлённого варианта.</p>
+            <p>Кнопка <strong>«🔑 Ключи (Ответы)»</strong> создаёт общую таблицу ответов ко всей пачке. Если отдельное задание было заменено, в таблице будет его обновлённый ответ.</p>
 
             <h3>2. Ручная сборка варианта</h3>
             <p>Если нужен не полный случайный вариант, а собственный набор, задайте количество задач у нужных номеров.</p>
@@ -1157,13 +1175,13 @@ body.auth-locked > *:not(#passwordGate) {
             <p><strong>Таймер.</strong> Можно задать ограничение по времени. Значение 0 работает как обычный секундомер и показывает, сколько времени ученик затратил на выполнение.</p>
 
             <h3>7. Сгенерируйте вариант</h3>
-            <p>Для ручного набора после выбора заданий и настроек нажмите <strong>«Сгенерировать вариант»</strong>. Для полного случайного варианта используйте верхнюю кнопку <strong>«🎲 Сгенерировать случайный вариант»</strong>.</p>
+            <p>Для ручного набора после выбора заданий и настроек нажмите <strong>«Сгенерировать выбранные задания»</strong>. Для полного набора из 1–20 заданий укажите количество (1–40) и используйте верхнюю кнопку <strong>«🎲 Сгенерировать полные варианты»</strong>.</p>
 
             <h3>8. Скачайте нужный формат</h3>
             <p>После генерации доступны несколько форматов.</p>
             <p><strong>💻 Интерактивный вариант.</strong> Ученик решает задания прямо в браузере. Доступны проверка, черновики, разборы и тренировка на аналогах — в зависимости от выбранных настроек.</p>
-            <p><strong>🖨️ Файл для печати (PDF).</strong> Аккуратная версия для распечатки, самостоятельной или контрольной работы.</p>
-            <p><strong>🔑 Ключи (Ответы).</strong> Отдельный файл с ответами к текущему сгенерированному варианту. Эта же функция используется и для случайного варианта.</p>
+            <p><strong>🖨️ Файл для печати (PDF).</strong> Выберите компактную горизонтальную печать A4 в две колонки или формат с полями для решения. Все полные варианты печатаются подряд, после них добавляются общие ключи. Откройте скачанный HTML и выберите «Сохранить в PDF» в окне печати.</p>
+            <p><strong>🔑 Ключи (Ответы).</strong> Для пачки полных вариантов создаётся таблица ответов ко всем вариантам; для ручной подборки — отдельные ответы.</p>
             <p><strong>🎬 Презентация.</strong> Вариант можно оформить как презентацию: выбрать готовый дизайн или использовать собственное оформление.</p>
             <p><strong>🎮 Игра.</strong> Задания можно использовать в игровых форматах для урока, повторения или командной работы.</p>
 
@@ -1216,10 +1234,15 @@ body.auth-locked > *:not(#passwordGate) {
         <h2 style="margin: 0 0 8px 0; text-align: center;">Генератор вариантов</h2>
         <div style="text-align: center; color: #bbb; font-size: 1.05em; margin-bottom: 25px; border-bottom: 1px dashed #555; padding-bottom: 15px;">Генератор вариантов - ЕГЭ профильный</div>
 
-        <div class="random-variant-panel">
-            <div class="random-variant-panel-title">🎲 Быстрый случайный вариант</div>
-            <div class="random-variant-panel-note">По одному заданию каждого номера 1–20. Для заданий 1–13 используются только основные задачи; дополнительные блоки первой части в случайный вариант не попадают. Сначала случайно выбирается прототип, затем задача внутри него.</div>
-            <button type="button" class="btn-random-variant" onclick="generateRandomVariant(event)">🎲 Сгенерировать случайный вариант</button>
+        <div id="ege-fast-variant-panel" class="random-variant-panel">
+            <div class="random-variant-panel-title">🎲 Быстрый полный вариант ЕГЭ</div>
+            <div class="random-variant-panel-note">По одному заданию каждого номера <b>1–20</b>, без предварительного выбора. Задания №1–13 берутся из основной базы, №14–20 — из соответствующих заданий второй части. При создании нескольких вариантов прототипы каждого номера сначала проходят без повторений, затем перемешиваются для следующего круга.</div>
+            <div class="ege-generation-row">
+                <label for="ege-variant-count" class="ege-variant-count-label">Количество вариантов</label>
+                <input id="ege-variant-count" type="number" min="1" max="40" step="1" value="1" inputmode="numeric" onblur="egeNormalizeVariantCount()" title="От 1 до 40 вариантов" aria-label="Количество вариантов">
+                <button type="button" class="btn-random-variant ege-fast-btn" onclick="safeGenerateVariant(event,'full')">🎲 Сгенерировать полные варианты</button>
+            </div>
+            <div class="ege-fast-manual-tip">Нужны только отдельные задания? Отметьте их ниже и нажмите «Сгенерировать выбранные задания» под настройками. Количество вариантов наверху действует <b>только для полных вариантов 1–20</b>.</div>
         </div>
         
         <div class="task-row">
@@ -1308,14 +1331,15 @@ body.auth-locked > *:not(#passwordGate) {
 
         <div id="dynamic-tasks"></div>
 
-        <div id="generation-controls" style="scroll-margin-top: 110px;">
-            <button class="btn-generate" onclick="safeGenerateVariant(event)">Сгенерировать вариант</button>
+        <div id="generation-controls" class="ege-manual-generation">
+            <button type="button" class="btn-generate" onclick="safeGenerateVariant(event,'manual')">Сгенерировать выбранные задания</button>
+            <div class="ege-manual-hint">Собирает только отмеченные задания, в одном экземпляре. <a href="#ege-fast-variant-panel">Полный вариант 1–20 — наверху ↑</a></div>
         </div>
+        <div id="ege-variant-switch" class="ege-variant-switch" aria-live="polite"></div>
         
         <div id="info-board"></div>
         
         <div id="btn-group" class="btn-group">
-            <button id="random-reroll-btn" class="btn-dl" style="display:none;background:#ef6c00;" onclick="generateRandomVariant(event)">🎲 Другой вариант</button>
             <button class="btn-dl btn-html" onclick="downloadStudentHTML()">💻 Интерактивный вариант</button>
             <button class="btn-dl btn-pdf" onclick="downloadPrintPDF()">🖨️ Файл для печати (PDF)</button>
             <button class="btn-dl btn-ans" onclick="downloadAnswers()">🔑 Ключи (Ответы)</button>
@@ -2056,6 +2080,10 @@ body.auth-locked > *:not(#passwordGate) {
     window.randomVariantMode = false;
     window.randomVariantPicks = null;
     window.randomVariantNumber = null;
+    // Текущий план ручного варианта. Нужен для точечной замены одной задачи
+    // без пересборки остальных заданий. Каждый элемент хранит номер задания,
+    // источник (main/extra), прототип и конкретный аналог внутри прототипа.
+    window.manualVariantPlan = null;
 
     function getCurrentVariantTitle() {
         return window.randomVariantMode && window.randomVariantNumber
@@ -2174,6 +2202,50 @@ body.auth-locked > *:not(#passwordGate) {
         const num = parseInt(String(tid).replace(/\D/g, ''), 10);
         requestAnimationFrame(() => {
             const el = document.querySelector(`.generated-task-block[data-random-task-number="${num}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }
+
+
+    function replaceManualVariantTask(planIndex) {
+        const plan = Array.isArray(window.manualVariantPlan) ? window.manualVariantPlan : null;
+        const current = plan && plan[planIndex];
+        if (!current) return;
+
+        const data = getPrototypeData(current.tid, current.kind || 'main');
+        const proto = data && Array.isArray(data.prototypes) ? data.prototypes[current.protoIndex] : null;
+        const tasks = proto && Array.isArray(proto.tasks) ? proto.tasks : [];
+        if (tasks.length < 2) {
+            alert('В этом прототипе нет другого загруженного варианта задачи.');
+            return;
+        }
+
+        const currentKey = String(current.taskKey ?? '');
+        const candidates = tasks
+            .map((task, taskIndex) => ({
+                task,
+                taskIndex,
+                taskKey: String(task && (task.id ?? task.text ?? taskIndex))
+            }))
+            .filter(x => x.taskKey !== currentKey || x.taskIndex !== current.taskIndex);
+
+        if (!candidates.length) {
+            alert('В этом прототипе нет другого загруженного варианта задачи.');
+            return;
+        }
+
+        const next = candidates[Math.floor(Math.random() * candidates.length)];
+        const nextPlan = plan.map((item, idx) => idx === planIndex ? {
+            ...item,
+            taskIndex: next.taskIndex,
+            taskKey: next.taskKey
+        } : { ...item });
+
+        window.manualVariantPlan = nextPlan;
+        generateVariant({ manualPlan: nextPlan });
+
+        requestAnimationFrame(() => {
+            const el = document.querySelector(`.generated-task-block[data-manual-plan-index="${planIndex}"]`);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     }
@@ -2348,7 +2420,7 @@ body.auth-locked > *:not(#passwordGate) {
                     <option value="sphere">🔮 Сфера</option>
                 </select>
                 <input type="color" id="color-${draftId}" value="#003399" style="cursor:pointer; height:30px; width:35px; border:none; background:transparent; padding:0;" title="Цвет">
-                <input type="range" id="size-${draftId}" min="1" max="15" value="3" style="cursor:pointer; width:80px;" title="Толщина линии">
+                <input type="range" id="size-${draftId}" min="1" max="15" step="0.1" value="2" style="cursor:pointer; width:80px;" title="Толщина линии">
                 <button onclick="window.setTool('${draftId}', 'eraser')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Ластик">🧽</button>
                 <div style="flex-grow:1;"></div>
                 <button onclick="window.clearCanvas('${draftId}')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Очистить всё">🗑️</button>
@@ -2461,7 +2533,8 @@ body.auth-locked > *:not(#passwordGate) {
         const protectedHtml = html.replace(
             mathWithPunctuation,
             '<span style="white-space:nowrap;">$1$2</span>'
-        );
+        ).replace(/(\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$[^$]*\$)/g,
+            formula => formula.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 
         const template = document.createElement('template');
         template.innerHTML = protectedHtml;
@@ -2506,11 +2579,13 @@ body.auth-locked > *:not(#passwordGate) {
 
     function generateVariant(options = {}) {
         const useRandomPicks = !!(options && options.useRandomPicks && window.randomVariantPicks);
+        const useManualPlan = !useRandomPicks && !!(options && Array.isArray(options.manualPlan) && options.manualPlan.length);
         if (!useRandomPicks) {
             window.randomVariantMode = false;
             window.randomVariantPicks = null;
             window.randomVariantNumber = null;
             setRandomVariantButtonsVisible(false);
+            if (!useManualPlan) window.manualVariantPlan = null;
         }
         const infoBoard = document.getElementById('info-board');
         infoBoard.style.display = 'none';
@@ -2594,6 +2669,7 @@ body.auth-locked > *:not(#passwordGate) {
         };
 
         let sortedTaskIds = getUniqueTaskIds();
+        const manualPlanBuilt = [];
 
         let generationBlocks = [];
         if (useRandomPicks) {
@@ -2606,6 +2682,24 @@ body.auth-locked > *:not(#passwordGate) {
                 const randomPick = window.randomVariantPicks[tid];
                 if (data && randomPick) generationBlocks.push({ tid, kind: 'main', data, requiredCount: 1, randomPick });
             }
+        } else if (useManualPlan) {
+            // При точечной замене восстанавливаем весь уже собранный вариант
+            // из сохранённого плана, чтобы изменилось только нажатое задание.
+            const grouped = [];
+            options.manualPlan.forEach((pick, planIndex) => {
+                if (!pick || !pick.tid) return;
+                const kind = pick.kind || 'main';
+                let group = grouped[grouped.length - 1];
+                if (!group || group.tid !== pick.tid || group.kind !== kind) {
+                    const data = getPrototypeData(pick.tid, kind);
+                    if (!data) return;
+                    group = { tid: pick.tid, kind, data, requiredCount: 0, manualPicks: [] };
+                    grouped.push(group);
+                }
+                group.manualPicks.push({ ...pick, planIndex });
+                group.requiredCount++;
+            });
+            generationBlocks.push(...grouped);
         } else {
             sortedTaskIds.forEach(tid => {
                 const mainCountInput = document.getElementById(`count-${tid}`);
@@ -2631,112 +2725,120 @@ body.auth-locked > *:not(#passwordGate) {
             if (!data || !Array.isArray(data.prototypes)) continue;
 
             const randomPick = useRandomPicks ? block.randomPick : null;
-            let selectedProtos = randomPick
-                ? [data.prototypes[randomPick.protoIndex]].filter(Boolean)
-                : data.prototypes.filter((p, idx) => {
-                    const cb = document.getElementById(getPrototypeCheckboxId(tid, idx, kind));
-                    return cb && cb.checked;
-                });
-            if (selectedProtos.length === 0) continue;
-
+            const manualPicks = Array.isArray(block.manualPicks) ? block.manualPicks : null;
             const visibleBlockTitle = (kind === 'extra') ? 'Дополнительно' : data.title;
-            window.selectedBlockTitles.push(visibleBlockTitle);
             const isSecondPartBlock = Number(data.part || 1) >= 2;
-            let activePools = selectedProtos.map((p, selectedIndex) => {
-                const originalProtoIndex = randomPick ? randomPick.protoIndex : data.prototypes.indexOf(p);
-                const chosenTask = randomPick && p.tasks ? p.tasks[randomPick.taskIndex] : null;
-                const poolTasks = chosenTask ? [chosenTask] : shuffleArray([...p.tasks]);
-                return {
-                    tasks: poolTasks,
-                    allTasks: [...p.tasks],
-                    protoSvg: p.svg_code || "",
-                    theory: p,
-                    prototype: p,
-                    protoIndex: originalProtoIndex >= 0 ? originalProtoIndex : selectedIndex
-                };
-            });
             let finalTasks = [];
 
-            const availableCount = activePools.reduce((sum, pool) => sum + pool.tasks.length, 0);
-            const requestedCount = requiredCount;
-            // Если задач запрошено больше, чем уникальных доступно,
-            // не обрезаем количество: после первого круга пойдут повторы.
-            const actualCount = requiredCount;
-
-            if (availableCount === 0) {
-                infoBoard.innerHTML += `<div><b>${data.title}:</b> в выбранных прототипах нет доступных задач.</div>`;
-                infoBoard.style.display = 'block';
-                continue;
-            }
-
-            if (requestedCount > availableCount) {
-                infoBoard.innerHTML += `<div><b>${data.title}:</b> запрошено ${requestedCount}, уникальных задач в выбранных прототипах ${availableCount}. После первого круга задачи будут повторяться по новому кругу.</div>`;
-                infoBoard.style.display = 'block';
-            }
-
-            // Логика набора внутри одного номера задания:
-            // порядок прототипов зависит от галочки «Упорядочить задания»,
-            // но задачи ВНУТРИ каждого прототипа всегда перемешиваются.
-            // Поэтому при повторной генерации сохраняются те же типы/прототипы,
-            // а конкретные аналоги из каждого прототипа выбираются заново.
-            // Берём НЕ все задачи первого прототипа подряд, а по одной задаче
-            // из каждого выбранного прототипа. Когда дошли до конца прототипов,
-            // идём на следующий слой: снова по одной задаче из каждого прототипа.
-            // Только после того, как все уникальные задачи выбранных прототипов
-            // прошли по одному разу, начинается следующий большой круг повторов.
-            function buildPrototypeRound() {
-                let pools = activePools.map(pool => ({
-                    protoSvg: pool.protoSvg || "",
-                    theory: pool.theory,
-                    prototype: pool.prototype || pool.theory,
-                    protoIndex: pool.protoIndex,
-                    allTasks: [...(pool.allTasks || pool.tasks || [])],
-                    tasks: shuffleArray([...pool.tasks])
-                })).filter(pool => pool.tasks.length > 0);
-
-                if (!orderedTasks) {
-                    pools = shuffleArray(pools);
-                }
-
-                const maxTasksInProto = Math.max(...pools.map(pool => pool.tasks.length));
-                let roundTasks = [];
-
-                for (let layerIndex = 0; layerIndex < maxTasksInProto; layerIndex++) {
-                    let layerPools = pools.filter(pool => pool.tasks[layerIndex]);
-
-                    // В хаотичном режиме на каждом слое тасуем порядок прототипов,
-                    // но всё равно не берём вторую задачу из прототипа раньше,
-                    // чем прошли по одной из остальных доступных прототипов.
-                    if (!orderedTasks) {
-                        layerPools = shuffleArray(layerPools);
+            if (manualPicks) {
+                manualPicks.forEach(pick => {
+                    const proto = data.prototypes[pick.protoIndex];
+                    if (!proto || !Array.isArray(proto.tasks) || !proto.tasks.length) return;
+                    let task = proto.tasks[pick.taskIndex];
+                    const expectedKey = String(pick.taskKey ?? '');
+                    if (!task || String(task && (task.id ?? task.text ?? pick.taskIndex)) !== expectedKey) {
+                        const foundIndex = proto.tasks.findIndex((candidate, idx) => String(candidate && (candidate.id ?? candidate.text ?? idx)) === expectedKey);
+                        if (foundIndex >= 0) {
+                            task = proto.tasks[foundIndex];
+                            pick.taskIndex = foundIndex;
+                        }
                     }
-
-                    layerPools.forEach(pool => {
-                        const task = pool.tasks[layerIndex];
-                        roundTasks.push({
-                            ...task,
-                            svg: task.svg_code || pool.protoSvg || "",
-                            theory: pool.theory,
-                            prototype: pool.prototype || pool.theory,
-                            protoIndex: pool.protoIndex,
-                            allProtoTasks: [...(pool.allTasks || [])]
-                        });
+                    if (!task) return;
+                    finalTasks.push({
+                        ...task,
+                        svg: task.svg_code || proto.svg_code || "",
+                        theory: proto,
+                        prototype: proto,
+                        protoIndex: pick.protoIndex,
+                        sourceTaskIndex: pick.taskIndex,
+                        sourcePlanIndex: pick.planIndex,
+                        allProtoTasks: [...proto.tasks]
                     });
+                });
+            } else {
+                let selectedProtos = randomPick
+                    ? [data.prototypes[randomPick.protoIndex]].filter(Boolean)
+                    : data.prototypes.filter((p, idx) => {
+                        const cb = document.getElementById(getPrototypeCheckboxId(tid, idx, kind));
+                        return cb && cb.checked;
+                    });
+                if (selectedProtos.length === 0) continue;
+
+                let activePools = selectedProtos.map((p, selectedIndex) => {
+                    const originalProtoIndex = randomPick ? randomPick.protoIndex : data.prototypes.indexOf(p);
+                    const chosenTask = randomPick && p.tasks ? p.tasks[randomPick.taskIndex] : null;
+                    const poolTasks = chosenTask ? [chosenTask] : shuffleArray([...p.tasks]);
+                    return {
+                        tasks: poolTasks,
+                        allTasks: [...p.tasks],
+                        protoSvg: p.svg_code || "",
+                        theory: p,
+                        prototype: p,
+                        protoIndex: originalProtoIndex >= 0 ? originalProtoIndex : selectedIndex
+                    };
+                });
+
+                const availableCount = activePools.reduce((sum, pool) => sum + pool.tasks.length, 0);
+                const requestedCount = requiredCount;
+                const actualCount = requiredCount;
+
+                if (availableCount === 0) {
+                    infoBoard.innerHTML += `<div><b>${data.title}:</b> в выбранных прототипах нет доступных задач.</div>`;
+                    infoBoard.style.display = 'block';
+                    continue;
                 }
 
-                return roundTasks;
+                if (requestedCount > availableCount) {
+                    infoBoard.innerHTML += `<div><b>${data.title}:</b> запрошено ${requestedCount}, уникальных задач в выбранных прототипах ${availableCount}. После первого круга задачи будут повторяться по новому кругу.</div>`;
+                    infoBoard.style.display = 'block';
+                }
+
+                function buildPrototypeRound() {
+                    let pools = activePools.map(pool => ({
+                        protoSvg: pool.protoSvg || "",
+                        theory: pool.theory,
+                        prototype: pool.prototype || pool.theory,
+                        protoIndex: pool.protoIndex,
+                        allTasks: [...(pool.allTasks || pool.tasks || [])],
+                        tasks: shuffleArray([...pool.tasks])
+                    })).filter(pool => pool.tasks.length > 0);
+
+                    if (!orderedTasks) pools = shuffleArray(pools);
+
+                    const maxTasksInProto = Math.max(...pools.map(pool => pool.tasks.length));
+                    let roundTasks = [];
+                    for (let layerIndex = 0; layerIndex < maxTasksInProto; layerIndex++) {
+                        let layerPools = pools.filter(pool => pool.tasks[layerIndex]);
+                        if (!orderedTasks) layerPools = shuffleArray(layerPools);
+                        layerPools.forEach(pool => {
+                            const task = pool.tasks[layerIndex];
+                            const allTasks = pool.allTasks || [];
+                            const sourceTaskIndex = allTasks.indexOf(task);
+                            roundTasks.push({
+                                ...task,
+                                svg: task.svg_code || pool.protoSvg || "",
+                                theory: pool.theory,
+                                prototype: pool.prototype || pool.theory,
+                                protoIndex: pool.protoIndex,
+                                sourceTaskIndex: sourceTaskIndex >= 0 ? sourceTaskIndex : 0,
+                                allProtoTasks: [...allTasks]
+                            });
+                        });
+                    }
+                    return roundTasks;
+                }
+
+                let oneFullRound = buildPrototypeRound();
+                if (oneFullRound.length === 0) continue;
+                while (finalTasks.length < actualCount) {
+                    const cycleTasks = finalTasks.length === 0 ? [...oneFullRound] : buildPrototypeRound();
+                    const needNow = actualCount - finalTasks.length;
+                    finalTasks.push(...cycleTasks.slice(0, needNow));
+                }
             }
 
-            let oneFullRound = buildPrototypeRound();
-            if (oneFullRound.length === 0) {
-                continue;
-            }
-
-            while (finalTasks.length < actualCount) {
-                const cycleTasks = finalTasks.length === 0 ? [...oneFullRound] : buildPrototypeRound();
-                const needNow = actualCount - finalTasks.length;
-                finalTasks.push(...cycleTasks.slice(0, needNow));
-            }
+            if (finalTasks.length === 0) continue;
+            window.selectedBlockTitles.push(visibleBlockTitle);
             if (isSecondPartBlock) {
                 const selectedIdsByProto = {};
                 finalTasks.forEach(t => {
@@ -2840,6 +2942,21 @@ body.auth-locked > *:not(#passwordGate) {
                     }
                 }
 
+                const sourceTaskIndex = Number.isInteger(item.sourceTaskIndex)
+                    ? item.sourceTaskIndex
+                    : (item.prototype && Array.isArray(item.prototype.tasks) ? item.prototype.tasks.indexOf(item) : 0);
+                const taskKey = String(item && (item.id ?? item.text ?? sourceTaskIndex));
+                const manualPlanIndex = useRandomPicks ? -1 : manualPlanBuilt.length;
+                if (!useRandomPicks) {
+                    manualPlanBuilt.push({
+                        tid,
+                        kind,
+                        protoIndex: item.protoIndex,
+                        taskIndex: sourceTaskIndex >= 0 ? sourceTaskIndex : 0,
+                        taskKey
+                    });
+                }
+
                 window.currentGeneratedTasks.push({
                     text: item.text,
                     svg: mainSvg,
@@ -2855,6 +2972,11 @@ body.auth-locked > *:not(#passwordGate) {
                     instantCheck: instantCheck,
                     taskId: item.id ?? null,
                     taskTid: tid,
+                    taskKind: kind,
+                    protoIndex: item.protoIndex,
+                    sourceTaskIndex: sourceTaskIndex >= 0 ? sourceTaskIndex : 0,
+                    taskKey,
+                    manualPlanIndex,
                     randomVariant: useRandomPicks
                 });
                 
@@ -2928,8 +3050,11 @@ body.auth-locked > *:not(#passwordGate) {
                     ? `<div style="margin-top:15px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;clear:both;">${drawBtn}${secondPartButtons}<div class="second-part-final-answer" id="second-final-answer-${taskCounter}" style="display:none;width:100%;margin-top:8px;padding:12px 14px;background:#eef6ff;border-left:4px solid #003399;border-radius:6px;"><b>Ответ:</b> ${item.answer}</div></div>`
                     : `<div style="margin-top:15px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; clear:both;"><input type="text" class="ans-box" id="ans-interactive-${taskCounter}" placeholder="Ответ..." data-ans="${item.answer}" style="padding:10px 15px; border:2px solid #ccc; border-radius:6px; font-size:16px; font-weight:bold; width:150px; outline:none; transition:0.3s;">${instantBtn}${drawBtn}${helpBtn}<span class="answer-feedback" id="feedback-${taskCounter}" style="font-weight:bold; font-size:15px; display:none;"></span></div>`;
                 const randomTaskNumber = parseInt(String(tid).replace(/\D/g, ''), 10);
-                const randomReplaceButton = useRandomPicks ? `<button type="button" class="random-replace-btn" onclick="replaceRandomVariantTask('${tid}')" title="Заменить только это задание, остальные оставить">🎲 Заменить</button>` : '';
-                currentInteractiveHTML += `<div class="generated-task-block ${isSecondPartBlock ? 'second-part-task' : 'first-part-task'}" data-part="${isSecondPartBlock ? 2 : 1}" data-random-task-number="${randomTaskNumber}" style="margin-bottom:30px; clear:both; overflow:visible; position:relative; border-bottom:1px dashed #ddd; padding:8px 0 20px;"><div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; overflow:visible;"><div style="display:flex; align-items:flex-start; gap:15px; flex-grow:1; min-width:0; overflow:visible;"><div style="flex-shrink:0; font-weight:bold; font-size:1.1em; padding-top:2px;">${taskCounter}.</div>${mainSvg ? `<div class="generated-task-diagram" style="flex-shrink:0; min-width:150px; max-width:350px; padding:22px 8px 6px; box-sizing:border-box; overflow:visible;">${mainSvg}</div>` : ""}<div style="flex-grow:1; min-width:0;"><div class="task-copy">${displayTaskText}</div>${taskActionArea}</div></div><div style="display:flex;align-items:flex-start;gap:8px;">${randomReplaceButton}${stickerHTMLInteractive}</div></div>${scratchpadHTML}</div>`;
+                const hasSamePrototypeAlternative = !useRandomPicks && Array.isArray(item.allProtoTasks) && item.allProtoTasks.length > 1;
+                const replaceButton = useRandomPicks
+                    ? `<button type="button" class="random-replace-btn" onclick="replaceRandomVariantTask('${tid}')" title="Заменить только это задание, остальные оставить">🎲 Заменить</button>`
+                    : (hasSamePrototypeAlternative ? `<button type="button" class="random-replace-btn" onclick="replaceManualVariantTask(${manualPlanIndex})" title="Заменить на другую задачу этого же прототипа">🔄 Заменить</button>` : '');
+                currentInteractiveHTML += `<div class="generated-task-block ${isSecondPartBlock ? 'second-part-task' : 'first-part-task'}" data-part="${isSecondPartBlock ? 2 : 1}" data-random-task-number="${randomTaskNumber}" data-manual-plan-index="${manualPlanIndex}" style="margin-bottom:30px; clear:both; overflow:visible; position:relative; border-bottom:1px dashed #ddd; padding:8px 0 20px;"><div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; overflow:visible;"><div style="display:flex; align-items:flex-start; gap:15px; flex-grow:1; min-width:0; overflow:visible;"><div style="flex-shrink:0; font-weight:bold; font-size:1.1em; padding-top:2px;">${taskCounter}.</div>${mainSvg ? `<div class="generated-task-diagram" style="flex-shrink:0; min-width:150px; max-width:350px; padding:22px 8px 6px; box-sizing:border-box; overflow:visible;">${mainSvg}</div>` : ""}<div style="flex-grow:1; min-width:0;"><div class="task-copy">${displayTaskText}</div>${taskActionArea}</div></div><div style="display:flex;align-items:flex-start;gap:8px;">${replaceButton}${stickerHTMLInteractive}</div></div>${scratchpadHTML}</div>`;
                 
                 currentPrintHTML += `<div class="task-print-block"><div class="task-print-flex"><div class="task-print-num">${taskCounter}</div>${mainSvg ? `<div class="task-print-img">${mainSvg}</div>` : ""}<div class="task-print-text"><div class="task-copy">${displayTaskText}</div>${isSecondPartBlock ? `<div class="task-print-answer" style="margin-top:10px;color:#777;">Решение выполняется с полным обоснованием.</div>` : `<div class="task-print-answer">Ответ: ______________________________</div>`}</div>${stickerHTMLPrint}</div></div>`;
                 
@@ -2941,10 +3066,16 @@ body.auth-locked > *:not(#passwordGate) {
         }
 
         if (hasContent) {
-            document.getElementById('output-section').style.display = 'block';
-            document.getElementById('btn-group').style.display = 'flex';
-            setRandomVariantButtonsVisible(useRandomPicks);
-            renderPreview();
+            if (!useRandomPicks) window.manualVariantPlan = manualPlanBuilt.map(item => ({ ...item }));
+            // При сборке пачки 1–40 не отрисовываем интерактивный лист 40 раз.
+            // Готовые HTML и задачи сохраняются, а предпросмотр строится один раз
+            // для первого варианта после завершения полной пачки.
+            if (!options.silent) {
+                document.getElementById('output-section').style.display = 'block';
+                document.getElementById('btn-group').style.display = 'flex';
+                setRandomVariantButtonsVisible(useRandomPicks);
+                renderPreview();
+            }
         }
     }
 
@@ -2955,42 +3086,139 @@ body.auth-locked > *:not(#passwordGate) {
             if (!sourceEl) return;
             const visual = sourceEl.matches && sourceEl.matches('svg,img,picture,canvas') ? sourceEl : sourceEl.querySelector('svg,img,picture,canvas');
             if (!visual) return;
+
             let overlay = document.getElementById('draftVisualZoomOverlay');
             if (!overlay) {
                 overlay = document.createElement('div');
                 overlay.id = 'draftVisualZoomOverlay';
-                overlay.style.cssText = 'position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
-                overlay.innerHTML = '<div style="position:relative;width:min(1100px,96vw);height:min(820px,90vh);background:#fff;border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.55);overflow:hidden;display:flex;flex-direction:column;"><div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;background:#eef6ff;border-bottom:1px solid #c9dff2;"><button type="button" data-z="out" title="Уменьшить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">−</button><button type="button" data-z="reset" title="Исходный размер" style="font-size:16px;border:1px solid #90caf9;background:#fff;border-radius:8px;height:36px;cursor:pointer;">100%</button><button type="button" data-z="in" title="Увеличить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">+</button><button type="button" data-z="close" title="Закрыть" style="margin-left:auto;font-size:24px;border:1px solid #ffcc80;background:#fff3e0;color:#e65100;border-radius:8px;width:38px;height:36px;cursor:pointer;">×</button></div><div data-z="viewport" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;background:#fff;"><div data-z="content" style="transform-origin:center center;transition:transform .12s ease;"></div></div></div>';
+                overlay.style.cssText = 'position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;';
+                overlay.innerHTML = '<div data-z="dialog" style="position:relative;width:min(1180px,97vw);height:min(860px,94vh);background:#fff;border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.55);overflow:hidden;display:flex;flex-direction:column;"><div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;background:#eef6ff;border-bottom:1px solid #c9dff2;flex:0 0 auto;"><button type="button" data-z="out" title="Уменьшить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">−</button><button type="button" data-z="reset" title="Показать целиком" style="font-size:16px;border:1px solid #90caf9;background:#fff;border-radius:8px;height:36px;cursor:pointer;">100%</button><button type="button" data-z="in" title="Увеличить" style="font-size:20px;border:1px solid #90caf9;background:#fff;border-radius:8px;min-width:38px;height:36px;cursor:pointer;">+</button><button type="button" data-z="close" title="Закрыть" style="margin-left:auto;font-size:24px;border:1px solid #ffcc80;background:#fff3e0;color:#e65100;border-radius:8px;width:38px;height:36px;cursor:pointer;">×</button></div><div data-z="viewport" style="flex:1;min-height:0;overflow:auto;padding:18px;box-sizing:border-box;background:#fff;"><div data-z="stage" style="min-width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box;"><div data-z="content" style="flex:0 0 auto;line-height:0;"></div></div></div></div>';
                 document.body.appendChild(overlay);
-                const close = () => { overlay.style.display = 'none'; document.body.style.overflow = overlay.dataset.oldOverflow || ''; };
-                overlay.addEventListener('click', e => { if (e.target === overlay || e.target.closest('[data-z="close"]')) close(); });
-                document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.style.display !== 'none') close(); });
-                overlay.querySelector('[data-z="in"]').addEventListener('click', () => { overlay._scale = Math.min(4, (overlay._scale || 1) + .25); overlay._apply(); });
-                overlay.querySelector('[data-z="out"]').addEventListener('click', () => { overlay._scale = Math.max(.5, (overlay._scale || 1) - .25); overlay._apply(); });
-                overlay.querySelector('[data-z="reset"]').addEventListener('click', () => { overlay._scale = 1; overlay._apply(); });
-                overlay.querySelector('[data-z="viewport"]').addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); overlay._scale = Math.max(.5, Math.min(4, (overlay._scale || 1) + (e.deltaY < 0 ? .15 : -.15))); overlay._apply(); }, {passive:false});
+
+                const close = () => {
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = overlay.dataset.oldOverflow || '';
+                };
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay || e.target.closest('[data-z="close"]')) close();
+                });
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape' && overlay.style.display !== 'none') close();
+                });
+
+                const changeScale = delta => {
+                    if (!overlay._apply) return;
+                    overlay._scale = Math.max(.5, Math.min(4, (overlay._scale || 1) + delta));
+                    overlay._apply();
+                };
+                overlay.querySelector('[data-z="in"]').addEventListener('click', () => changeScale(.25));
+                overlay.querySelector('[data-z="out"]').addEventListener('click', () => changeScale(-.25));
+                overlay.querySelector('[data-z="reset"]').addEventListener('click', () => {
+                    if (!overlay._apply) return;
+                    overlay._scale = 1;
+                    overlay._apply();
+                });
+                overlay.querySelector('[data-z="viewport"]').addEventListener('wheel', e => {
+                    if (!e.ctrlKey) return;
+                    e.preventDefault();
+                    changeScale(e.deltaY < 0 ? .15 : -.15);
+                }, {passive:false});
+                window.addEventListener('resize', () => {
+                    if (overlay.style.display !== 'none' && overlay._refit) overlay._refit();
+                });
             }
+
             const content = overlay.querySelector('[data-z="content"]');
+            const stage = overlay.querySelector('[data-z="stage"]');
+            const viewport = overlay.querySelector('[data-z="viewport"]');
             content.innerHTML = '';
+
             let clone;
             if (visual.tagName && visual.tagName.toLowerCase() === 'canvas') {
                 clone = document.createElement('img');
-                try { clone.src = visual.toDataURL('image/png'); } catch(e) { return; }
-            } else clone = visual.cloneNode(true);
-            clone.removeAttribute && clone.removeAttribute('id');
-            clone.style.cssText = 'display:block;max-width:none!important;max-height:none!important;width:auto!important;height:auto!important;min-width:min(760px,82vw);object-fit:contain;margin:auto;';
-            if (clone.tagName && clone.tagName.toLowerCase() === 'svg') {
-                const vb = clone.getAttribute('viewBox');
-                if (!clone.getAttribute('width')) clone.setAttribute('width', vb ? Math.max(760, Number(vb.split(/\\s+/)[2]) * 2) : 900);
-                if (!clone.getAttribute('height') && vb) clone.setAttribute('height', Math.max(520, Number(vb.split(/\\s+/)[3]) * 2));
+                try {
+                    clone.src = visual.toDataURL('image/png');
+                } catch(e) {
+                    return;
+                }
+            } else {
+                clone = visual.cloneNode(true);
             }
+
+            clone.removeAttribute && clone.removeAttribute('id');
+            clone.style.cssText = 'display:block!important;max-width:none!important;max-height:none!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;object-fit:contain!important;margin:0!important;';
+
+            if (clone.tagName && clone.tagName.toLowerCase() === 'picture') {
+                const pictureImg = clone.querySelector('img');
+                if (pictureImg) {
+                    pictureImg.style.cssText = 'display:block!important;max-width:none!important;max-height:none!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;object-fit:contain!important;margin:0!important;';
+                }
+            }
+
             content.appendChild(clone);
+
+            const sourceRect = visual.getBoundingClientRect();
+            let ratio = sourceRect.width > 0 && sourceRect.height > 0 ? sourceRect.width / sourceRect.height : 1;
+            const tag = visual.tagName ? visual.tagName.toLowerCase() : '';
+
+            if (tag === 'img' && visual.naturalWidth > 0 && visual.naturalHeight > 0) {
+                ratio = visual.naturalWidth / visual.naturalHeight;
+            } else if (tag === 'canvas' && visual.width > 0 && visual.height > 0) {
+                ratio = visual.width / visual.height;
+            } else if (tag === 'svg' && visual.viewBox && visual.viewBox.baseVal && visual.viewBox.baseVal.width > 0 && visual.viewBox.baseVal.height > 0) {
+                ratio = visual.viewBox.baseVal.width / visual.viewBox.baseVal.height;
+            } else if (tag === 'picture') {
+                const sourceImg = visual.querySelector('img');
+                if (sourceImg && sourceImg.naturalWidth > 0 && sourceImg.naturalHeight > 0) {
+                    ratio = sourceImg.naturalWidth / sourceImg.naturalHeight;
+                }
+            }
+
+            if (!isFinite(ratio) || ratio <= 0) ratio = 1;
+            overlay._ratio = ratio;
             overlay._scale = 1;
-            overlay._apply = () => { content.style.transform = 'scale(' + overlay._scale + ')'; overlay.querySelector('[data-z="reset"]').textContent = Math.round(overlay._scale * 100) + '%'; };
-            overlay._apply();
+
+            overlay._apply = () => {
+                const scale = overlay._scale || 1;
+                const width = Math.max(1, (overlay._baseWidth || 1) * scale);
+                const height = Math.max(1, (overlay._baseHeight || 1) * scale);
+
+                content.style.width = width + 'px';
+                content.style.height = height + 'px';
+
+                const viewportWidth = Math.max(0, viewport.clientWidth - 36);
+                const viewportHeight = Math.max(0, viewport.clientHeight - 36);
+                stage.style.justifyContent = width <= viewportWidth + 1 ? 'center' : 'flex-start';
+                stage.style.alignItems = height <= viewportHeight + 1 ? 'center' : 'flex-start';
+
+                overlay.querySelector('[data-z="reset"]').textContent = Math.round(scale * 100) + '%';
+            };
+
+            overlay._refit = () => {
+                const styles = window.getComputedStyle(viewport);
+                const padX = (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0);
+                const padY = (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0);
+                const availableWidth = Math.max(120, viewport.clientWidth - padX);
+                const availableHeight = Math.max(120, viewport.clientHeight - padY);
+                const ratioNow = overlay._ratio || 1;
+
+                let baseWidth = availableWidth;
+                let baseHeight = baseWidth / ratioNow;
+                if (baseHeight > availableHeight) {
+                    baseHeight = availableHeight;
+                    baseWidth = baseHeight * ratioNow;
+                }
+
+                overlay._baseWidth = Math.max(1, Math.floor(baseWidth));
+                overlay._baseHeight = Math.max(1, Math.floor(baseHeight));
+                overlay._apply();
+            };
+
             overlay.dataset.oldOverflow = document.body.style.overflow || '';
             document.body.style.overflow = 'hidden';
             overlay.style.display = 'flex';
+
+            requestAnimationFrame(() => overlay._refit());
         };
         window.openTheoryModalLocal = function(dataId) {
             let el = document.getElementById(dataId);
@@ -4170,7 +4398,7 @@ body.auth-locked > *:not(#passwordGate) {
 
 </script>
 
-<script src="presentations.js?v=20260807-3"></script>
+<script src="presentations.js?v=20261030-1"></script>
 
 <script>
 (function(){
@@ -4320,5 +4548,6 @@ body.auth-locked > *:not(#passwordGate) {
 })();
 </script>
 
+<script src="ege_full_variants.js?v=20261102-grid-v10"></script>
 </body>
 </html>
