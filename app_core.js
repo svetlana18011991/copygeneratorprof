@@ -1122,7 +1122,7 @@
 
         // Пунктуация сразу после формулы должна переноситься вместе с формулой.
         // Иначе браузер/MathJax иногда оставляет точку или запятую в начале новой строки.
-        const mathWithPunctuation = /(\\\([\s\S]*?\\\)|\$[^$]*\$)[ \t\u00A0]*([.!?,;:])/g;
+        const mathWithPunctuation = /(\\\((?:(?!\\\))[\s\S])*\\\)|\$[^$]*\$)[ \t\u00A0]*([.!?,;:])/g;
         const protectedHtml = html.replace(
             mathWithPunctuation,
             '<span style="white-space:nowrap;">$1$2</span>'
@@ -2332,9 +2332,10 @@
         let customBg = getSelectedCustomBg();
         let timerValue = document.getElementById("timer-input").value;
         let customBgRule = '';
-        if (theme === 'custom' && customBg) { customBgRule = `.bg-custom { background: #f4f7f6 url('${customBg}') center top / cover no-repeat fixed !important; }`; theme = 'custom'; }
+        if (theme === 'custom' && customBg) { customBgRule = `.bg-custom { background: #f4f7f6 url('${customBg.replace(/[\\'<>\r\n]/g, c => '\\' + c.charCodeAt(0).toString(16) + ' ')}') center top / cover no-repeat fixed !important; }`; theme = 'custom'; }
 
         let teacherName = document.getElementById('teacher-name').value.trim();
+        teacherName = teacherName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         let sig = "";
         if (document.getElementById('toggle-signature').checked && teacherName !== '') {
             let verb = (document.getElementById('teacher-gender').value === 'male') ? 'подготовил' : 'подготовила';
@@ -2568,8 +2569,12 @@
         // так как вариант уже открыт на сайте и не требует автономности.
         if (window.__EGE_LINK_STUDENT_VIEWER === true) {
             html = html.replace('</style>', `
+        .generated-task-block, .generated-task-block .task-copy,
+        .generated-task-block .task-copy p { min-width:0; max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+        .generated-task-block .task-copy img { max-width:100%; height:auto; }
+        .generated-task-block .task-copy mjx-container[display="true"] { max-width:100%; overflow-x:auto; }
         @media(max-width:760px){
-            html,body{max-width:100%;overflow-x:hidden;}
+            html,body{max-width:100%;}
             .theme-wrapper{padding:12px 6px!important;box-sizing:border-box;}
             .paper{width:100%!important;max-width:100%!important;box-sizing:border-box;
                 margin:0!important;padding:20px 12px!important;}

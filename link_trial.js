@@ -46,20 +46,91 @@
         ]));
     }
 
-    function encode(data) {
-        const bytes = new TextEncoder().encode(JSON.stringify(data));
+    // v2: binary task records, no network or compression API required.
+    // Preserve numeric IDs versus task-prefixed IDs, as the generator uses both.
+    // Existing v1 URLs remain readable.
+    function toBase64(bytes) {
         let binary = '';
         for (let i = 0; i < bytes.length; i += 2048) {
             binary += String.fromCharCode(...bytes.subarray(i, i + 2048));
         }
         return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
-
+    function fromBase64(token) {
+        if (!/^[A-Za-z0-9_-]{1,14000}$/.test(token)) throw new Error('Повреждён код варианта.');
+        const binary = atob(token.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - token.length % 4) % 4));
+        return Uint8Array.from(binary, c => c.charCodeAt(0));
+    }
+    function encode(data) {
+        const out = [];
+        const put = n => {
+            if (!Number.isSafeInteger(n) || n < 0 || n > 0xffffffff) throw new Error('Некорректный номер задания.');
+            while (n >= 128) { out.push((n % 128) + 128); n = Math.floor(n / 128); }
+            out.push(n);
+        };
+        const str = value => {
+            const bytes = new TextEncoder().encode(value);
+            put(bytes.length); for (const byte of bytes) out.push(byte);
+        };
+        const [theme, sticker, timer, signature, gender, name, bgUrl] = data.o;
+        const themeIndex = ['none','winter','spring','summer','autumn','custom'].indexOf(theme);
+        const stickerIndex = ['none','cat','sci','ro'].indexOf(sticker);
+        if (themeIndex < 0 || stickerIndex < 0 || !['female','male'].includes(gender)) throw new Error('Неподдерживаемые параметры оформления.');
+        out.push(data.c.reduce((n, flag, i) => n | (flag ? 1 << i : 0), 0) | (data.r ? 16 : 0) | (signature ? 32 : 0) | (gender === 'male' ? 64 : 0));
+        out.push(themeIndex | (stickerIndex << 3));
+        put(data.n); put(timer); str(name); str(bgUrl); put(data.q.length);
+        for (const entry of data.q) {
+            const [tid, kind, pi, ti, fingerprint] = entry;
+            const match = /^(task|archive_task)?([1-9][0-9]{0,2})$/.exec(tid);
+            if (!match) throw new Error('Неизвестный тип задания: ' + tid);
+            const type = match[1] === 'archive_task' ? 2 : match[1] === 'task' ? 1 : 0;
+            put(Number(match[2]) * 8 + type * 2 + kind);
+            put(pi); put(ti);
+            const h = parseInt(fingerprint, 36) >>> 0;
+            out.push(h & 255, (h >>> 8) & 255, (h >>> 16) & 255, h >>> 24);
+        }
+        return '2.' + toBase64(Uint8Array.from(out));
+    }
     function decode(token) {
-        if (!/^[A-Za-z0-9_-]{20,14000}$/.test(token)) throw new Error('Повреждён код варианта. Попросите учителя отправить ссылку повторно.');
-        const text = atob(token.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - token.length % 4) % 4));
-        const bytes = Uint8Array.from(text, c => c.charCodeAt(0));
-        return JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes));
+        if (!token.startsWith('2.')) {
+            return JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(fromBase64(token)));
+        }
+        const bytes = fromBase64(token.slice(2)); let pos = 0;
+        const byte = () => { if (pos >= bytes.length) throw new Error('Ссылка обрезана.'); return bytes[pos++]; };
+        const get = () => {
+            let n = 0, m = 1;
+            for (let i = 0; i < 5; i++) {
+                const b = byte(); n += (b & 127) * m;
+                if (n > 0xffffffff) break;
+                if (b < 128) return n;
+                m *= 128;
+            }
+            throw new Error('Повреждён код варианта.');
+        };
+        const str = () => {
+            const length = get();
+            if (length > 4000 || pos + length > bytes.length) throw new Error('Ссылка обрезана.');
+            const value = new TextDecoder('utf-8', {fatal:true}).decode(bytes.subarray(pos, pos + length));
+            pos += length; return value;
+        };
+        const flags = byte(), appearance = byte();
+        if (flags & 128 || appearance & 224) throw new Error('Неизвестные настройки варианта.');
+        const n = get(), timer = get(), name = str(), bg = str(), count = get();
+        if (!count || count > MAX_TASKS) throw new Error('Некорректное число заданий.');
+        const q = [];
+        for (let i = 0; i < count; i++) {
+            const id = get(), type = (id >> 1) & 3, number = Math.floor(id / 8);
+            if (type > 2 || number < 1 || number > 999) throw new Error('Некорректный номер задания.');
+            const pi = get(), ti = get();
+            const fingerprint = (byte() | byte() << 8 | byte() << 16 | byte() << 24) >>> 0;
+            q.push([['','task','archive_task'][type] + number, id & 1, pi, ti, fingerprint.toString(36)]);
+        }
+        if (pos !== bytes.length) throw new Error('Повреждён код варианта.');
+        return {v:1, r:flags & 16 ? 1 : 0, n,
+            c:[0,1,2,3].map(i => (flags >> i) & 1),
+            o:[['none','winter','spring','summer','autumn','custom'][appearance & 7],
+                ['none','cat','sci','ro'][(appearance >> 3) & 3], timer, flags & 32 ? 1 : 0,
+                flags & 64 ? 'male' : 'female', name, bg], q};
     }
 
     function validateEntry(entry) {

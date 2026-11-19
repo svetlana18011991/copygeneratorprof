@@ -139,5 +139,27 @@ function setup(hash='', full=false) {
   assert.equal(mixedPlan.length,15); assert.equal(mixedPlan[0].tid,'1'); assert.equal(mixedPlan[2].tid,'archive_task6');
   assert.equal(mixedStudent.w.__EGE_LINK_STUDENT_VIEWER_RENDERED,true);
   console.log('PASS: 15 manual tasks with numeric, archive and extra bank identifiers');
+  const compact=mixed.els['ege-link-share-url'].value;
+  assert.match(compact, /#student=2\./);
+  // Old JSON links must continue to work after the update.
+  const hashText = value => {let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(36);};
+  const legacyPayload={v:1,r:0,n:0,c:[0,1,1,0],o:['winter','none',45,1,'female','И.И. Иванова',''],q:mixed.w.currentGeneratedTasks.map(e=>{let t=bank[e.taskTid].prototypes[0].tasks[0];return [e.taskTid,e.taskKind==='extra'?1:0,0,0,hashText(JSON.stringify([t.id,t.text,t.answer,t.svg_code||'',t.imageHTML||'','']))];})};
+  const oldToken=Buffer.from(JSON.stringify(legacyPayload)).toString('base64url');
+  const legacy=setup('#student='+oldToken);
+  legacy.w.generateVariant=({manualPlan})=>{legacy.w.currentGeneratedTasks=manualPlan.map(p=>({taskTid:p.tid,taskKind:p.kind,protoIndex:p.protoIndex,sourceTaskIndex:p.taskIndex}));};
+  legacy.w.downloadStudentHTML=async()=>{legacy.w.__EGE_LINK_STUDENT_VIEWER_RENDERED=true;};
+  await legacy.events.load();await new Promise(setImmediate);
+  assert.equal(legacy.w.__EGE_LINK_STUDENT_VIEWER_RENDERED,true);
+  const oldLink=new URL(legacy.loc.href);const newLink=new URL(compact);
+  assert(newLink.hash.length<oldLink.hash.length/2);
+  console.log(`PASS: 15-task URL length ${oldLink.href.length} -> ${newLink.href.length}; old URLs still work`);
+  // Regression: never let the punctuation protection span intervening prose.
+  const core=fs.readFileSync(path.join(__dirname,'..','app_core.js'),'utf8');
+  const regexLine=core.match(/const mathWithPunctuation = (.*);/)[1];
+  const re=vm.runInNewContext(regexLine);
+  const car=String.raw`Автомобиль, масса которого равна \(m=1500\) кг, начинает двигаться с ускорением, которое в течение \(t\) секунд остаётся неизменным, и проходит за это время путь \(S=400\) м. Значение силы \(F\) (в ньютонах), приложенной к автомобилю, равно \(F=\dfrac{2mS}{t^2}\). Определите наибольшее время.`;
+  const matches=Array.from(car.matchAll(re),m=>m[0]);
+  assert.equal(matches.length,1);assert.equal(matches[0],String.raw`\(F=\dfrac{2mS}{t^2}\).`);
+  console.log('PASS: exact car-task punctuation regression');
   console.log('All link-trial tests passed.');
 })().catch(err=>{console.error(err);process.exitCode=1;});
