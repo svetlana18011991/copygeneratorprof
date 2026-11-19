@@ -11,7 +11,7 @@ const bank = {
   task2: {prototypes: [{svg_code:'', tasks:[{id:'c',text:'Вторая задача',answer:'9'}]}]},
 };
 bank['1']=bank.task1; bank['2']=bank.task2; bank['archive_task6']=bank.task1;
-function setup(hash='', full=false) {
+function setup(hash='', full=false, now=Date.now(), active='123456789abc') {
   const els = {};
   function getEl(id) {
     if (!els[id]) els[id]={
@@ -30,7 +30,7 @@ function setup(hash='', full=false) {
   const events = {};
   const loc = new URL('https://example.github.io/test-generator/index.html'+hash);
   const w = {
-    location:loc,
+    location:loc, __EGE_RELEASE:{id:'123456789abc',archive:false,root:'https://example.github.io/test-generator/'},
     getPrototypeData: (tid,kind)=>bank[tid],
     getSelectedCustomBg:()=>'',
     currentGeneratedTasks:[],
@@ -52,7 +52,7 @@ function setup(hash='', full=false) {
   });
   const sandbox = {
     window:w,document,location:loc,URL,TextEncoder,TextDecoder,Uint8Array,
-    btoa,atob,console, setTimeout:fn=>fn(), navigator:{clipboard:{writeText:async()=>{}}}
+    btoa,atob,console, Date:class extends Date {static now(){return now;}}, fetch:async()=>({ok:true,json:async()=>({active})}), setTimeout:fn=>fn(), navigator:{clipboard:{writeText:async()=>{}}}
   };
   vm.runInNewContext(code,sandbox,{filename:'link_trial.js'});
   return {w, els,events,document,loc};
@@ -64,9 +64,9 @@ function setup(hash='', full=false) {
     {taskTid:'task1',taskKind:'main',protoIndex:0,sourceTaskIndex:0},
     {taskTid:'task2',taskKind:'main',protoIndex:0,sourceTaskIndex:0}
   ];
-  teacher.w.egeShowStudentLink();
+  await teacher.w.egeShowStudentLink();
   const link=teacher.els['ege-link-share-url'].value;
-  assert.match(link,/^https:\/\/example.github.io\/test-generator\/index.html#student=/);
+  assert.match(link,/^https:\/\/example.github.io\/test-generator\/v.html#student=/);
   assert(link.length<1500,'two tasks should yield a compact link');
   assert.match(teacher.els['ege-link-share-status'].textContent,/2 заданий/);
   console.log('PASS: creates a compact link for a manual variant');
@@ -110,7 +110,7 @@ function setup(hash='', full=false) {
   random.w.currentGeneratedTasks=teacher.w.currentGeneratedTasks;
   random.w.randomVariantMode=true;
   random.w.randomVariantNumber=1234;
-  random.w.egeShowStudentLink();
+  await random.w.egeShowStudentLink();
   const randomLink=random.els['ege-link-share-url'].value;
   const studentRandom=setup(new URL(randomLink).hash);
   let randomCalls=0;
@@ -130,7 +130,7 @@ function setup(hash='', full=false) {
 
   const mixed=setup();
   mixed.w.currentGeneratedTasks=Array.from({length:15},(_,i)=>({taskTid:['1','2','archive_task6'][i%3],taskKind:i%2?'extra':'main',protoIndex:0,sourceTaskIndex:0}));
-  mixed.w.egeShowStudentLink();
+  await mixed.w.egeShowStudentLink();
   const mixedStudent=setup(new URL(mixed.els['ege-link-share-url'].value).hash);
   let mixedPlan;
   mixedStudent.w.generateVariant=({manualPlan})=>{mixedPlan=manualPlan;mixedStudent.w.currentGeneratedTasks=manualPlan.map(p=>({taskTid:p.tid,taskKind:p.kind,protoIndex:p.protoIndex,sourceTaskIndex:p.taskIndex}));};
@@ -140,7 +140,22 @@ function setup(hash='', full=false) {
   assert.equal(mixedStudent.w.__EGE_LINK_STUDENT_VIEWER_RENDERED,true);
   console.log('PASS: 15 manual tasks with numeric, archive and extra bank identifiers');
   const compact=mixed.els['ege-link-share-url'].value;
-  assert.match(compact, /#student=2\./);
+  assert.match(compact, /#student=3\.123456789abc\./);
+  const expired=setup(new URL(compact).hash,false,Date.now()+22*86400000);
+  expired.w.generateVariant=()=>{throw new Error('expired link must not render');};
+  await expired.events.load(); await new Promise(setImmediate);
+  assert.equal(expired.document.title,'Ошибка открытия варианта');
+  const almost=setup(new URL(compact).hash,false,Date.now()+20*86400000);
+  almost.w.generateVariant=({manualPlan})=>{almost.w.currentGeneratedTasks=manualPlan.map(p=>({taskTid:p.tid,taskKind:p.kind,protoIndex:p.protoIndex,sourceTaskIndex:p.taskIndex}));};
+  almost.w.downloadStudentHTML=async()=>{almost.w.__EGE_LINK_STUDENT_VIEWER_RENDERED=true;};
+  await almost.events.load(); await new Promise(setImmediate);
+  assert.equal(almost.w.__EGE_LINK_STUDENT_VIEWER_RENDERED,true);
+  const stale=setup('',false,Date.now(),'abcdef123456');
+  stale.w.currentGeneratedTasks=mixed.w.currentGeneratedTasks;
+  await stale.w.egeShowStudentLink();
+  assert.match(stale.els['ege-link-share-status'].textContent,/Генератор обновился/);
+  assert.equal(stale.els['ege-link-share-url'].value,'');
+  console.log('PASS: expiration, 20-day validity and stale teacher tab');
   // Old JSON links must continue to work after the update.
   const hashText = value => {let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(36);};
   const legacyPayload={v:1,r:0,n:0,c:[0,1,1,0],o:['winter','none',45,1,'female','И.И. Иванова',''],q:mixed.w.currentGeneratedTasks.map(e=>{let t=bank[e.taskTid].prototypes[0].tasks[0];return [e.taskTid,e.taskKind==='extra'?1:0,0,0,hashText(JSON.stringify([t.id,t.text,t.answer,t.svg_code||'',t.imageHTML||'','']))];})};

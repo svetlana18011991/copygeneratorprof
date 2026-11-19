@@ -1,0 +1,45 @@
+name: Publish EGE with 21-day versions
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '41 3 * * *'
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+concurrency:
+  group: ege-pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Build current and preserved student versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          set -euo pipefail
+          previous=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ege-pages.yml/runs?status=success&per_page=1" --jq '.workflow_runs[0].head_sha // ""')
+          # A queued workflow with a different head must not claim the wrong commit.
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo 'A newer push exists; its publishing run will deploy.'; exit 1; }
+          python3 ege_versions/build.py --out "$RUNNER_TEMP/ege-site" --base-url "$SITE_URL" --previous-sha "$previous"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/ege-site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
