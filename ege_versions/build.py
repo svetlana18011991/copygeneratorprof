@@ -33,6 +33,22 @@ def published_files(sha):
 def write(path,data):
     path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data if isinstance(data,bytes) else data.encode('utf-8'))
 
+def validate_previous(m, expected):
+    if not isinstance(m, dict) or m.get('active') != expected[:12]:
+        raise RuntimeError('Published manifest is not the last successful deployment')
+    versions = m.get('versions')
+    if not isinstance(versions, dict) or versions.get(expected[:12], {}).get('sha') != expected:
+        raise RuntimeError('Previous manifest has an invalid active revision')
+    if not isinstance(m.get('legacy'), str) or not isinstance(m.get('legacy_until'), int):
+        raise RuntimeError('Previous manifest lacks legacy metadata')
+    for key, value in versions.items():
+        if (not isinstance(value, dict) or not isinstance(value.get('sha'), str)
+                or not re.fullmatch(r'[0-9a-f]{40}', value['sha']) or key != value['sha'][:12]
+                or 'retired' not in value or (value['retired'] is not None and not isinstance(value['retired'], int))):
+            raise RuntimeError('Previous manifest contains invalid revision metadata')
+    return m
+
+
 def fetch_previous(base,expected):
     if not expected: return None
     url=base.rstrip('/')+'/ege-release.json?build='+str(time.time_ns())
@@ -40,11 +56,35 @@ def fetch_previous(base,expected):
     for _ in range(4):
         try:
             with urllib.request.urlopen(urllib.request.Request(url,headers={'Cache-Control':'no-cache'}),timeout=25) as f: m=json.load(f)
-            if m.get('active')==expected[:12] and m['versions'][m['active']]['sha']==expected: return m
-            last='Published manifest is not the last successful deployment'
+            return validate_previous(m, expected)
         except Exception as e: last=str(e)
         time.sleep(4)
     raise RuntimeError('Cannot safely read previous publication: '+str(last))
+
+# Recovery is restricted to the known first successful test deployment, which
+# completed before its manifest was available from the published site. It is
+# not a general 'ignore missing previous state' switch.
+RECOVERY_SHA = '76b4d654566a34b7b2c5072ac58b9e61cb036395'
+RECOVERY_RUN = '44441377518'
+
+
+def load_previous(base, expected, previous_json, recovery_run, now):
+    if previous_json:
+        m = json.loads(previous_json.read_text())
+        return validate_previous(m, expected) if expected else m
+    if not expected:
+        return None
+    try:
+        return fetch_previous(base, expected)
+    except RuntimeError:
+        if expected != RECOVERY_SHA or recovery_run != RECOVERY_RUN:
+            raise
+        # This specific run was the very first versioned deployment. Rebuild
+        # both its active revision and the preceding legacy bank from Git.
+        # The transition period starts anew so no previously issued link loses days.
+        print('Recovering known first test deployment from Git history.', flush=True)
+        return state(expected, None, now)
+
 
 def state(head, previous, now, baseline=None):
     if previous:
@@ -124,7 +164,7 @@ def build(out, manifest):
     print(f'Built {len(manifest["versions"])} versions; {total:,} bytes.')
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--out',required=True,type=Path);p.add_argument('--base-url',default='');p.add_argument('--previous-sha',default='');p.add_argument('--previous-json',type=Path);p.add_argument('--baseline');p.add_argument('--now',type=int,default=int(time.time()));a=p.parse_args()
-    head=textgit('rev-parse','HEAD');previous=json.loads(a.previous_json.read_text()) if a.previous_json else fetch_previous(a.base_url,a.previous_sha)
+    p=argparse.ArgumentParser();p.add_argument('--out',required=True,type=Path);p.add_argument('--base-url',default='');p.add_argument('--previous-sha',default='');p.add_argument('--previous-json',type=Path);p.add_argument('--recovery-run',default='');p.add_argument('--baseline');p.add_argument('--now',type=int,default=int(time.time()));a=p.parse_args()
+    head=textgit('rev-parse','HEAD');previous=load_previous(a.base_url,a.previous_sha,a.previous_json,a.recovery_run,a.now)
     m=state(head,previous,a.now,a.baseline);build(a.out,m)
 if __name__=='__main__':main()

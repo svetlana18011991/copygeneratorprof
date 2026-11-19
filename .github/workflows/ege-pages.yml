@@ -33,10 +33,37 @@ jobs:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
           set -euo pipefail
-          previous=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ege-pages.yml/runs?status=success&per_page=1" --jq '.workflow_runs[0].head_sha // ""')
-          # A queued workflow with a different head must not claim the wrong commit.
+          previous_info=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ege-pages.yml/runs?status=success&per_page=1" --jq '[.workflow_runs[0] | (.id // "" | tostring), (.head_sha // "")] | join(" ")')
+          read -r previous_id previous_sha <<< "$previous_info"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo 'A newer push exists; its publishing run will deploy.'; exit 1; }
-          python3 ege_versions/build.py --out "$RUNNER_TEMP/ege-site" --base-url "$SITE_URL" --previous-sha "$previous"
+          args=()
+          if [[ -n "$previous_id" ]]; then
+            # Use the manifest saved by the last successful deployment, not a
+            # potentially stale or temporarily unavailable public CDN URL.
+            if gh run download "$previous_id" --repo "$GITHUB_REPOSITORY" --name ege-release-state --dir "$RUNNER_TEMP/ege-previous"; then
+              test -s "$RUNNER_TEMP/ege-previous/ege-release.json"
+              args+=(--previous-json "$RUNNER_TEMP/ege-previous/ege-release.json")
+            else
+              echo 'Previous state artifact unavailable; attempting public manifest.'
+            fi
+            # The first test publication predates state artifacts and was
+            # overwritten by the old Pages publisher. Only this exact run is
+            # eligible for reconstructing the initial state on a missing manifest.
+            if [[ "$GITHUB_REPOSITORY" == "svetlana18011991/copygeneratorprof" && "$previous_id" == "44441377518" ]]; then
+              args+=(--recovery-run "$previous_id")
+            fi
+          fi
+          python3 ege_versions/build.py --out "$RUNNER_TEMP/ege-site" --base-url "$SITE_URL" --previous-sha "$previous_sha" "${args[@]}"
+          mkdir -p "$RUNNER_TEMP/ege-state"
+          cp "$RUNNER_TEMP/ege-site/ege-release.json" "$RUNNER_TEMP/ege-state/ege-release.json"
+      - name: Save release state for future publications
+        uses: actions/upload-artifact@v4
+        with:
+          name: ege-release-state
+          path: ${{ runner.temp }}/ege-state/ege-release.json
+          retention-days: 90
+          if-no-files-found: error
+          overwrite: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ runner.temp }}/ege-site
