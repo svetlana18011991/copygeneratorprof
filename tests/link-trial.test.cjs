@@ -10,6 +10,7 @@ const bank = {
   task1: {prototypes: [{svg_code:'', tasks:[{id:'a',text:'Первая задача',answer:'4',svg_code:'<svg/>'},{id:'b',text:'Другая задача',answer:'8'}]}]},
   task2: {prototypes: [{svg_code:'', tasks:[{id:'c',text:'Вторая задача',answer:'9'}]}]},
 };
+bank['1']=bank.task1; bank['2']=bank.task2; bank['archive_task6']=bank.task1;
 function setup(hash='', full=false) {
   const els = {};
   function getEl(id) {
@@ -127,5 +128,16 @@ function setup(hash='', full=false) {
   assert.equal(randomCalls,1);
   console.log('PASS: restores the random full-variant number and exact task picks');
 
+  const mixed=setup();
+  mixed.w.currentGeneratedTasks=Array.from({length:15},(_,i)=>({taskTid:['1','2','archive_task6'][i%3],taskKind:i%2?'extra':'main',protoIndex:0,sourceTaskIndex:0}));
+  mixed.w.egeShowStudentLink();
+  const mixedStudent=setup(new URL(mixed.els['ege-link-share-url'].value).hash);
+  let mixedPlan;
+  mixedStudent.w.generateVariant=({manualPlan})=>{mixedPlan=manualPlan;mixedStudent.w.currentGeneratedTasks=manualPlan.map(p=>({taskTid:p.tid,taskKind:p.kind,protoIndex:p.protoIndex,sourceTaskIndex:p.taskIndex}));};
+  mixedStudent.w.downloadStudentHTML=async()=>{mixedStudent.w.__EGE_LINK_STUDENT_VIEWER_RENDERED=true;};
+  await mixedStudent.events.load(); await new Promise(setImmediate);
+  assert.equal(mixedPlan.length,15); assert.equal(mixedPlan[0].tid,'1'); assert.equal(mixedPlan[2].tid,'archive_task6');
+  assert.equal(mixedStudent.w.__EGE_LINK_STUDENT_VIEWER_RENDERED,true);
+  console.log('PASS: 15 manual tasks with numeric, archive and extra bank identifiers');
   console.log('All link-trial tests passed.');
 })().catch(err=>{console.error(err);process.exitCode=1;});

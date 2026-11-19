@@ -65,7 +65,7 @@
     function validateEntry(entry) {
         if (!Array.isArray(entry) || entry.length !== 5) throw new Error('Неверный состав варианта.');
         const [tid, kindCode, pi, ti, fingerprint] = entry;
-        if (typeof tid !== 'string' || !/^((task|archive)[\w-]{1,32})$/.test(tid) ||
+        if (typeof tid !== 'string' || !/^(?:[1-9][0-9]{0,2}|task[1-9][0-9]{0,2}|archive_task[1-9][0-9]{0,2})$/.test(tid) ||
             (kindCode !== 0 && kindCode !== 1) ||
             !Number.isInteger(pi) || pi < 0 || !Number.isInteger(ti) || ti < 0 ||
             typeof fingerprint !== 'string' || !/^[0-9a-z]{1,7}$/.test(fingerprint)) {
