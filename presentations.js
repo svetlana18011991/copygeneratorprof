@@ -24,6 +24,151 @@ function getShowCorrectOnErrorSetting() {
     return false;
 }
 
+// ==========================================
+// СТАРТОВЫЙ ЭКРАН ПРЕЗЕНТАЦИИ
+// Полный вариант ЕГЭ — короткая титульная заставка.
+// Произвольная подборка — компактная сводка по типам заданий.
+// ==========================================
+function escapePresHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function getPresentationTaskNumber(task) {
+    const match = String(task && task.taskTid || '').match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+}
+
+function isFullEgePresentation(tasks) {
+    tasks = Array.isArray(tasks) ? tasks : [];
+    if (!tasks.length) return false;
+
+    // Кнопка «Сгенерировать случайный вариант» однозначно означает полный вариант.
+    if (window.randomVariantMode || tasks.every(t => t && t.randomVariant)) return true;
+
+    // Полный вариант может состоять из 19 или 20 основных заданий
+    // (в проекте встречаются обе структуры). Главное: по одному заданию
+    // каждого номера подряд, без дополнительных блоков и повторов.
+    if (tasks.length !== 19 && tasks.length !== 20) return false;
+    if (!tasks.every(t => !t.taskKind || t.taskKind === 'main')) return false;
+
+    const nums = tasks.map(getPresentationTaskNumber).filter(Number.isFinite).sort((a, b) => a - b);
+    if (nums.length !== tasks.length) return false;
+    for (let i = 0; i < nums.length; i++) {
+        if (nums[i] !== i + 1) return false;
+    }
+    return true;
+}
+
+function shortPresentationTopic(rawTitle, taskNumber, kind) {
+    let title = String(rawTitle || '').trim();
+    title = title.replace(/^Задание\s*\d+\s*[.\-–—:]?\s*/i, '');
+    title = title.replace(/\s*\([^)]*(?:Решу\s*ЕГЭ|сайт)[^)]*\)\s*/gi, ' ');
+    title = title.replace(/\s{2,}/g, ' ').trim();
+    if (!title || /^Дополнительно$/i.test(title)) {
+        return kind === 'extra' ? 'Дополнительные задания' : `Задание ${taskNumber || ''}`.trim();
+    }
+    return title;
+}
+
+function getPresentationStartInfo() {
+    const tasks = Array.isArray(window.currentGeneratedTasks) ? window.currentGeneratedTasks : [];
+    const fullVariant = isFullEgePresentation(tasks);
+    if (fullVariant) {
+        return { fullVariant: true, total: tasks.length, groups: [] };
+    }
+
+    const selectedTitles = Array.isArray(window.selectedBlockTitles) ? window.selectedBlockTitles : [];
+    const groups = [];
+    const byKey = new Map();
+    let titleCursor = 0;
+    let previousKey = null;
+
+    tasks.forEach(task => {
+        const num = getPresentationTaskNumber(task);
+        const kind = (task && task.taskKind) || 'main';
+        const key = `${task && task.taskTid || 'task'}|${kind}`;
+
+        if (key !== previousKey) {
+            previousKey = key;
+            titleCursor++;
+        }
+
+        let group = byKey.get(key);
+        if (!group) {
+            const titleFromSelection = selectedTitles[Math.max(0, titleCursor - 1)] || '';
+            const titleFromDatabase = task && task.taskTid && window.database && window.database[task.taskTid]
+                ? window.database[task.taskTid].title
+                : '';
+            const rawTitle = kind === 'extra' ? titleFromSelection : (titleFromDatabase || titleFromSelection);
+            group = {
+                key,
+                number: num,
+                kind,
+                title: shortPresentationTopic(rawTitle, num, kind),
+                count: 0
+            };
+            byKey.set(key, group);
+            groups.push(group);
+        }
+        group.count++;
+    });
+
+    // Фолбэк для старых сохранённых данных, где у задач ещё не было taskTid.
+    if (!groups.length && selectedTitles.length) {
+        selectedTitles.forEach((title, index) => {
+            const m = String(title).match(/Задание\s*(\d+)/i);
+            const num = m ? parseInt(m[1], 10) : null;
+            groups.push({ number: num, kind: 'main', title: shortPresentationTopic(title, num, 'main'), count: 1 });
+        });
+    }
+
+    return { fullVariant: false, total: tasks.length, groups };
+}
+
+function buildPresentationStartCardHtml(authorLine, accentColor) {
+    const info = getPresentationStartInfo();
+    const safeAccent = escapePresHtml(accentColor || '#ff8c00');
+    const authorHtml = authorLine
+        ? `<div class="pres-start-author">${authorLine}</div>`
+        : '';
+    const brandHtml = `<div class="pres-start-brand"><img src="${window.getEmbeddedAssetUrl('logo.png')}" class="logo-small" onerror="this.style.display='none'">Шкатулка математических интерактивов</div>`;
+
+    if (info.fullVariant) {
+        return `<div class="title-box pres-start-card pres-start-card-full" onclick="event.stopPropagation();">
+            <div class="pres-start-kicker">Профильная математика</div>
+            <h1 class="pres-start-main-title">Вариант ЕГЭ</h1>
+            <div class="pres-start-rule" style="background:${safeAccent};"></div>
+            ${authorHtml}
+            ${brandHtml}
+        </div>`;
+    }
+
+    const groups = info.groups || [];
+    const gridClass = groups.length >= 13 ? 'pres-topic-grid pres-topic-grid-dense'
+        : (groups.length >= 7 ? 'pres-topic-grid pres-topic-grid-mid' : 'pres-topic-grid');
+    const chips = groups.map(group => {
+        const number = Number.isFinite(group.number) ? `<b>№${group.number}</b> ` : '';
+        const suffix = group.count > 1 ? `<span class="pres-topic-count">×${group.count}</span>` : '';
+        const fullLabel = `${Number.isFinite(group.number) ? `№${group.number} ` : ''}${group.title}${group.count > 1 ? ` ×${group.count}` : ''}`;
+        return `<div class="pres-topic-chip" title="${escapePresHtml(fullLabel)}"><span>${number}${escapePresHtml(group.title)}</span>${suffix}</div>`;
+    }).join('');
+
+    const totalText = `${info.total} ${info.total % 10 === 1 && info.total % 100 !== 11 ? 'задание' : ([2,3,4].includes(info.total % 10) && ![12,13,14].includes(info.total % 100) ? 'задания' : 'заданий')}`;
+    return `<div class="title-box pres-start-card pres-start-card-selection" onclick="event.stopPropagation();">
+        <div class="pres-start-kicker">Профильная математика</div>
+        <h1 class="pres-start-selection-title">Подборка заданий</h1>
+        <div class="pres-start-meta" style="border-color:${safeAccent};color:${safeAccent};">${totalText}</div>
+        <div class="${gridClass}">${chips}</div>
+        ${authorHtml}
+        ${brandHtml}
+    </div>`;
+}
+
 
 
 // ==========================================
@@ -53,6 +198,7 @@ function buildPresentationControls(task, index, options) {
         return `<div class="pres-check-zone pres-second-part-zone" style="display:flex;gap:12px;justify-content:center;align-items:center;width:100%;flex-wrap:wrap;flex-shrink:0;">
             ${instantCheck ? `<button type="button" id="pres-second-answer-btn-${index}" onclick="event.stopPropagation(); showSecondPartPresAnswer(${index})" style="background:#e8f5e9;color:#1b5e20;border:1px solid #4CAF50;border-radius:10px;font-size:16px;font-weight:bold;padding:9px 13px;cursor:pointer;">Показать ответ</button>` : ''}
             <button type="button" onclick="event.stopPropagation(); window.openTheoryModalLocal('theory-pres-${index}')" style="background:#e3f2fd;color:#003399;border:1px solid #90caf9;border-radius:10px;font-size:16px;font-weight:bold;padding:9px 13px;cursor:pointer;">🔁 Аналоги</button>
+            <button type="button" class="pres-next-btn" onclick="event.stopPropagation(); nextSlide()" style="background:${accent};color:#fff;border:none;border-radius:10px;font-size:18px;font-weight:bold;padding:10px 24px;cursor:pointer;">Далее →</button>
             ${drawButton}
             <div id="pres-second-answer-${index}" style="display:none;width:100%;margin-top:4px;padding:10px 12px;background:#eef6ff;border-left:4px solid #003399;border-radius:7px;color:#222;text-align:left;"><b>Ответ:</b> ${task.answer || ''}</div>
         </div><div id="pres-status-${index}" class="pres-status" style="margin-top:10px;min-height:28px;font-size:18px;font-weight:bold;text-align:center;"></div>`;
@@ -135,6 +281,11 @@ function generatePresentation1() {
     let showCorrectOnError = getShowCorrectOnErrorSetting();
 
     let topicsList = window.selectedBlockTitles.map(t => `<li style="margin-bottom: 10px;">${t}</li>`).join('');
+
+    // Размеры карточки первого шаблона. Раньше эти переменные не были объявлены,
+    // из-за чего generatePresentation1() падала с ReferenceError при клике.
+    const panelTop = '15%';
+    const panelBottom = '15%';
     
     let taskSlides = window.currentGeneratedTasks.map((t, i) => `
         <div class="slide task-slide" style="background-image: url('${window.getEmbeddedAssetUrl('p2.jpg')}')">
@@ -169,7 +320,7 @@ function generatePresentation1() {
                         <option value="sphere">🔮 Сфера</option>
                     </select>
                     <input type="color" id="color-pres-${i}" value="#003399" style="cursor:pointer; height: 28px; width: 32px; flex:0 0 auto; border: none; background: transparent; padding: 0;">
-                    <input type="range" id="size-pres-${i}" min="1" max="15" value="3" style="cursor:pointer; width: 58px; flex:0 0 58px;">
+                    <input type="range" id="size-pres-${i}" min="1" max="15" step="0.1" value="2" style="cursor:pointer; width: 58px; flex:0 0 58px;">
                     <button onclick="window.setTool('pres-${i}', 'eraser')" style="background:none; border:none; cursor:pointer; font-size:18px; padding:0 2px; flex:0 0 auto;" title="Ластик">🧽</button>
                     <button onclick="window.clearCanvas('pres-${i}')" style="background:none; border:none; cursor:pointer; font-size:18px; padding:0 2px; flex:0 0 auto;" title="Очистить всё">🗑️</button>
                     <div style="flex-grow:1; min-width:0;"></div>
@@ -235,7 +386,7 @@ function generatePresentation2() {
                         <option value="sphere">🔮 Сфера</option>
                     </select>
                     <input type="color" id="color-pres-${i}" value="#d81b60" style="cursor:pointer; height: 28px; width: 32px; flex:0 0 auto; border: none; background: transparent; padding: 0;">
-                    <input type="range" id="size-pres-${i}" min="1" max="15" value="3" style="cursor:pointer; width: 58px; flex:0 0 58px;">
+                    <input type="range" id="size-pres-${i}" min="1" max="15" step="0.1" value="2" style="cursor:pointer; width: 58px; flex:0 0 58px;">
                     <button onclick="window.setTool('pres-${i}', 'eraser')" style="background:none; border:none; cursor:pointer; font-size:18px; padding:0 2px; flex:0 0 auto;" title="Ластик">🧽</button>
                     <button onclick="window.clearCanvas('pres-${i}')" style="background:none; border:none; cursor:pointer; font-size:18px; padding:0 2px; flex:0 0 auto;" title="Очистить всё">🗑️</button>
                     <div style="flex-grow:1; min-width:0;"></div>
@@ -301,7 +452,7 @@ function generatePresentation3() {
                         <option value="sphere">🔮 Сфера</option>
                     </select>
                     <input type="color" id="color-pres-${i}" value="#7b1fa2" style="cursor:pointer; height: 28px; width: 32px; flex:0 0 auto; border: none; background: transparent; padding: 0;">
-                    <input type="range" id="size-pres-${i}" min="1" max="15" value="3" style="cursor:pointer; width: 58px; flex:0 0 58px;">
+                    <input type="range" id="size-pres-${i}" min="1" max="15" step="0.1" value="2" style="cursor:pointer; width: 58px; flex:0 0 58px;">
                     <button onclick="window.setTool('pres-${i}', 'eraser')" style="background:none; border:none; cursor:pointer; font-size:18px; padding:0 2px; flex:0 0 auto;" title="Ластик">🧽</button>
                     <button onclick="window.clearCanvas('pres-${i}')" style="background:none; border:none; cursor:pointer; font-size:18px; padding:0 2px; flex:0 0 auto;" title="Очистить всё">🗑️</button>
                     <div style="flex-grow:1; min-width:0;"></div>
@@ -475,7 +626,7 @@ function makeCustomPresentationTaskSlide(t, i, settings) {
                         <option value="" disabled selected hidden>🔺 Фигуры</option><option value="line">📏 Прямая</option><option value="vector">↗️ Вектор</option><option value="circle">⭕ Окружность</option><option value="triangle">🔺 Треугольник</option><option value="cylinder">🛢️ Цилиндр</option><option value="cone">🍦 Конус</option><option value="sphere">🔮 Сфера</option>
                     </select>
                     <input type="color" id="color-pres-${i}" value="${inputAccent}" style="cursor:pointer; height: 30px; width: 35px; border: none; background: transparent; padding: 0; flex:0 0 auto;">
-                    <input type="range" id="size-pres-${i}" min="1" max="15" value="3" style="cursor:pointer; width: 80px; flex:0 0 auto;">
+                    <input type="range" id="size-pres-${i}" min="1" max="15" step="0.1" value="2" style="cursor:pointer; width: 80px; flex:0 0 auto;">
                     <button onclick="window.setTool('pres-${i}', 'eraser')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Ластик">🧽</button>
                     <div style="flex-grow:1; min-width:8px;"></div>
                     <button onclick="window.clearCanvas('pres-${i}')" style="background:none; border:none; cursor:pointer; font-size:20px;" title="Очистить всё">🗑️</button>
@@ -550,17 +701,42 @@ function updateCustomPresentationPreview() {
     }
 
     if (previewMode === 'start') {
-        const topics = (window.selectedBlockTitles || ['Тема 1', 'Тема 2']).slice(0, 4).map(t => `<li style="margin-bottom:4px;">${t}</li>`).join('');
+        const info = getPresentationStartInfo();
         const author = getCustomPresAuthorLine();
         preview.style.backgroundImage = `url('${startBg}')`;
-        preview.innerHTML = `
-            <div style="position:absolute;inset:0;background:rgba(255,255,255,.08);"></div>
-            <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68%;max-height:76%;background:rgba(255,255,255,.94);border:2px solid ${accent};border-radius:${radius}px;box-shadow:0 10px 28px rgba(0,0,0,.20);padding:20px 24px;box-sizing:border-box;text-align:center;color:#333;overflow:hidden;">
-                <div style="font-weight:900;font-size:28px;color:#003399;border-bottom:2px solid ${accent};padding-bottom:10px;margin-bottom:10px;">Тренировочный вариант</div>
-                <ul style="text-align:left;margin:8px auto 0;max-width:78%;font-size:13px;line-height:1.25;padding-left:18px;color:#333;">${topics}</ul>
-                <div style="font-family:Caveat,cursive;font-size:21px;color:#003399;margin-top:12px;">${author || 'Вариант подготовила: ...'}</div>
-                <div style="font-family:Caveat,cursive;font-size:17px;color:#555;margin-top:12px;">Шкатулка математических интерактивов</div>
-            </div>`;
+
+        if (info.fullVariant) {
+            preview.innerHTML = `
+                <div style="position:absolute;inset:0;background:rgba(255,255,255,.05);"></div>
+                <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:62%;background:rgba(255,255,255,.94);border:2px solid ${accent};border-radius:${radius}px;box-shadow:0 10px 28px rgba(0,0,0,.20);padding:26px 28px 22px;box-sizing:border-box;text-align:center;color:#333;">
+                    <div style="font-size:12px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#555;">Профильная математика</div>
+                    <div style="font-weight:900;font-size:38px;line-height:1.05;color:#003399;margin-top:8px;">Вариант ЕГЭ</div>
+                    <div style="width:68px;height:3px;border-radius:999px;background:${accent};margin:14px auto;"></div>
+                    ${author ? `<div style="font-family:Caveat,cursive;font-size:20px;color:#003399;">${author}</div>` : ''}
+                    <div style="font-family:Caveat,cursive;font-size:15px;color:#555;margin-top:12px;">Шкатулка математических интерактивов</div>
+                </div>`;
+        } else {
+            const groups = info.groups || [];
+            const previewGroups = groups.slice(0, 12);
+            const cols = previewGroups.length >= 7 ? 3 : 2;
+            const chips = previewGroups.map(group => {
+                const n = Number.isFinite(group.number) ? `№${group.number} ` : '';
+                const c = group.count > 1 ? ` ×${group.count}` : '';
+                return `<div style="min-width:0;padding:5px 7px;border:1px solid rgba(0,0,0,.10);border-radius:8px;background:rgba(255,255,255,.82);font-size:10px;line-height:1.1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><b style="color:#003399;">${n}</b>${escapePresHtml(group.title)}<b style="color:${accent};">${c}</b></div>`;
+            }).join('');
+            const more = groups.length > previewGroups.length ? `<div style="font-size:10px;color:#777;margin-top:6px;">+ ещё ${groups.length - previewGroups.length}</div>` : '';
+            preview.innerHTML = `
+                <div style="position:absolute;inset:0;background:rgba(255,255,255,.05);"></div>
+                <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78%;max-height:80%;background:rgba(255,255,255,.94);border:2px solid ${accent};border-radius:${radius}px;box-shadow:0 10px 28px rgba(0,0,0,.20);padding:15px 18px;box-sizing:border-box;text-align:center;color:#333;overflow:hidden;">
+                    <div style="font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#555;">Профильная математика</div>
+                    <div style="font-weight:900;font-size:24px;line-height:1.05;color:#003399;margin:4px 0 6px;">Подборка заданий</div>
+                    <div style="display:inline-block;border:1px solid ${accent};color:${accent};border-radius:999px;padding:3px 9px;font-size:10px;font-weight:800;margin-bottom:8px;">${info.total} заданий</div>
+                    <div style="display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:5px;">${chips}</div>
+                    ${more}
+                    ${author ? `<div style="font-family:Caveat,cursive;font-size:16px;color:#003399;margin-top:8px;">${author}</div>` : ''}
+                    <div style="font-family:Caveat,cursive;font-size:13px;color:#555;margin-top:7px;">Шкатулка математических интерактивов</div>
+                </div>`;
+        }
     } else {
         preview.style.backgroundImage = `url('${taskBg}')`;
         preview.innerHTML = `
@@ -715,6 +891,7 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
     }
     const resolvedBgTitle = resolvePresentationBgUrl(bgTitle);
     const resolvedBgMain = resolvePresentationBgUrl(bgMain);
+    const startCardHtml = buildPresentationStartCardHtml(authorLine, accentColor);
 
     let fullHTML = `<!DOCTYPE html>
 <html>
@@ -731,6 +908,33 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
         .slide.active { display: flex; }
         .title-box { background: rgba(255,255,255,0.95); padding: 40px 60px; border-radius: 20px; border: 3px solid ${accentColor}; text-align: center; max-width: 900px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); }
         .topics-list { text-align: left; margin: 20px 0; font-size: 1.3em; color: #333; line-height: 1.4; list-style-type: disc; padding-left: 20px;}
+        .pres-start-card { width: min(760px, calc(100vw - 160px)); box-sizing: border-box; }
+        .pres-start-card-full { padding: 48px 70px 38px; }
+        .pres-start-card-selection { padding: 28px 34px 24px; max-width: 980px; width: min(980px, calc(100vw - 150px)); max-height: calc(100vh - 150px); overflow: hidden; }
+        .pres-start-kicker { font-size: clamp(15px, 1.4vw, 20px); font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #555; }
+        .pres-start-main-title { margin: 12px 0 0; color: #003399; font-size: clamp(48px, 6vw, 78px); line-height: 1; }
+        .pres-start-selection-title { margin: 6px 0 8px; color: #003399; font-size: clamp(30px, 3.3vw, 48px); line-height: 1.05; }
+        .pres-start-rule { width: 110px; height: 4px; border-radius: 999px; margin: 24px auto 20px; }
+        .pres-start-meta { display: inline-block; margin: 0 auto 18px; padding: 6px 14px; border: 1.5px solid currentColor; border-radius: 999px; font-weight: 800; font-size: 16px; background: rgba(255,255,255,.72); }
+        .pres-topic-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; width: 100%; margin: 0 auto 14px; }
+        .pres-topic-grid-mid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; }
+        .pres-topic-grid-dense { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px 8px; }
+        .pres-topic-chip { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; border-radius: 12px; background: rgba(255,255,255,.82); border: 1px solid rgba(0,0,0,.10); color: #333; font-size: 15px; line-height: 1.15; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+        .pres-topic-grid-dense .pres-topic-chip { padding: 7px 9px; font-size: 13px; }
+        .pres-topic-chip > span:first-child { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pres-topic-chip b { color: #003399; }
+        .pres-topic-count { flex: 0 0 auto; font-weight: 900; color: ${accentColor}; background: rgba(255,255,255,.88); border-radius: 999px; padding: 2px 7px; }
+        .pres-start-author { font-family: 'Caveat', cursive; font-size: clamp(22px, 2.5vw, 34px); color: #003399; margin-top: 16px; }
+        .pres-start-brand { margin-top: 18px; font-size: 17px; color: #555; font-style: italic; display: flex; align-items: center; justify-content: center; }
+        @media (max-height: 700px) {
+            .pres-start-card-selection { padding: 18px 24px 16px; max-height: calc(100vh - 110px); }
+            .pres-start-selection-title { font-size: 31px; }
+            .pres-start-meta { margin-bottom: 10px; padding: 4px 11px; font-size: 14px; }
+            .pres-topic-grid { gap: 6px 8px; margin-bottom: 8px; }
+            .pres-topic-chip { padding: 6px 8px; font-size: 12px; }
+            .pres-start-author { margin-top: 8px; font-size: 23px; }
+            .pres-start-brand { margin-top: 8px; font-size: 14px; }
+        }
         .nav-btns { position: fixed; bottom: 40px; right: 70px; display: flex; gap: 20px; z-index: 100; }
         .nav-btn { background: #333; color: white; border: none; padding: 15px 35px; border-radius: 50px; cursor: pointer; font-size: 1.3em; opacity: 0.85; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .nav-btn:hover { opacity: 1; background: ${accentColor}; transform: translateY(-2px); }
@@ -740,6 +944,7 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
         .results-table th { background: #f5f5f5; color: #333; }
         .row-correct { background-color: #e8f5e9; color: #2e7d32; }
         .row-incorrect { background-color: #ffebee; color: #c62828; }
+        .row-self-check { background-color: #eef3ff; color: #334c87; }
         .pres-footer { position: absolute; bottom: 30px; left: 70px; font-family: 'Caveat'; font-size: 26px; color: #555; }
         .logo-small { height: 50px; vertical-align: middle; margin-right: 15px; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
@@ -757,7 +962,18 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
         .task-right-side > div { min-height: 0 !important; height: 100% !important; justify-content: flex-start !important; overflow: hidden !important; }
         .svg-wrapper { flex: 1 1 auto !important; min-height: 0 !important; max-height: 54% !important; width: 100% !important; overflow: hidden !important; margin-bottom: 10px !important; }
         .svg-wrapper img, .svg-wrapper svg { max-width: 100% !important; max-height: 100% !important; width: auto !important; height: auto !important; object-fit: contain !important; display: block !important; margin: 0 auto !important; }
-        .task-text { font-size: clamp(16px, 1.5vw, 23px) !important; line-height: 1.22 !important; max-height: 28% !important; min-height: 0 !important; flex: 0 1 auto !important; overflow: hidden !important; padding: 0 8px !important; margin-bottom: 10px !important; box-sizing: border-box !important; text-align: center !important; }
+        /* Условие прокручивается вместо обрезки; кнопки проверки всегда снаружи области прокрутки. */
+        .task-text { font-size: clamp(16px, 1.5vw, 23px) !important; line-height: 1.22 !important; max-height: 28% !important; min-height: 0 !important; flex: 0 1 auto !important; overflow-y: auto !important; overflow-x: hidden !important; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #9c9c9c #f1f1f1; padding: 0 8px !important; margin-bottom: 10px !important; box-sizing: border-box !important; text-align: center !important; overflow-wrap: anywhere; }
+        .task-text::-webkit-scrollbar { width: 9px; }
+        .task-text::-webkit-scrollbar-thumb { background: #aaa; border-radius: 12px; border: 2px solid #f6f6f6; }
+        .task-text::-webkit-scrollbar-track { background: #f6f6f6; border-radius: 12px; }
+        .pres-expand-task-btn { display: inline-block; flex: 0 0 auto; align-self: center; padding: 3px 11px; margin: -2px 0 7px; font-size: 14px; font-weight: 650; line-height: 1.3; color: #003399; background: rgba(232, 241, 255, .95); border: 1px solid #9bb9eb; border-radius: 8px; cursor: pointer; }
+        .pres-expand-task-btn[hidden] { display: none !important; }
+        .pres-expand-task-btn:hover { background: #dbe9ff; }
+        .pres-expanded-task-modal { width: min(1050px, 94vw) !important; max-width: min(1050px, 94vw) !important; max-height: 90vh !important; box-sizing: border-box; }
+        .pres-expanded-task-text { font-size: clamp(19px, 2vw, 27px); line-height: 1.4; text-align: left; overflow-wrap: anywhere; padding: 8px 8px 20px; }
+        .pres-expanded-task-visual { max-height: 40vh; display: flex; align-items: center; justify-content: center; margin: 10px auto 16px; }
+        .pres-expanded-task-visual svg, .pres-expanded-task-visual img { display: block; width: auto; height: auto; max-width: 100%; max-height: 38vh; }
         .task-card-visual .task-text mjx-container { font-size: 108% !important; }
         .pres-check-zone { flex: 0 0 auto !important; margin-top: auto !important; gap: 10px !important; }
         .pres-input { max-width: 180px !important; box-sizing: border-box !important; }
@@ -778,7 +994,7 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
         /* РЕЖИМ ДЛЯ ЗАДАНИЙ БЕЗ ЧЕРТЕЖА */
         .task-card-text-only { width: min(58vw, 780px) !important; min-height: 230px !important; height: auto !important; max-height: 68vh !important; top: 50% !important; bottom: auto !important; right: 7% !important; transform: translateY(-50%) !important; padding: 24px 34px !important; justify-content: center !important; }
         .task-card-text-only > div { justify-content: center !important; min-height: 0 !important; height: auto !important; overflow: hidden !important; }
-        .task-card-text-only .task-text { font-size: clamp(19px, 1.72vw, 27px) !important; line-height: 1.28 !important; max-height: 44vh !important; overflow: hidden !important; text-align: center !important; margin: 0 0 22px 0 !important; padding: 0 6px !important; color: #222 !important; }
+        .task-card-text-only .task-text { font-size: clamp(19px, 1.72vw, 27px) !important; line-height: 1.28 !important; max-height: 44vh !important; overflow-y: auto !important; overflow-x: hidden !important; text-align: center !important; margin: 0 0 22px 0 !important; padding: 0 6px !important; color: #222 !important; }
         .task-card-text-only .task-text mjx-container { font-size: 104% !important; }
         .task-card-text-only .pres-check-zone { margin-top: 0 !important; gap: 14px !important; }
         .task-card-text-only .pres-input { width: 190px !important; font-size: 1.15em !important; }
@@ -788,21 +1004,24 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
             .task-card-text-only { width: min(64vw, 760px) !important; min-height: 210px !important; max-height: 70vh !important; padding: 18px 24px !important; }
             .task-card-text-only .task-text { font-size: clamp(16px, 1.65vw, 24px) !important; max-height: 46vh !important; line-height: 1.22 !important; margin-bottom: 18px !important; }
         }
+        /* Длинные задания: используем максимальную высоту ПОД табличкой с номером. */
+        .task-card-text-only.pres-long-task { top: 24% !important; bottom: 7% !important; height: 69vh !important; max-height: none !important; transform: none !important; }
+        .task-card-text-only.pres-long-task > div { min-height: 0 !important; height: 100% !important; max-height: 100% !important; justify-content: flex-start !important; overflow: hidden !important; }
+        .task-card-text-only.pres-long-task .task-text { min-height: 0 !important; max-height: none !important; flex: 1 1 auto !important; margin-bottom: 8px !important; }
+        .task-card-text-only.pres-long-task .pres-check-zone { flex: 0 0 auto !important; margin-top: auto !important; }
+        .task-card-visual.pres-long-task .svg-wrapper { max-height: 40% !important; }
+        .task-card-visual.pres-long-task .task-text { min-height: 0 !important; max-height: none !important; flex: 1 1 auto !important; }
+        @media (max-height: 700px) {
+            .task-card-text-only.pres-long-task { top: 20% !important; bottom: 5% !important; height: 75vh !important; }
+            .pres-expand-task-btn { font-size: 12px; margin-bottom: 3px; }
+        }
     </style>
 </head>
 <body>
     <div id="pres-timer-box" class="pres-timer-box">⏱ 00:00</div>
 
     <div class="slide active" style="background-image: url('${resolvedBgTitle}')">
-        <div class="title-box" onclick="event.stopPropagation();">
-            <h1 style="color:#003399; margin:0; font-size: 3em; border-bottom: 3px solid ${accentColor}; padding-bottom: 20px;">Тренировочный вариант</h1>
-            <ul class="topics-list">${topicsList}</ul>
-            <div style="font-family:'Caveat'; font-size:35px; color:#003399; margin-top:30px;">${authorLine}</div>
-            <div style="margin-top:40px; font-size: 1.2em; color: #555; font-style: italic;">
-                <img src="${window.getEmbeddedAssetUrl('logo.png')}" class="logo-small" onerror="this.style.display='none'"> 
-                Шкатулка математических интерактивов
-            </div>
-        </div>
+        ${startCardHtml}
         <div class="nav-btns" id="start-nav"><button class="nav-btn" onclick="event.stopPropagation(); nextSlide()">Начать →</button></div>
     </div>
 
@@ -856,6 +1075,8 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
         const showSolutions = ${showSolutions};
         const showCorrectOnError = ${showCorrectOnError};
         const instantCheck = ${instantCheck};
+        // Задания второй части не подлежат автоматической проверке.
+        const secondPartFlags = ${JSON.stringify((window.currentGeneratedTasks || []).map(isSecondPartPresentationTask))};
 
         function normalizeAnswer(value) {
             return String(value == null ? '' : value).trim().replace(',', '.');
@@ -914,48 +1135,86 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
             }
         }
 
+        function isPresTextClipped(el) {
+            return !!el && (el.scrollHeight > el.clientHeight + 3 || el.scrollWidth > el.clientWidth + 3);
+        }
+
         function fitTextToBox(textEl, maxPx, minPx) {
             if (!textEl) return;
-            textEl.style.fontSize = maxPx + 'px';
-            textEl.style.overflow = 'hidden';
-
+            // CSS шаблона использует !important: меняем размер с тем же приоритетом.
+            // Не уменьшаем шрифт до нечитаемых 13px: дальше будет прокрутка.
+            textEl.style.removeProperty('line-height');
+            textEl.style.setProperty('font-size', maxPx + 'px', 'important');
             let size = maxPx;
-            let safety = 0;
-            while (safety < 80 && size > minPx && (textEl.scrollHeight > textEl.clientHeight + 2 || textEl.scrollWidth > textEl.clientWidth + 2)) {
+            while (size > minPx && isPresTextClipped(textEl)) {
                 size -= 1;
-                textEl.style.fontSize = size + 'px';
-                safety++;
+                textEl.style.setProperty('font-size', size + 'px', 'important');
             }
-
-            if (textEl.scrollHeight > textEl.clientHeight + 3 && size <= minPx) {
-                textEl.style.lineHeight = '1.12';
+            if (size === minPx && isPresTextClipped(textEl)) {
+                textEl.style.setProperty('line-height', '1.18', 'important');
             }
         }
 
         function chooseTextOnlyMax(textEl) {
-            const plain = (textEl.textContent || '').replace(/\\s+/g, ' ').trim();
+            const plain = (textEl.textContent || '').replace(/\s+/g, ' ').trim();
             const len = plain.length;
-            if (len > 520) return 19;
-            if (len > 420) return 21;
-            if (len > 300) return 23;
+            if (len > 520) return 20;
+            if (len > 420) return 22;
+            if (len > 300) return 24;
             if (len > 200) return 25;
             return 27;
         }
 
-        function fitCurrentSlideText() {
-            let slide = slides[currentSlide];
-            if (!slide) return;
-            slide.querySelectorAll('.task-right-side').forEach(card => {
-                let textEl = card.querySelector('.task-text');
-                if (!textEl) return;
-                if (card.classList.contains('task-card-text-only')) {
-                    fitTextToBox(textEl, chooseTextOnlyMax(textEl), 13);
-                } else {
-                    fitTextToBox(textEl, 23, 14);
-                }
-            });
+        function openFullPresentationTask(button) {
+            const card = button.closest('.task-right-side');
+            const textEl = card && card.querySelector('.task-text');
+            const content = document.getElementById('modal-content-box');
+            const overlay = document.getElementById('modal-overlay');
+            if (!textEl || !content || !overlay) return;
+            const titleEl = card.closest('.task-slide')?.querySelector('.header-plate h3');
+            const visual = card.querySelector('.svg-wrapper');
+            const heading = titleEl ? titleEl.textContent.trim() : 'Задание ' + currentSlide;
+            content.innerHTML = '<h2 style="margin:0 38px 14px 0;color:#003399;">' + heading + '</h2>' +
+                (visual ? '<div class="pres-expanded-task-visual">' + visual.innerHTML + '</div>' : '') +
+                '<div class="pres-expanded-task-text">' + textEl.innerHTML + '</div>';
+            const modal = overlay.querySelector('.modal-box');
+            if (modal) modal.classList.add('pres-expanded-task-modal');
+            overlay.style.display = 'flex';
+            if (modal) modal.scrollTop = 0;
+            if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([content]).catch(() => {});
         }
 
+        function fitCurrentSlideText() {
+            const slide = slides[currentSlide];
+            if (!slide) return;
+            slide.querySelectorAll('.task-right-side').forEach(card => {
+                const textEl = card.querySelector('.task-text');
+                if (!textEl) return;
+                const textOnly = card.classList.contains('task-card-text-only');
+                const max = textOnly ? chooseTextOnlyMax(textEl) : 23;
+                const min = textOnly ? 17 : 16;
+                card.classList.remove('pres-long-task');
+                fitTextToBox(textEl, max, min);
+                if (isPresTextClipped(textEl)) {
+                    card.classList.add('pres-long-task');
+                    fitTextToBox(textEl, max, min);
+                }
+                let expand = card.querySelector('.pres-expand-task-btn');
+                if (!expand) {
+                    expand = document.createElement('button');
+                    expand.type = 'button';
+                    expand.className = 'pres-expand-task-btn';
+                    expand.textContent = '↗ Показать условие полностью';
+                    expand.title = 'Открыть весь текст задания в большом окне';
+                    expand.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openFullPresentationTask(expand);
+                    });
+                    textEl.insertAdjacentElement('afterend', expand);
+                }
+                expand.hidden = !isPresTextClipped(textEl);
+            });
+        }
 
         function fitPresentationDraftDiagrams() {
             document.querySelectorAll('.pres-draft-diagram').forEach(card => {
@@ -1089,16 +1348,23 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
             let totalTimeBox = document.getElementById('results-total-time');
             let html = '';
             let correctCount = 0;
+            let autoCheckedCount = 0;
+            let selfCheckCount = 0;
 
             userResults
                 .sort((a, b) => a.taskNum - b.taskNum)
                 .forEach((res, idx) => {
-                    let isCorrect = (normalizeAnswer(res.userAns) === normalizeAnswer(res.correctAns));
-                    if (isCorrect) correctCount++;
-                    let rowClass = isCorrect ? 'row-correct' : 'row-incorrect';
+                    const isSelfCheck = !!secondPartFlags[res.taskNum - 1];
+                    const isCorrect = !isSelfCheck && (normalizeAnswer(res.userAns) === normalizeAnswer(res.correctAns));
+                    if (isSelfCheck) selfCheckCount++;
+                    else {
+                        autoCheckedCount++;
+                        if (isCorrect) correctCount++;
+                    }
+                    let rowClass = isSelfCheck ? 'row-self-check' : (isCorrect ? 'row-correct' : 'row-incorrect');
                     let displayAns = res.userAns === "" ? "—" : res.userAns;
-                    let resultText = isCorrect ? '✅ Верно' : '❌ Неверно';
-                    let correctCell = showCorrectOnError ? \`<td>\${res.correctAns}</td>\` : '';
+                    let resultText = isSelfCheck ? '📝 Самопроверка' : (isCorrect ? '✅ Верно' : '❌ Неверно');
+                    let correctCell = showCorrectOnError ? \`<td>\${isSelfCheck ? '—' : res.correctAns}</td>\` : '';
                     let solutionCell = showSolutions ? \`<td><button class="help-btn" onclick="event.stopPropagation(); window.openTheoryModalLocal('theory-pres-\${res.taskNum - 1}')">Смотреть</button></td>\` : '';
 
                     html += \`<tr class="\${rowClass}">
@@ -1112,7 +1378,12 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
                 });
 
             if (summary) {
-                summary.textContent = 'Верно: ' + correctCount + ' из ' + userResults.length;
+                if (autoCheckedCount > 0) {
+                    summary.textContent = 'Верно: ' + correctCount + ' из ' + autoCheckedCount +
+                        (selfCheckCount > 0 ? ' · Самопроверка: ' + selfCheckCount : '');
+                } else {
+                    summary.textContent = 'Самопроверка: ' + selfCheckCount;
+                }
             }
 
             if (workEndTime === null) workEndTime = Date.now();
@@ -1127,6 +1398,8 @@ function generateAndDownloadPresentationHTML(taskSlides, hiddenTheories, authorL
         function openTheoryModalLocal(dataId) {
             let el = document.getElementById(dataId);
             if(el) {
+                const modal = document.querySelector('#modal-overlay .modal-box');
+                if (modal) modal.classList.remove('pres-expanded-task-modal');
                 document.getElementById('modal-content-box').innerHTML = decodeURIComponent(el.textContent);
                 document.getElementById('modal-overlay').style.display = 'flex';
                 if (window.MathJax) MathJax.typesetPromise([document.getElementById('modal-overlay')]);

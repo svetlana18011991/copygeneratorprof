@@ -1,12 +1,30 @@
-/* Полные варианты ЕГЭ 1–20: пачка, очереди прототипов, переключение, компактная печать.
+/* Полные варианты ЕГЭ 1–19: пачка, очереди прототипов, переключение, компактная печать.
    Остальная логика генератора и ручные подборки остаются в index.html. */
 (function () {
     'use strict';
+
+    const examStructure = window.egeExamStructure || {
+        taskCount: 19,
+        firstPartLast: 12,
+        secondPartFirst: 13,
+        activeTaskIds: Array.from({length:19}, (_, i) => 'task' + (i + 1))
+    };
+    const activeTaskIds = examStructure.activeTaskIds;
 
     window.egeVariantBatch = [];
     window.egeActiveVariantIndex = 0;
     window.egeGenerationMode = 'manual';
     let batchInProgress = false;
+    let generationTimer = null;
+    let cancelGeneration = null;
+
+    window.egeResetVariants = function () {
+        if (cancelGeneration) cancelGeneration();
+        window.egeVariantBatch = [];
+        window.egeActiveVariantIndex = 0;
+        window.egeGenerationMode = 'manual';
+        showBatchSwitcher();
+    };
 
     function shuffledIndexes(length) {
         const result = Array.from({length}, (_, i) => i);
@@ -130,7 +148,7 @@
         const full = requestedMode === 'full';
         if (!full && !Array.from(document.querySelectorAll('input[id^="count-"]'))
             .some(el => Number(el.value) > 0)) {
-            alert('Сначала отметьте нужные задания. Для полного варианта 1–20 воспользуйтесь верхней панелью.');
+            alert(`Сначала отметьте нужные задания. Для полного варианта 1–${examStructure.taskCount} воспользуйтесь верхней панелью.`);
             return;
         }
         const count = full ? window.egeNormalizeVariantCount() : 1;
@@ -147,11 +165,16 @@
         let current = 0;
 
         function finish() {
+            clearTimeout(generationTimer);
+            generationTimer = null;
+            cancelGeneration = null;
             batchInProgress = false;
             if (button) { button.disabled = false; button.textContent = originalLabel; }
         }
+        cancelGeneration = finish;
 
         function makeNext() {
+            generationTimer = null;
             try {
                 if (!full) {
                     generateVariant({useRandomPicks:false});
@@ -163,27 +186,26 @@
                 }
                 const picks = {};
                 const missing = [];
-                for (let n = 1; n <= 20; n++) {
-                    const tid = 'task' + n;
+                for (const tid of activeTaskIds) {
                     const pick = nextFullPick(tid, decks);
                     if (pick) picks[tid] = pick;
-                    else missing.push(n);
+                    else missing.push(Number(tid.replace(/\D/g, '')));
                 }
                 if (missing.length) {
                     throw Error('Не загружена база заданий № ' + missing.join(', ') +
-                        '. Проверьте файлы task1.js–task20.js.');
+                        '. Обновите страницу и проверьте загрузку текущих баз заданий.');
                 }
                 window.randomVariantPicks = picks;
                 window.randomVariantMode = true;
                 window.randomVariantNumber = current + 1;
                 generateVariant({useRandomPicks:true, silent:true});
-                if ((window.currentGeneratedTasks || []).length !== 20)
-                    throw Error('Вместо 20 заданий сформировано ' + (window.currentGeneratedTasks || []).length);
+                if ((window.currentGeneratedTasks || []).length !== examStructure.taskCount)
+                    throw Error(`Вместо ${examStructure.taskCount} заданий сформировано ` + (window.currentGeneratedTasks || []).length);
                 window.egeVariantBatch.push(captureEntry());
                 current++;
                 if (current < count) {
                     if (button) button.textContent = `Генерирую ${current + 1} из ${count}…`;
-                    setTimeout(makeNext, 0);
+                    generationTimer = setTimeout(makeNext, 0);
                 } else {
                     // Показываем первый вариант, как в панели ОГЭ. Соседние варианты
                     // сохраняются и печатаются в том же порядке.
@@ -198,7 +220,7 @@
                 }
             } catch (err) {finish(); showGenerationError(err); showBatchSwitcher();}
         }
-        setTimeout(makeNext, 0);
+        generationTimer = setTimeout(makeNext, 0);
     };
 
     window.generateRandomVariant = function (event) {
@@ -206,9 +228,9 @@
     };
 
     const originalReplaceRandom = window.replaceRandomVariantTask;
-    window.replaceRandomVariantTask = function (tid) {
+    window.replaceRandomVariantTask = function (tid, mode = 'inside') {
         if (typeof originalReplaceRandom !== 'function') return;
-        originalReplaceRandom(tid);
+        originalReplaceRandom(tid, mode);
         syncActiveEntry();
     };
 
@@ -261,9 +283,10 @@
         const articleFooter = `<footer class="ege-exam-footer">${footerHtml}</footer>`;
 
         const tasks = taskNodes.map((task, i) => {
-            const taskNumber = Number(entry.tasks && entry.tasks[i] &&
-                String(entry.tasks[i].taskTid || '').replace(/\D/g, '')) || i + 1;
-            const second = taskNumber >= 14;
+            const taskInfo = entry.tasks && entry.tasks[i];
+            const taskNumber = Number(String(taskInfo && taskInfo.taskTid || '').replace(/\D/g, '')) || i + 1;
+            const part = Number(taskInfo && taskInfo.part);
+            const second = part > 0 ? part >= 2 : taskNumber >= examStructure.secondPartFirst;
             const fields = withFields ? makeGrid(taskNumber, second) : '';
             return {
                 taskNumber,
@@ -422,14 +445,14 @@
 
     function buildPrintKeys(entries) {
         if (window.egeGenerationMode !== 'full' || !entries.length ||
-            !entries.every(e => e.tasks && e.tasks.length === 20)) return '';
+            !entries.every(e => e.tasks && e.tasks.length === examStructure.taskCount)) return '';
         const sheets = [];
         for (let start = 0; start < entries.length; start += 4) {
             const group = entries.slice(start, start + 4);
             const columnHeads = group.map((_, i) => `<th>Вариант №${start + i + 1}</th>`).join('');
-            const rows = Array.from({length:20}, (_, i) => {
+            const rows = activeTaskIds.map((tid, i) => {
                 const cells = group.map(e => {
-                    const task = e.tasks.find(t => Number(String(t.taskTid || '').replace(/\D/g,'')) === i + 1);
+                    const task = e.tasks.find(t => String(t.taskTid || '') === tid);
                     return `<td>${escapeHtml(task ? task.answer : '—')}</td>`;
                 }).join('');
                 return `<tr><th scope="row">${i + 1}</th>${cells}</tr>`;
@@ -437,10 +460,10 @@
             sheets.push(`<article class="ege-exam-page ege-keys-page" aria-label="Ключи ответов">
                 <header class="ege-exam-header"><strong>ЕГЭ · профильная математика</strong><strong>Ключи ответов</strong></header>
                 <section class="ege-keys-content"><h1>Ответы к полным вариантам ЕГЭ</h1>
-                <p>Варианты №${start + 1}–${start + group.length} · задания 1–20</p>
+                <p>Варианты №${start + 1}–${start + group.length} · задания 1–${examStructure.taskCount}</p>
                 <table><thead><tr><th>№ задания</th>${columnHeads}</tr></thead>
                 <tbody>${rows}</tbody></table>
-                <div class="ege-keys-note">В заданиях 14–20 приведены итоговые ответы, если они указаны в базе. Развёрнутое решение проверяет учитель.</div></section>
+                <div class="ege-keys-note">В заданиях ${examStructure.secondPartFirst}–${examStructure.taskCount} приведены итоговые ответы, если они указаны в базе. Развёрнутое решение проверяет учитель.</div></section>
                 <footer class="ege-exam-footer"><span class="ege-exam-brand">Шкатулка математических интерактивов · <a href="https://shkatulka.sistema-math.ru/" target="_blank" rel="noopener noreferrer">https://shkatulka.sistema-math.ru/</a></span><span>Ключи ответов</span></footer>
             </article>`);
         }
@@ -449,6 +472,8 @@
 
     function buildPrintDocument(entries, withFields) {
         const pages = entries.map((entry, i) => buildPrintVariant(entry, i, withFields)).join('\n') + buildPrintKeys(entries);
+        const generatorAssetsBase = new URL('./', window.location.href).href
+            .replace(/&/g, '&amp;').replace(/"/g, '&quot;');
         const printCSS = `
             @page{size:A4 landscape;margin:9mm 10mm 15mm;}
             *{box-sizing:border-box;}
@@ -514,7 +539,7 @@
             @media print{body{background:#fff;padding:0;print-color-adjust:exact;-webkit-print-color-adjust:exact;}.ege-exam-page{box-shadow:none!important;margin:0!important;}}
         `;
         return `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>ЕГЭ · варианты для печати</title>
-            <base href="https://svetlana18011991.github.io/generator11prof/">
+            <base href="${generatorAssetsBase}">
             <script>window.MathJax={tex:{inlineMath:[['$','$'],['\\\\(','\\\\)']],processEscapes:true,macros:{tg:'\\\\operatorname{tg}',ctg:'\\\\operatorname{ctg}',arctg:'\\\\operatorname{arctg}',arcctg:'\\\\operatorname{arcctg}'}},chtml:{adaptiveCSS:false}};<\/script>
             <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
             <style>${printCSS}</style></head><body class="${withFields ? 'ege-with-fields' : 'ege-compact'}">
@@ -534,16 +559,21 @@
         setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
 
+    const originalSelectiveDownloadPrintPDF = window.downloadPrintPDF;
+
     function choosePrintMode() {
         document.getElementById('ege-print-dialog')?.remove();
         const overlay = document.createElement('div');
         overlay.id = 'ege-print-dialog';
         overlay.style.cssText = 'position:fixed;inset:0;z-index:2147482000;background:#07111bc0;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
+        const selective = window.egeGenerationMode !== 'full' || !window.egeVariantBatch.length;
         overlay.innerHTML = `<div role="dialog" aria-modal="true" aria-labelledby="ege-print-title" style="background:white;color:#192b3c;width:min(510px,96vw);padding:25px;border:2px solid #ffb347;border-radius:14px;box-shadow:0 15px 55px #0006;font:15px/1.4 Arial,sans-serif;">
             <h2 id="ege-print-title" style="font-size:22px;margin:0 0 9px;color:#263849;">Как подготовить варианты к печати?</h2>
-            <p style="margin:0 0 18px;color:#526474">Горизонтальный формат A4, две колонки, задания без разрывов. В пачке печатаются все варианты.</p>
-            <button data-ege-print="compact" style="display:block;width:100%;text-align:left;cursor:pointer;border:1px solid #ffcc80;border-radius:9px;background:#fff7e9;padding:13px 15px;margin-bottom:10px;font:inherit"><b>Компактный PDF — без полей для решения</b><small style="display:block;color:#666;margin-top:5px">Условия, чертежи и строки для ответов, как в компактной печати ОГЭ.</small></button>
-            <button data-ege-print="fields" style="display:block;width:100%;text-align:left;cursor:pointer;border:1px solid #b6cde0;border-radius:9px;background:#f4f9fe;padding:13px 15px;font:inherit"><b>С полями для решения</b><small style="display:block;color:#666;margin-top:5px">Для заданий 1–13 поля автоматически распределяются по странице и заполняют свободное место аккуратно. Задания 14–20 печатаются по два на лист: одно слева, второе справа, с большим клетчатым полем для решения до низа страницы.</small></button>
+            <p style="margin:0 0 18px;color:#526474">${selective
+                ? 'Выборочная сборка: прежний вертикальный A4 и исходное расположение заданий. С полями и без полей — одинаковый макет.'
+                : 'Быстрые полные варианты: горизонтальный формат A4, две колонки, печать всей пачки.'}</p>
+            <button data-ege-print="compact" style="display:block;width:100%;text-align:left;cursor:pointer;border:1px solid #ffcc80;border-radius:9px;background:#fff7e9;padding:13px 15px;margin-bottom:10px;font:inherit"><b>${selective ? 'Исходный вариант — без полей' : 'Компактный PDF — без полей для решения'}</b><small style="display:block;color:#666;margin-top:5px">${selective ? 'Прежняя выборочная печать без изменения ориентации и оформления.' : 'Компактная печать полных вариантов ЕГЭ.'}</small></button>
+            <button data-ege-print="fields" style="display:block;width:100%;text-align:left;cursor:pointer;border:1px solid #b6cde0;border-radius:9px;background:#f4f9fe;padding:13px 15px;font:inherit"><b>С полями для решения</b><small style="display:block;color:#666;margin-top:5px">${selective ? 'Тот же вертикальный макет выборочной сборки: под выбранными заданиями добавляются квадратные клетчатые поля.' : `Для 1–${examStructure.firstPartLast} поля распределяются автоматически, а для ${examStructure.secondPartFirst}–${examStructure.taskCount} — по два задания на горизонтальной странице с большими клетчатыми полями.`}</small></button>
             <div style="text-align:right;margin-top:14px"><button data-ege-cancel style="border:0;background:transparent;color:#526474;cursor:pointer;padding:7px;">Отмена</button></div></div>`;
         const close = () => {document.removeEventListener('keydown', onKey); overlay.remove();};
         const onKey = ev => {if (ev.key === 'Escape') close();};
@@ -565,6 +595,11 @@
             alert('Сначала сгенерируйте вариант!'); return;
         }
         if (mode !== 'compact' && mode !== 'fields') {choosePrintMode(); return;}
+        // Ручная/выборочная сборка: неизменный исходный портретный шаблон.
+        // Вторая кнопка лишь добавляет поля, но не переключает на макет пачки.
+        if (window.egeGenerationMode !== 'full' || !window.egeVariantBatch.length) {
+            return originalSelectiveDownloadPrintPDF(mode === 'fields');
+        }
         try {
             const entries = getPrintEntries();
             const html = buildPrintDocument(entries, mode === 'fields');
@@ -585,8 +620,8 @@
         for (let start = 0; start < batch.length; start += 4) {
             const slice = batch.slice(start, start + 4);
             const columns = slice.map((_, i) => `<th>Вариант №${start + i + 1}</th>`).join('');
-            const rows = Array.from({length:20}, (_, taskIndex) => `<tr><th>${taskIndex + 1}</th>${slice.map(v => {
-                const task = v.tasks.find(t => Number(String(t.taskTid || '').replace(/\D/g, '')) === taskIndex + 1);
+            const rows = activeTaskIds.map((tid, taskIndex) => `<tr><th>${taskIndex + 1}</th>${slice.map(v => {
+                const task = v.tasks.find(t => String(t.taskTid || '') === tid);
                 return `<td>${escapeHtml(task ? task.answer : '—')}</td>`;
             }).join('')}</tr>`).join('');
             htmlRows.push(`<section><h2>Ответы к вариантам №${start + 1}–${start + slice.length}</h2><table><thead><tr><th>№</th>${columns}</tr></thead><tbody>${rows}</tbody></table></section>`);
