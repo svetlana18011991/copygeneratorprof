@@ -1661,7 +1661,7 @@
                     : `<div style="margin-top:15px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; clear:both;"><input type="text" class="ans-box" id="ans-interactive-${taskCounter}" placeholder="Ответ..." data-ans="${item.answer}" style="padding:10px 15px; border:2px solid #ccc; border-radius:6px; font-size:16px; font-weight:bold; width:150px; outline:none; transition:0.3s;">${instantBtn}${drawBtn}${helpBtn}<span class="answer-feedback" id="feedback-${taskCounter}" style="font-weight:bold; font-size:15px; display:none;"></span></div>`;
                 const randomTaskNumber = parseInt(String(tid).replace(/\D/g, ''), 10);
                 const replaceButtons = buildVariantReplacementButtons(tid,kind,item,manualPlanIndex,useRandomPicks);
-                currentInteractiveHTML += `<div class="generated-task-block ${isSecondPartBlock ? 'second-part-task' : 'first-part-task'}" data-part="${isSecondPartBlock ? 2 : 1}" data-random-task-number="${randomTaskNumber}" data-manual-plan-index="${manualPlanIndex}" style="margin-bottom:30px; clear:both; overflow:visible; position:relative; border-bottom:1px dashed #ddd; padding:8px 0 20px;">${replaceButtons}<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; overflow:visible;"><div style="display:flex; align-items:flex-start; gap:15px; flex-grow:1; min-width:0; overflow:visible;"><div style="flex-shrink:0; font-weight:bold; font-size:1.1em; padding-top:2px;">${taskCounter}.</div>${mainSvg ? `<div class="generated-task-diagram" style="flex-shrink:0; min-width:150px; max-width:350px; padding:22px 8px 6px; box-sizing:border-box; overflow:visible;">${mainSvg}</div>` : ""}<div style="flex-grow:1; min-width:0;"><div class="task-copy">${displayTaskText}</div>${taskActionArea}</div></div><div style="display:flex;align-items:flex-start;gap:8px;">${stickerHTMLInteractive}</div></div>${scratchpadHTML}</div>`;
+                currentInteractiveHTML += `<div class="generated-task-block ${isSecondPartBlock ? 'second-part-task' : 'first-part-task'}" data-part="${isSecondPartBlock ? 2 : 1}" data-variant-number="${taskCounter}" data-random-task-number="${randomTaskNumber}" data-manual-plan-index="${manualPlanIndex}" style="margin-bottom:30px; clear:both; overflow:visible; position:relative; border-bottom:1px dashed #ddd; padding:8px 0 20px;">${replaceButtons}<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; overflow:visible;"><div style="display:flex; align-items:flex-start; gap:15px; flex-grow:1; min-width:0; overflow:visible;"><div style="flex-shrink:0; font-weight:bold; font-size:1.1em; padding-top:2px;">${taskCounter}.</div>${mainSvg ? `<div class="generated-task-diagram" style="flex-shrink:0; min-width:150px; max-width:350px; padding:22px 8px 6px; box-sizing:border-box; overflow:visible;">${mainSvg}</div>` : ""}<div style="flex-grow:1; min-width:0;"><div class="task-copy">${displayTaskText}</div>${taskActionArea}</div></div><div style="display:flex;align-items:flex-start;gap:8px;">${stickerHTMLInteractive}</div></div>${scratchpadHTML}</div>`;
                 
                 // Only the printable derivative diagram uses a contrast-boosted raster;
                 // the interactive diagram and mathematical task data stay untouched.
@@ -2320,6 +2320,65 @@
         };
     }
 
+    // Self-contained function: serialized into both downloaded and linked student HTML.
+    function egeStudentReport(data) {
+        const host = document.getElementById('res-box');
+        if (!host || host.querySelector('.ege-student-report')) return;
+        const panel = document.createElement('section');
+        panel.className = 'ege-student-report';
+        panel.style.cssText = 'margin-top:22px;padding:16px;border:1px solid #c7d2e4;border-radius:10px;background:#f7faff;text-align:left;font:16px/1.5 Arial,sans-serif;color:#17355c;overflow-wrap:anywhere';
+        const make = (tag, text, parent) => { const x=document.createElement(tag); x.textContent=text; parent.appendChild(x); return x; };
+        make('p','Шкатулка математических интерактивов',panel).style.cssText='font-weight:600;margin:0 0 8px';
+        make('h3','Передать результат учителю',panel);
+        const note=make('p', 'Отчёт создаётся на вашем устройстве без имени и почты ученика. Генератор не отправляет его автоматически. '+(data.email?'Почтовое приложение подготовит письмо, которое вы сможете отправить самостоятельно.':'Передайте отчёт учителю в привычной переписке.'),panel);
+        note.style.fontSize='14px';
+        const duration=String(Math.floor(data.seconds/60)).padStart(2,'0')+':'+String(data.seconds%60).padStart(2,'0');
+        const date=new Date(data.finished).toLocaleString('ru-RU');
+        const rows=data.rows.map((r,i)=>({num:String(r.taskNum||i+1),status:r.status}));
+        const manual=(data.manualTasks||[]).map(String);
+        const groups=[['correct','Верно'],['wrong','Неверно'],['empty','Не решено']];
+        const list=kind=>rows.filter(r=>r.status===kind).map(r=>r.num).join(', ')||'—';
+        const summaries=groups.map(([kind,label])=>label+': '+list(kind));
+        if(manual.length) summaries.push('Ручная проверка: '+manual.join(', '));
+        const total=`Верно: ${data.correct} из ${rows.length}; неверно: ${data.wrong}; не решено: ${data.empty}`;
+        const second=manual.length?'Вторая часть: '+manual.length+' заданий. Оценка по полному решению учителем.':'';
+        make('p','Номера заданий в выданном варианте:',panel).style.fontWeight='bold';
+        summaries.forEach(line=>make('p',line,panel).style.margin='4px 0');
+        const actions=make('div','',panel); actions.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-top:14px';
+        const status=make('p','',panel); status.setAttribute('role','status'); status.setAttribute('aria-live','polite');status.style.fontSize='14px';
+        const labels={correct:'верно',wrong:'неверно',empty:'не решено',manual:'ручная проверка'};
+        const allRows=rows.concat(manual.map(num=>({num,status:'manual'}))).sort((a,b)=>Number(a.num)-Number(b.num));
+        const details=allRows.map(r=>'№ '+r.num+' — '+(labels[r.status]||'не проверено'));
+        // Shared reports deliberately omit raw student inputs, which could contain personal data.
+        const header=['Шкатулка математических интерактивов','Результат самостоятельной работы',data.title,'Дата: '+date,'Время выполнения: '+duration,total,second].filter(Boolean);
+        const compact=header.concat(summaries).join('\n');
+        const report=header.concat(['','Номера заданий в варианте:'],summaries,['','По заданиям:'],details).join('\n');
+        const button=(text,fn)=>{const b=make('button',text,actions);b.type='button';b.style.cssText='padding:10px 14px;border:1px solid #235b8b;border-radius:7px;background:#235b8b;color:white;font:600 14px Arial,sans-serif;cursor:pointer';b.addEventListener('click',fn);return b;};
+        const copyReport=async()=>{try{if(!navigator.clipboard)throw Error();await navigator.clipboard.writeText(report);status.textContent='Отчёт скопирован. Вставьте его в сообщение учителю.';return true;}catch(e){let area=panel.querySelector('textarea');if(!area){area=document.createElement('textarea');area.readOnly=true;area.style.cssText='width:100%;box-sizing:border-box;min-height:130px;margin-top:10px';panel.appendChild(area);}area.value=report;area.focus();area.select();try{if(document.execCommand('copy')){status.textContent='Отчёт скопирован.';return true;}}catch(e){}status.textContent='Выделите текст отчёта и скопируйте вручную.';return false;}};
+        if(data.email) button('Подготовить письмо учителю',async()=>{
+            const recipient=data.email.split('@').map(encodeURIComponent).join('@');
+            const prefix='mailto:'+recipient+'?subject='+encodeURIComponent('Результат самостоятельной работы')+'&body=';
+            let url=prefix+encodeURIComponent(report);
+            if(url.length>1800)url=prefix+encodeURIComponent(compact);
+            if(url.length>1800){await copyReport();status.textContent+=' Отчёт слишком длинный для почтовой ссылки. Вставьте его в письмо на адрес '+data.email+'.';return;}
+            status.textContent='Проверьте письмо и отправьте его самостоятельно. Если почта не открылась, скопируйте отчёт. Адрес: '+data.email;
+            location.href=url;
+        });
+        button('Скопировать отчёт',copyReport);
+        button('Скачать карточку PNG',()=>{try{
+            const canvas=document.createElement('canvas');canvas.width=900;
+            const cols=7, gridRows=Math.ceil(allRows.length/cols);canvas.height=390+gridRows*66;
+            const ctx=canvas.getContext('2d');ctx.fillStyle='#f4f7fb';ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle='#16365c';ctx.font='bold 25px Arial';ctx.fillText('Шкатулка математических интерактивов',36,38,828);ctx.font='bold 34px Arial';ctx.fillText('Результат работы',36,94);ctx.font='24px Arial';ctx.fillText(data.title,36,132,828);ctx.font='20px Arial';ctx.fillText(date+'  ·  Время: '+duration,36,166,828);
+            ctx.fillStyle='#187343';ctx.font='bold 48px Arial';ctx.fillText(data.correct+' / '+rows.length,36,225);ctx.fillStyle='#16365c';ctx.font='21px Arial';ctx.fillText('Неверно: '+data.wrong+'     Не решено: '+data.empty,36,261,828);ctx.font='18px Arial';if(second)ctx.fillText(second,36,292,828);
+            ctx.fillText('Номера заданий в варианте',36,322);ctx.fillText('+ верно     − неверно     · не решено     Р ручная проверка',36,350,828);
+            const colors={correct:'#d6efdf',wrong:'#f9dada',empty:'#e3e7ec',manual:'#dbeafe'};const marks={correct:'+',wrong:'−',empty:'·',manual:'Р'};
+            allRows.forEach((row,i)=>{const x=36+i%cols*119,y=366+Math.floor(i/cols)*66;ctx.fillStyle=colors[row.status]||'#e3e7ec';ctx.fillRect(x,y,110,54);ctx.fillStyle='#16365c';ctx.font='bold 22px Arial';ctx.fillText('№ '+row.num+'  '+(marks[row.status]||'?'),x+8,y+33,94);});
+            const a=document.createElement('a');a.download='Результат_работы.png';a.href=canvas.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();status.textContent='Карточка подготовлена. Если скачивание не началось, используйте копирование отчёта.';
+        }catch(e){status.textContent='Не удалось создать карточку. Скопируйте отчёт.';}});
+        host.appendChild(panel);
+    }
+
     async function downloadStudentHTML() {
         if (!currentInteractiveHTML) { alert("Сначала сгенерируйте вариант!"); return; }
         const button = document.querySelector('button[onclick="downloadStudentHTML()"]');
@@ -2328,6 +2387,10 @@
         if (button) { button.disabled = true; button.textContent = 'Подготавливаем вариант…'; }
         try {
         const variantTitle = getCurrentVariantTitle();
+        const reportEnabled = document.getElementById('ege-report-enabled');
+        const reportField = document.getElementById('ege-report-email');
+        const reportEmail = window.__EGE_LINK_STUDENT_VIEWER === true ? (window.__EGE_REPORT_EMAIL || '') : (reportEnabled && reportEnabled.checked && reportField ? reportField.value.trim() : '');
+        if (reportEmail && !/^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}$/.test(reportEmail) || reportEmail.length > 150 || (window.__EGE_LINK_STUDENT_VIEWER !== true && reportEnabled && reportEnabled.checked && !reportEmail)) {alert('Введите корректную рабочую почту учителя или отключите отправку на почту.');return;}
         let theme = document.getElementById("theme-select").value;
         let customBg = getSelectedCustomBg();
         let timerValue = document.getElementById("timer-input").value;
@@ -2411,6 +2474,10 @@
     <script>
         ${window.CANVAS_LOGIC_SCRIPT}
         const SHOW_CORRECT_ON_ERROR = ${showCorrectOnError};
+        const EGE_REPORT_STARTED = Date.now();
+        const EGE_REPORT_EMAIL = ${JSON.stringify(reportEmail)};
+        const EGE_REPORT_TITLE = ${JSON.stringify(String(variantTitle)).replace(/</g,'\\u003c')};
+        ${egeStudentReport.toString()}
         let timerInterval; let timeLimit = ${timerValue} * 60; let timeSpent = 0; let isCountdown = timeLimit > 0;
 
         function setFeedback(taskNum, status, correctAns) {
@@ -2517,7 +2584,7 @@
                 let rowBg = index % 2 === 0 ? '#ffffff' : '#f7f9fc';
 
                 tableRows += '<tr style="background:' + rowBg + ';">' +
-                    '<td style="padding:11px 10px; border:1px solid #d7deea; text-align:center; font-weight:bold; color:#003399;">' + (index + 1) + '</td>' +
+                    '<td style="padding:11px 10px; border:1px solid #d7deea; text-align:center; font-weight:bold; color:#003399;">' + escapeHTML(item.taskNum || index + 1) + '</td>' +
                     '<td style="padding:11px 10px; border:1px solid #d7deea; text-align:center;">' + shownAnswer + '</td>' +
                     correctCell +
                     '<td style="padding:11px 10px; border:1px solid #d7deea; text-align:center;"><span style="display:inline-block; min-width:105px; padding:6px 10px; border-radius:999px; background:' + statusBg + '; color:' + statusColor + '; font-weight:bold; white-space:nowrap;">' + statusIcon + ' ' + statusText + '</span></td>' +
@@ -2556,6 +2623,7 @@
             '</div>' + detailsHTML;
             document.getElementById('res-box').style.display = 'block';
             document.getElementById('btn-check').style.display = 'none';
+            egeStudentReport({email:EGE_REPORT_EMAIL,title:EGE_REPORT_TITLE,finished:Date.now(),seconds:Math.max(0,Math.floor((Date.now()-EGE_REPORT_STARTED)/1000)),correct:c,wrong:ic,empty:e,manualTasks:secondPartTasks.map(task=>task.getAttribute('data-variant-number')).filter(Boolean),rows:taskStatistics});
             
             // Открываем все доступные разборы в конце
             document.querySelectorAll('.btn-help').forEach(btn => btn.style.display = 'inline-flex');

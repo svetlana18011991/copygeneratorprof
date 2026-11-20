@@ -11,12 +11,12 @@ const bank = {
   task2: {prototypes: [{svg_code:'', tasks:[{id:'c',text:'Вторая задача',answer:'9'}]}]},
 };
 bank['1']=bank.task1; bank['2']=bank.task2; bank['archive_task6']=bank.task1;
-function setup(hash='', full=false, now=Date.now(), active='123456789abc') {
+function setup(hash='', full=false, now=Date.now(), active='123456789abc', storage=new Map()) {
   const els = {};
   function getEl(id) {
     if (!els[id]) els[id]={
       value:'',checked:false,style:{},textContent:'',href:'',
-      scrollIntoView(){},removeAttribute(attr){delete this[attr]}, focus(){},select(){}
+      scrollIntoView(){},removeAttribute(attr){delete this[attr]}, focus(){},select(){},addEventListener(name,fn){this[name+'Handler']=fn;}
     };
     return els[id];
   }
@@ -51,7 +51,7 @@ function setup(hash='', full=false, now=Date.now(), active='123456789abc') {
     'toggle-instant-check':{checked:false},
   });
   const sandbox = {
-    window:w,document,location:loc,URL,TextEncoder,TextDecoder,Uint8Array,
+    window:w,document,location:loc,URL,TextEncoder,TextDecoder,Uint8Array,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     btoa,atob,console, Date:class extends Date {static now(){return now;}}, fetch:async()=>({ok:true,json:async()=>({active})}), setTimeout:fn=>fn(), navigator:{clipboard:{writeText:async()=>{}}}
   };
   vm.runInNewContext(code,sandbox,{filename:'link_trial.js'});
@@ -176,5 +176,29 @@ function setup(hash='', full=false, now=Date.now(), active='123456789abc') {
   const matches=Array.from(car.matchAll(re),m=>m[0]);
   assert.equal(matches.length,1);assert.equal(matches[0],String.raw`\(F=\dfrac{2mS}{t^2}\).`);
   console.log('PASS: exact car-task punctuation regression');
+  const emailTeacher=setup();
+  emailTeacher.w.currentGeneratedTasks=teacher.w.currentGeneratedTasks;
+  emailTeacher.document.getElementById('ege-report-enabled').checked=true;
+  emailTeacher.document.getElementById('ege-report-email').value='teacher+test@example.org';
+  await emailTeacher.w.egeShowStudentLink();
+  const emailStudent=setup(new URL(emailTeacher.els['ege-link-share-url'].value).hash);
+  emailStudent.w.generateVariant=({manualPlan})=>{emailStudent.w.currentGeneratedTasks=manualPlan.map(p=>({taskTid:p.tid,taskKind:p.kind,protoIndex:p.protoIndex,sourceTaskIndex:p.taskIndex}));};
+  emailStudent.w.downloadStudentHTML=async()=>{emailStudent.w.__EGE_LINK_STUDENT_VIEWER_RENDERED=true;};
+  await emailStudent.events.load(); await new Promise(setImmediate);
+  assert.equal(emailStudent.w.__EGE_REPORT_EMAIL,'teacher+test@example.org');
+  assert.equal(student.w.__EGE_REPORT_EMAIL,'');
+  emailTeacher.document.getElementById('ege-report-email').value='bad address';
+  await emailTeacher.w.egeShowStudentLink();
+  assert.equal(emailTeacher.els['ege-link-share-url'].value,'');
+  console.log('PASS: optional teacher email round trip, no-email link, invalid email');
+  const stored=new Map([['ege-report-email','old@example.org'],['ege-report-enabled','1']]);
+  const prefs=setup('',false,Date.now(),'123456789abc',stored);
+  const enable=prefs.els['ege-report-enabled'], field=prefs.els['ege-report-email'], remember=prefs.els['ege-report-remember'];
+  assert.equal(enable.checked,false);assert.equal(field.value,'');assert(!stored.has('ege-report-email'));
+  enable.checked=true;enable.changeHandler();field.value='work@example.org';field.inputHandler();assert(!stored.has('ege-report-email-opt-in'));
+  remember.checked=true;remember.changeHandler();assert.equal(stored.get('ege-report-email-opt-in'),'work@example.org');
+  const next=setup('',false,Date.now(),'123456789abc',stored);assert.equal(next.els['ege-report-enabled'].checked,false);assert.equal(next.els['ege-report-email'].value,'work@example.org');
+  remember.checked=false;remember.changeHandler();assert(!stored.has('ege-report-email-opt-in'));
+  console.log('PASS: optional local storage, old implicit preference removed, mailing disabled by default');
   console.log('All link-trial tests passed.');
 })().catch(err=>{console.error(err);process.exitCode=1;});

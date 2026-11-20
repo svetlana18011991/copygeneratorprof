@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Пробный режим для учеников: генератор скрыт до подготовки работы. -->
     <script>if (location.hash.startsWith('#student=')) document.documentElement.classList.add('ege-student-link');</script>
     <style>
@@ -1086,16 +1087,56 @@ body.auth-locked > *:not(#passwordGate) {
     .password-gate-field-wrap { flex-direction: column; }
     .password-gate-submit { width: 100%; padding: 12px 16px; }
 }
+
+/* Экран выбора доступа — продолжение исходного тёмно-оранжевого оформления. */
+#passwordGate { flex-direction:column; align-items:stretch; justify-content:flex-start; overflow:auto; padding:18px 24px; }
+#passwordGate .gate-top-links { display:flex; justify-content:flex-end; gap:9px; flex-wrap:wrap; flex:none; }
+#passwordGate .gate-top-link { font-weight:600; font-size:13px; text-decoration:none; color:#ffb15c; border:1px solid rgba(255,140,0,.65); border-radius:8px; padding:8px 13px; background:#24201a; white-space:normal; }
+#passwordGate .gate-top-link:hover, #passwordGate .gate-option-outline:hover { background:#3c2b18; }
+#passwordGate .gate-center { display:flex; flex:1 0 auto; align-items:center; justify-content:center; flex-direction:column; gap:18px; padding:26px 0; width:100%; }
+#passwordGate .gate-main-title { font-size:clamp(1.45rem,3.7vw,2.3rem); line-height:1.2; color:#ff8c00; margin:0; font-weight:800; text-align:center; }
+#passwordGate .gate-main-subtitle { color:#c2c2c2; margin:-9px 0 3px; font-size:1rem; text-align:center; }
+#passwordGate .gate-option { display:block; width:100%; box-sizing:border-box; padding:13px 12px; border-radius:10px; font:700 1rem/1.35 'Segoe UI',Tahoma,Arial,sans-serif; text-decoration:none; text-align:center; cursor:pointer; transition:background .15s; }
+#passwordGate .gate-option-primary { color:#161616; background:#ff8c00; border:1px solid #ff8c00; }
+#passwordGate .gate-option-primary:hover { background:#ffb15c; }
+#passwordGate .gate-option-outline { color:#ffb15c; background:transparent; border:1px solid #ff8c00; }
+#passwordGate .gate-option-video { color:#ececec; background:#292929; border:1px solid #5a5148; margin-top:16px; }
+#passwordGate .gate-option-video:hover { border-color:#ff8c00; }
+#passwordGate .gate-caption { font-size:.85rem; line-height:1.45; color:#c5c5c5; margin:7px 0 17px; }
+#passwordGate .gate-divider { border:0; height:1px; background:#4a433b; margin:17px 0; }
+#passwordGate .gate-back { color:#d0d0d0; background:none; border:0; font:inherit; font-size:.88rem; cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:10px 4px 0; }
+#passwordGate .gate-brand { text-align:center; color:#afafaf; font-size:.85rem; margin:0 0 4px; }
+#passwordGate form[hidden], #passwordGate section[hidden] { display:none!important; }
+#passwordGate a:focus-visible, #passwordGate button:focus-visible { outline:2px solid #fff; outline-offset:3px; }
+@media(max-width:520px) { #passwordGate{padding:14px;} #passwordGate .gate-top-links{justify-content:center;} #passwordGate .gate-top-link{font-size:12px;padding:7px 9px;} #passwordGate .gate-center{padding:18px 0;} }
+
 </style>
 
     <!-- EXTRA_LABELS_BUILD: 20260806-4 -->
 </head>
 <body class="auth-locked">
 
-<div id="passwordGate" role="dialog" aria-modal="true" aria-labelledby="passwordGateTitle">
-    <form id="passwordGateForm" class="password-gate-card" autocomplete="off">
-        <h2 id="passwordGateTitle" class="password-gate-title">Доступ к генератору</h2>
-        <p class="password-gate-text">Введите пароль из письма, чтобы открыть генератор.</p>
+<div id="passwordGate" role="dialog" aria-modal="true" aria-labelledby="egeAccessTitle">
+    <nav class="gate-top-links" aria-label="Другие генераторы">
+        <a class="gate-top-link" href="https://oge.sistema-math.ru/">ОГЭ по математике ↗</a>
+        <a class="gate-top-link" href="https://baza.sistema-math.ru/">ЕГЭ базовый ↗</a>
+    </nav>
+    <div class="gate-center">
+        <h1 class="gate-main-title" id="egeAccessTitle">ЕГЭ. ПРОФИЛЬНАЯ МАТЕМАТИКА</h1>
+        <p class="gate-main-subtitle">Генератор экзаменационных вариантов</p>
+        <section id="egeChoicePanel" class="password-gate-card" aria-labelledby="egeChoiceTitle">
+            <h2 id="egeChoiceTitle" class="password-gate-title">Выберите формат доступа</h2>
+            <p class="password-gate-text">Подготовьте задания к уроку за несколько кликов.</p>
+            <a id="egeFreeEntry" class="gate-option gate-option-primary" href="free.html">Открыть бесплатно</a>
+            <p class="gate-caption">Случайные полные варианты ЕГЭ 1–19 и просмотр ответов.</p>
+            <button id="egeFullEntry" type="button" class="gate-option gate-option-outline">Войти в полную версию</button>
+            <p class="gate-caption">Все возможности генератора доступны по паролю.</p>
+            <hr class="gate-divider">
+            <a class="gate-option gate-option-video" href="compressed.mp4" target="_blank" rel="noopener noreferrer">▶ Видеообзор полной версии</a>
+        </section>
+    <form id="passwordGateForm" class="password-gate-card" autocomplete="off" hidden>
+        <h2 id="passwordGateTitle" class="password-gate-title">Доступ к полной версии</h2>
+        <p class="password-gate-text">Введите пароль из письма, чтобы открыть все возможности генератора.</p>
         <div class="password-gate-field-wrap">
             <div class="password-gate-inputbox">
                 <input
@@ -1123,11 +1164,17 @@ body.auth-locked > *:not(#passwordGate) {
         </div>
         <label class="password-gate-remember">
             <input type="checkbox" id="passwordGateRemember">
-            <span>Запомнить пароль на этом устройстве на 30 дней</span>
+            <span>Запомнить вход на этом устройстве на 30 дней</span>
         </label>
         <div id="passwordGateError" class="password-gate-error" hidden>Пароль не подошёл. Проверьте ввод и попробуйте ещё раз.</div>
-        <div class="password-gate-note">Можно вводить в любом регистре. Лишние пробелы в начале и конце не учитываются.</div>
+        <div class="password-gate-note">При сохранённом входе полная версия открывается без стартового экрана. Регистр и пробелы в пароле не учитываются.</div>
+        <hr class="gate-divider">
+        <p class="password-gate-text" style="margin-bottom:10px">У меня нет пароля</p>
+        <a id="egePurchaseLink" class="gate-option gate-option-primary" href="https://payform.ru/93bYMT2/" target="_blank" rel="noopener noreferrer">Хочу приобрести доступ<br><small style="font-weight:400">Доступ до <span id="egeAccessUntil">05.09.2027</span></small></a>
+        <button type="button" class="gate-back" id="egeBackToChoice">← Вернуться к выбору доступа</button>
     </form>
+    </div>
+    <p class="gate-brand">Шкатулка математических интерактивов</p>
 </div>
 
 
@@ -1136,6 +1183,7 @@ body.auth-locked > *:not(#passwordGate) {
 <div class="instruction-actions-wrap">
     <div class="instruction-actions-row">
         <a id="videoInstructionLink" class="instruction-small-btn" href="compressed.mp4" target="_blank" rel="noopener">🎬 Видео-инструкция</a>
+        <a class="instruction-small-btn" href="index.html?start=1">Выбор доступа</a>
         <label for="textInstructionModalToggle" class="instruction-small-btn">📘 Текстовая инструкция</label>
     </div>
 </div>
@@ -1369,6 +1417,12 @@ body.auth-locked > *:not(#passwordGate) {
         
         <div id="info-board"></div>
         
+        <div style="margin:12px 0;padding:12px;border:1px solid #397a54;border-radius:9px;color:inherit;">
+            <label><input type="checkbox" id="ege-report-enabled"> Подготовка письма с результатами на почту учителя</label>
+            <input type="email" id="ege-report-email" maxlength="150" placeholder="Рабочая почта учителя (необязательно)" autocomplete="off" disabled style="display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:9px;border-radius:6px;">
+            <label style="display:block;margin-top:8px"><input type="checkbox" id="ege-report-remember" disabled> Запомнить адрес на этом устройстве</label>
+            <small>Указывайте только свою рабочую почту. Адрес включается в ссылку и HTML-файл и доступен их получателям. Ученик сам отправляет письмо через почтовое приложение. Без почты доступны копирование отчёта и карточка. Имя и почта ученика не запрашиваются. </small>
+        </div>
         <div id="btn-group" class="btn-group">
             <button class="btn-dl btn-html" onclick="downloadStudentHTML()">💻 Интерактивный вариант</button>
             <button class="btn-dl btn-pdf" onclick="downloadPrintPDF()">🖨️ Файл для печати (PDF)</button>
@@ -1544,7 +1598,7 @@ body.auth-locked > *:not(#passwordGate) {
     </div>
 </div>
 
-<script src="app_core.js?v=20261119-wrap-short-2"></script>
+<script src="app_core.js?v=20261120-report-min-1"></script>
 
 <script src="presentations.js?v=20261104-3"></script>
 
@@ -1584,6 +1638,7 @@ body.auth-locked > *:not(#passwordGate) {
 })();
 </script>
 
+<script src="ege_access_config.js?v=20261120-access-2"></script>
 <script id="password-gate-script">
 (function(){
     var PASSWORD_HASH = 532287797;
@@ -1653,7 +1708,17 @@ body.auth-locked > *:not(#passwordGate) {
             unlock(false, false);
             return;
         }
-        if (alreadyUnlocked()) {
+        var accessParams = new URLSearchParams(location.search);
+        function clearAccessParams(){
+            try {
+                var url = new URL(location.href);
+                url.searchParams.delete('start');
+                url.searchParams.delete('access');
+                if (url.href !== location.href) history.replaceState(history.state, '', url.href);
+            } catch(e) {}
+        }
+        if (alreadyUnlocked() && accessParams.get('start') !== '1') {
+            clearAccessParams();
             unlock(false, false);
             return;
         }
@@ -1664,6 +1729,35 @@ body.auth-locked > *:not(#passwordGate) {
         var error = document.getElementById('passwordGateError');
         var eye = document.getElementById('passwordGateEye');
         if (!form || !input) return;
+        var choice = document.getElementById('egeChoicePanel');
+        var full = document.getElementById('egeFullEntry');
+        var back = document.getElementById('egeBackToChoice');
+        var purchase = document.getElementById('egePurchaseLink');
+        var until = document.getElementById('egeAccessUntil');
+        var config = window.EGE_ACCESS_CONFIG || {};
+        if (purchase && /^https?:\/\//i.test(config.purchaseUrl || '')) purchase.href = config.purchaseUrl;
+        if (until && config.accessUntil) until.textContent = config.accessUntil;
+        function showChoice(){
+            form.hidden = true;
+            if (choice) choice.hidden = false;
+            if (error) error.hidden = true;
+            input.value = '';
+            clearAccessParams();
+            if (full) full.focus();
+        }
+        function showPassword(){
+            if (alreadyUnlocked()) {
+                clearAccessParams(); unlock(false,false); return;
+            }
+            if (choice) choice.hidden = true;
+            form.hidden = false;
+            input.value = '';
+            if (error) error.hidden = true;
+            setTimeout(function(){input.focus();},80);
+        }
+        if (full) full.addEventListener('click', showPassword);
+        if (back) back.addEventListener('click', showChoice);
+        if (accessParams.get('access') === 'full') showPassword();
 
         if (eye) {
             eye.addEventListener('click', function(){
@@ -1679,6 +1773,7 @@ body.auth-locked > *:not(#passwordGate) {
         form.addEventListener('submit', function(event){
             event.preventDefault();
             if (hashPassword(input.value) === PASSWORD_HASH) {
+                clearAccessParams();
                 unlock(true, !!(remember && remember.checked));
             } else {
                 if (error) error.hidden = false;
@@ -1691,7 +1786,7 @@ body.auth-locked > *:not(#passwordGate) {
             if (error) error.hidden = true;
         });
 
-        setTimeout(function(){ input.focus(); }, 80);
+        if (!form.hidden) setTimeout(function(){ input.focus(); }, 80);
     }
 
     if (document.readyState === 'loading') {
@@ -1703,6 +1798,6 @@ body.auth-locked > *:not(#passwordGate) {
 </script>
 
 <script src="ege_full_variants.js?v=20261114-exam-structure-1"></script>
-<script src="link_trial.js?v=20261119-exp21-3"></script>
+<script src="link_trial.js?v=20261120-report-min-1"></script>
 </body>
 </html>

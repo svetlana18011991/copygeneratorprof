@@ -65,6 +65,7 @@
         const binary = atob(token.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - token.length % 4) % 4));
         return Uint8Array.from(binary, c => c.charCodeAt(0));
     }
+    const validEmail = value => typeof value === 'string' && value.length <= 150 && /^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}$/.test(value);
     function encode(data, versioned = false) {
         const out = [];
         const put = n => {
@@ -80,7 +81,7 @@
         const themeIndex = ['none','winter','spring','summer','autumn','custom'].indexOf(theme);
         const stickerIndex = ['none','cat','sci','ro'].indexOf(sticker);
         if (themeIndex < 0 || stickerIndex < 0 || !['female','male'].includes(gender)) throw new Error('Неподдерживаемые параметры оформления.');
-        out.push(data.c.reduce((n, flag, i) => n | (flag ? 1 << i : 0), 0) | (data.r ? 16 : 0) | (signature ? 32 : 0) | (gender === 'male' ? 64 : 0));
+        out.push(data.c.reduce((n, flag, i) => n | (flag ? 1 << i : 0), 0) | (data.r ? 16 : 0) | (signature ? 32 : 0) | (gender === 'male' ? 64 : 0) | (versioned && data.email ? 128 : 0));
         out.push(themeIndex | (stickerIndex << 3));
         if (versioned) put(data.expires);
         put(data.n); put(timer); str(name); str(bgUrl); put(data.q.length);
@@ -97,6 +98,7 @@
         if (versioned) {
             const h = combinedFingerprint(data.q);
             out.push(h & 255, h >>> 8 & 255, h >>> 16 & 255, h >>> 24);
+            if (data.email) str(data.email);
             return '3.' + data.release + '.' + toBase64(Uint8Array.from(out));
         }
         return '2.' + toBase64(Uint8Array.from(out));
@@ -131,7 +133,7 @@
             pos += length; return value;
         };
         const flags = byte(), appearance = byte();
-        if (flags & 128 || appearance & 224) throw new Error('Неизвестные настройки варианта.');
+        if ((!versioned && flags & 128) || appearance & 224) throw new Error('Неизвестные настройки варианта.');
         const expires = versioned ? get() : null;
         const n = get(), timer = get(), name = str(), bg = str(), count = get();
         if (!count || count > MAX_TASKS) throw new Error('Некорректное число заданий.');
@@ -144,8 +146,10 @@
             q.push([['','task','archive_task'][type] + number, id & 1, pi, ti, versioned ? null : fingerprint.toString(36)]);
         }
         const checksum = versioned ? (byte() | byte() << 8 | byte() << 16 | byte() << 24) >>> 0 : null;
+        const email = versioned && (flags & 128) ? str() : '';
+        if (email && !validEmail(email)) throw new Error('Некорректный адрес учителя.');
         if (pos !== bytes.length) throw new Error('Повреждён код варианта.');
-        return {v:1, release:version, expires, checksum, r:flags & 16 ? 1 : 0, n,
+        return {v:1, release:version, expires, checksum, email, r:flags & 16 ? 1 : 0, n,
             c:[0,1,2,3].map(i => (flags >> i) & 1),
             o:[['none','winter','spring','summer','autumn','custom'][appearance & 7],
                 ['none','cat','sci','ro'][(appearance >> 3) & 3], timer, flags & 32 ? 1 : 0,
@@ -251,6 +255,9 @@
             const manifest = await response.json();
             if (manifest.active !== current.id) throw new Error('Генератор обновился. Обновите страницу (Ctrl+F5), затем создайте вариант и ссылку заново.');
             const payload = buildPayload();
+            const email = checked('ege-report-enabled') ? val('ege-report-email').trim() : '';
+            if (checked('ege-report-enabled') && !validEmail(email)) throw new Error('Введите корректную рабочую почту учителя или отключите отправку на почту.');
+            payload.email = email;
             payload.release = current.id;
             payload.expires = nowMinute() + LIFE_MINUTES;
             const url = new URL('v.html', current.root);
@@ -376,6 +383,7 @@
                     throw new Error(`Задание ${i+1} восстановлено неверно. Попросите новую ссылку.`);
                 }
             }
+            window.__EGE_REPORT_EMAIL = payload.release && validEmail(payload.email) ? payload.email : '';
             window.__EGE_LINK_STUDENT_VIEWER = true;
             await window.downloadStudentHTML();
             if (window.__EGE_LINK_STUDENT_VIEWER_RENDERED !== true) {
@@ -387,6 +395,21 @@
         }
     }
 
+    // Local preferences only; no network request or storage of student results.
+    if (!location.hash.startsWith(PREFIX)) {
+        const emailField=el('ege-report-email'), enableField=el('ege-report-enabled'), remember=el('ege-report-remember');
+        if (emailField && enableField && remember && typeof emailField.addEventListener === 'function') {
+            // Do not restore the previous implicit storage or automatically enable mailing.
+            enableField.checked=false; remember.checked=false; emailField.value='';
+            try {localStorage.removeItem('ege-report-email');localStorage.removeItem('ege-report-enabled');const saved=localStorage.getItem('ege-report-email-opt-in');if(validEmail(saved)){emailField.value=saved;remember.checked=true;}}catch(e){}
+            const update=()=>{
+                emailField.disabled=!enableField.checked;remember.disabled=!enableField.checked;
+                try{if(remember.checked&&validEmail(emailField.value.trim()))localStorage.setItem('ege-report-email-opt-in',emailField.value.trim());else localStorage.removeItem('ege-report-email-opt-in');}catch(e){}
+                const field=el('ege-link-share-url');if(field&&field.value){field.value='';el('ege-link-open').removeAttribute('href');showStatus('Настройки изменены. Создайте ссылку заново.',false);}
+            };
+            emailField.disabled=true;remember.disabled=true;emailField.addEventListener('input',update);enableField.addEventListener('change',update);remember.addEventListener('change',update);
+        }
+    }
     // После загрузки всех JS с банком задач и инициализации элементов управления.
     if (location.hash.startsWith(PREFIX)) {
         window.addEventListener('load', () => setTimeout(openFromLink, 0), {once:true});
