@@ -2344,7 +2344,7 @@
         const make = (tag, text, parent) => { const x=document.createElement(tag); x.textContent=text; parent.appendChild(x); return x; };
         make('p','Шкатулка математических интерактивов',panel).style.cssText='font-weight:600;margin:0 0 8px';
         make('h3','Передать результат учителю',panel);
-        const note=make('p', 'Отчёт создаётся на вашем устройстве без имени и почты ученика. Генератор не отправляет его автоматически. '+(data.email?'Почтовое приложение подготовит письмо, которое вы сможете отправить самостоятельно.':'Передайте отчёт учителю в привычной переписке.'),panel);
+        const note=make('p', 'Отчёт создаётся на вашем устройстве без имени и почты ученика. Генератор не отправляет его автоматически. Поделитесь результатом через доступное приложение или скопируйте отчёт в переписку с учителем.',panel);
         note.style.fontSize='14px';
         const duration=String(Math.floor(data.seconds/60)).padStart(2,'0')+':'+String(data.seconds%60).padStart(2,'0');
         const date=new Date(data.finished).toLocaleString('ru-RU');
@@ -2373,20 +2373,21 @@
         const details=allRows.map(r=>'№ '+r.num+' — '+(labels[r.status]||'не проверено'));
         // Shared reports deliberately omit raw student inputs, which could contain personal data.
         const header=['Шкатулка математических интерактивов','Результат самостоятельной работы',data.title,'Дата: '+date,'Время выполнения: '+duration,total,second].filter(Boolean);
-        const compact=header.concat(summaries,diagnosticLines.length?['Рекомендуем повторить:',...diagnosticLines]:[]).join('\n');
         const report=header.concat(['','Номера заданий в варианте:'],summaries,['','По заданиям:'],details,diagnosticLines.length?['','Рекомендуем повторить:',...diagnosticLines]:[]).join('\n');
         const button=(text,fn)=>{const b=make('button',text,actions);b.type='button';b.style.cssText='padding:10px 14px;border:1px solid #235b8b;border-radius:7px;background:#235b8b;color:white;font:600 14px Arial,sans-serif;cursor:pointer';b.addEventListener('click',fn);return b;};
         const copyReport=async()=>{try{if(!navigator.clipboard)throw Error();await navigator.clipboard.writeText(report);status.textContent='Отчёт скопирован. Вставьте его в сообщение учителю.';return true;}catch(e){let area=panel.querySelector('textarea');if(!area){area=document.createElement('textarea');area.readOnly=true;area.style.cssText='width:100%;box-sizing:border-box;min-height:130px;margin-top:10px';panel.appendChild(area);}area.value=report;area.focus();area.select();try{if(document.execCommand('copy')){status.textContent='Отчёт скопирован.';return true;}}catch(e){}status.textContent='Выделите текст отчёта и скопируйте вручную.';return false;}};
-        if(data.email) button('Подготовить письмо учителю',async()=>{
-            const recipient=data.email.split('@').map(encodeURIComponent).join('@');
-            const prefix='mailto:'+recipient+'?subject='+encodeURIComponent('Результат самостоятельной работы')+'&body=';
-            let url=prefix+encodeURIComponent(report);
-            if(url.length>1800)url=prefix+encodeURIComponent(compact);
-            let shortMail=false;
-            if(url.length>1800&&diagnosticLines.length){url=prefix+encodeURIComponent(header.concat(summaries).join('\n'));shortMail=true;}
-            if(url.length>1800){await copyReport();status.textContent+=' Отчёт слишком длинный для почтовой ссылки. Вставьте его в письмо на адрес '+data.email+'.';return;}
-            status.textContent='Проверьте письмо и отправьте его самостоятельно. Если почта не открылась, скопируйте отчёт. Адрес: '+data.email+(shortMail?' В письмо включены краткие итоги. Для передачи тем вставьте полный скопированный отчёт или приложите карточку PNG.':'');
-            location.href=url;
+        if (typeof navigator.share === 'function') button('Поделиться результатами',async()=>{
+            try {
+                await navigator.share({title:'Результат самостоятельной работы',text:report});
+                status.textContent='Меню отправки закрыто. Убедитесь, что сообщение отправлено учителю.';
+            } catch (error) {
+                if (error && error.name === 'AbortError') {
+                    status.textContent='Отправка отменена. Можно скопировать отчёт или скачать карточку.';
+                    return;
+                }
+                const copied=await copyReport();
+                status.textContent=copied?'Меню отправки недоступно. Отчёт скопирован — вставьте его в сообщение учителю.':'Не удалось открыть меню отправки. Скопируйте текст отчёта вручную.';
+            }
         });
         button('Скопировать отчёт',copyReport);
         button('Скачать карточку PNG',()=>{try{
@@ -2412,10 +2413,6 @@
         if (button) { button.disabled = true; button.textContent = 'Подготавливаем вариант…'; }
         try {
         const variantTitle = getCurrentVariantTitle();
-        const reportEnabled = document.getElementById('ege-report-enabled');
-        const reportField = document.getElementById('ege-report-email');
-        const reportEmail = window.__EGE_LINK_STUDENT_VIEWER === true ? (window.__EGE_REPORT_EMAIL || '') : (reportEnabled && reportEnabled.checked && reportField ? reportField.value.trim() : '');
-        if (reportEmail && !/^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}$/.test(reportEmail) || reportEmail.length > 150 || (window.__EGE_LINK_STUDENT_VIEWER !== true && reportEnabled && reportEnabled.checked && !reportEmail)) {alert('Введите корректную рабочую почту учителя или отключите отправку на почту.');return;}
         let theme = document.getElementById("theme-select").value;
         let customBg = getSelectedCustomBg();
         let timerValue = document.getElementById("timer-input").value;
@@ -2500,7 +2497,6 @@
         ${window.CANVAS_LOGIC_SCRIPT}
         const SHOW_CORRECT_ON_ERROR = ${showCorrectOnError};
         const EGE_REPORT_STARTED = Date.now();
-        const EGE_REPORT_EMAIL = ${JSON.stringify(reportEmail)};
         const EGE_REPORT_TITLE = ${JSON.stringify(String(variantTitle)).replace(/</g,'\\u003c')};
         ${egeStudentReport.toString()}
         let timerInterval; let timeLimit = ${timerValue} * 60; let timeSpent = 0; let isCountdown = timeLimit > 0;
@@ -2648,7 +2644,7 @@
             '</div>' + detailsHTML;
             document.getElementById('res-box').style.display = 'block';
             document.getElementById('btn-check').style.display = 'none';
-            egeStudentReport({email:EGE_REPORT_EMAIL,title:EGE_REPORT_TITLE,finished:Date.now(),seconds:Math.max(0,Math.floor((Date.now()-EGE_REPORT_STARTED)/1000)),correct:c,wrong:ic,empty:e,manualTasks:secondPartTasks.map(task=>task.getAttribute('data-variant-number')).filter(Boolean),rows:taskStatistics});
+            egeStudentReport({title:EGE_REPORT_TITLE,finished:Date.now(),seconds:Math.max(0,Math.floor((Date.now()-EGE_REPORT_STARTED)/1000)),correct:c,wrong:ic,empty:e,manualTasks:secondPartTasks.map(task=>task.getAttribute('data-variant-number')).filter(Boolean),rows:taskStatistics});
             
             // Открываем все доступные разборы в конце
             document.querySelectorAll('.btn-help').forEach(btn => btn.style.display = 'inline-flex');
