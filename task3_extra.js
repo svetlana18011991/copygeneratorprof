@@ -903,27 +903,27 @@
     task3Extra.prototypes[6].svg_code = task3ExtraTwoCylinders;
     task3Extra.prototypes[7].svg_code = task3ExtraTriPrismVessel;
 
-    // Внешние файлы с уникальными безопасными именами; старые имена оставлены только как запасной вариант.
-    task3Extra.prototypes[8].svg_code  = task3ExtraImage(['task3_square_prism_cylinder.png', 'про.png'], 233, 'Цилиндр в правильной четырёхугольной призме');
-    task3Extra.prototypes[9].svg_code  = task3ExtraImage(['task3_hex_prism_cylinder.png', 'proto11.png'], 233, 'Цилиндр в правильной шестиугольной призме');
-    task3Extra.prototypes[10].svg_code = task3ExtraImage(['task3_tri_prism_in_cylinder.png', 'tri_cyl.png'], 240, 'Правильная треугольная призма, вписанная в цилиндр');
+    // Используем существующие файлы рисунков, чтобы исключить ложные HTTP 404.
+    task3Extra.prototypes[8].svg_code  = task3ExtraImage('про.png', 233, 'Цилиндр в правильной четырёхугольной призме');
+    task3Extra.prototypes[9].svg_code  = task3ExtraImage('proto11.png', 233, 'Цилиндр в правильной шестиугольной призме');
+    task3Extra.prototypes[10].svg_code = task3ExtraImage('tri_cyl.png', 240, 'Правильная треугольная призма, вписанная в цилиндр');
 
     task3Extra.prototypes[11].svg_code = task3ExtraCylinder;
     task3Extra.prototypes[12].svg_code = task3ExtraCone;
     task3Extra.prototypes[13].svg_code = task3ExtraCone;
     task3Extra.prototypes[14].svg_code = task3ExtraSphere;
-    task3Extra.prototypes[15].svg_code = task3ExtraImage(['task3_sphere_in_cube.png', 'кпкп.png'], 233, 'Куб, описанный около сферы');
+    task3Extra.prototypes[15].svg_code = task3ExtraImage('кпкп.png', 233, 'Куб, описанный около сферы');
     task3Extra.prototypes[16].svg_code = task3ExtraRhombusPrism;
     task3Extra.prototypes[17].svg_code = task3ExtraRhombusPrism;
-    task3Extra.prototypes[18].svg_code = task3ExtraImage(['task3_right_tri_prism.png', 'рто.png'], 233, 'Прямая треугольная призма');
-    task3Extra.prototypes[19].svg_code = task3ExtraImage(['task3_right_tri_prism.png', 'рто.png'], 233, 'Прямая треугольная призма');
+    task3Extra.prototypes[18].svg_code = task3ExtraImage('рто.png', 233, 'Прямая треугольная призма');
+    task3Extra.prototypes[19].svg_code = task3ExtraImage('рто.png', 233, 'Прямая треугольная призма');
     task3Extra.prototypes[20].svg_code = task3ExtraPyramid;
     task3Extra.prototypes[21].svg_code = task3ExtraPyramid;
     task3Extra.prototypes[22].svg_code = task3ExtraTetra;
     task3Extra.prototypes[23].svg_code = task3ExtraTetra;
-    task3Extra.prototypes[24].svg_code = task3ExtraImage(['task3_tetra_mid.png', 'tetra_mid.png'], 248, 'Многогранник из середин рёбер тетраэдра');
+    task3Extra.prototypes[24].svg_code = task3ExtraImage('tetra_mid.png', 248, 'Многогранник из середин рёбер тетраэдра');
     task3Extra.prototypes[25].svg_code = task3ExtraHexPrism;
-    task3Extra.prototypes[26].svg_code = task3ExtraImage(['task3_prism_diag.png', 'prism_diag.png'], 330, 'Диагонали правильной четырёхугольной призмы');
+    task3Extra.prototypes[26].svg_code = task3ExtraImage('prism_diag.png', 330, 'Диагонали правильной четырёхугольной призмы');
 
     window.extraDatabase[3] = task3Extra;
     window.extraDatabase["task3"] = task3Extra;

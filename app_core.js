@@ -2279,19 +2279,33 @@
                 const attribute = image.hasAttribute('src') ? 'src' : image.hasAttribute('href') ? 'href' : 'xlink:href';
                 const source = image.getAttribute(attribute);
                 if (!source || source.startsWith('#')) return;
-                let data;
-                try {
-                    data = await sourceData(source);
-                } catch (error) {
+                // Перебираем резервные адреса рисунка и встраиваем первый доступный.
+                let candidates = [source];
+                if (image.hasAttribute('data-task3-sources')) {
+                    try {
+                        const alt = JSON.parse(image.getAttribute('data-task3-sources'));
+                        if (Array.isArray(alt)) candidates.push(...alt.filter(x => typeof x === 'string'));
+                    } catch (_) {}
+                }
+                candidates = [...new Set(candidates)];
+                let data, lastError;
+                for (const candidate of candidates) {
+                    try { data = await sourceData(candidate); break; }
+                    catch (error) { lastError = error; }
+                }
+                if (!data) {
                     const url = new URL(source, sourceBase);
                     if ((url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== baseOrigin) {
-                        // Внешние картинки могут отображаться в <img>, но не
-                        // читаться через fetch из-за CORS. Не удаляем их.
-                        externalFailures.set(url.href, error.message);
-                        console.warn('[ЕГЭ] Внешнее изображение осталось ссылкой:', url.href, error);
+                        externalFailures.set(url.href, lastError.message);
+                        console.warn('[ЕГЭ] Внешнее изображение осталось ссылкой:', url.href, lastError);
                         return;
                     }
-                    throw error;
+                    throw lastError;
+                }
+                if (image.hasAttribute('data-task3-sources')) {
+                    image.removeAttribute('data-task3-sources');
+                    image.removeAttribute('data-task3-index');
+                    image.removeAttribute('onerror');
                 }
                 if (!byData.has(data)) {
                     const id = byData.size;
